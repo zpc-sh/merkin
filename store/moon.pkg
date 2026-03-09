@@ -1,0 +1,4 @@
+import {
+  "nocsi/merkin/hash" @hash,
+  "nocsi/merkin/model" @model,
+}

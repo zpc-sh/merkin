@@ -1,0 +1,31 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "nocsi/merkin/hash"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct Hash {
+  alg : HashAlg
+  digest : Bytes
+}
+pub fn Hash::digest_len(Self) -> Int
+pub fn Hash::key(Self) -> String
+pub fn Hash::matches(Self, Self) -> Bool
+pub fn Hash::of_bytes(Bytes) -> Self
+pub fn Hash::semantic(Self, Bytes) -> Self
+pub impl Eq for Hash
+pub impl Show for Hash
+
+pub(all) enum HashAlg {
+  Fnv1a
+  Blake3
+}
+pub impl Eq for HashAlg
+pub impl Show for HashAlg
+
+// Type aliases
+
+// Traits
+

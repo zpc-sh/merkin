@@ -1,0 +1,133 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "nocsi/merkin/model"
+
+import {
+  "nocsi/merkin/hash",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct Anchor {
+  anchor_id : @hash.Hash
+  subject_hash : @hash.Hash
+  anchor_state : AnchorState
+  akash_leaf_index : UInt64?
+  akash_root_hash : @hash.Hash?
+  mmr_proof_ref : String?
+  temporash_ref : String?
+  anchored_at : String?
+  replication_vector : Array[String]
+}
+pub fn Anchor::add_replica(Self, String) -> Self
+pub fn Anchor::mark_anchored(Self, UInt64, @hash.Hash) -> Self
+pub fn Anchor::mark_failed(Self) -> Self
+pub fn Anchor::mark_pending(Self) -> Self
+pub fn Anchor::new(@hash.Hash) -> Self
+pub fn Anchor::set_mmr_proof_ref(Self, String) -> Self
+pub fn Anchor::set_temporash_ref(Self, String) -> Self
+pub fn Anchor::set_time(Self, String) -> Self
+pub impl Show for Anchor
+
+pub(all) enum AnchorState {
+  UNANCHORED
+  PENDING
+  ANCHORED
+  FAILED
+}
+pub impl Eq for AnchorState
+pub impl Show for AnchorState
+
+pub(all) struct Artifact {
+  content_hash : @hash.Hash
+  size_bytes : UInt64
+  mime : String?
+  payload_ref : PayloadRef
+}
+pub fn Artifact::from_bytes(Bytes) -> Self
+pub fn Artifact::from_bytes_with_mime(Bytes, String) -> Self
+pub fn Artifact::verify(Self) -> Bool
+pub impl Show for Artifact
+
+pub(all) struct Envelope {
+  envelope_id : @hash.Hash
+  artifact_hash : @hash.Hash
+  semantic_header : Array[String]
+  header_encoding : HeaderEncoding
+  semantic_hash : @hash.Hash?
+  policy_ids : Array[@hash.Hash]
+  lens_ids : Array[@hash.Hash]
+  anchors : Array[@hash.Hash]
+  provenance : String?
+  work_refs : Array[@hash.Hash]
+  state : EnvelopeState
+}
+pub fn Envelope::commit_semantic(Self) -> Self
+pub fn Envelope::is_sealed(Self) -> Bool
+pub fn Envelope::new(@hash.Hash, Array[String]) -> Self
+pub fn Envelope::seal(Self) -> Self
+pub fn Envelope::subject_hash(Self) -> @hash.Hash
+pub impl Show for Envelope
+
+pub(all) struct EnvelopeState {
+  freshness : Freshness
+  semantic_committed : Bool
+}
+pub impl Eq for EnvelopeState
+pub impl Show for EnvelopeState
+
+pub(all) enum Freshness {
+  FRESH
+  DIRTY
+  DEFERRED
+  SEALED
+}
+pub impl Eq for Freshness
+pub impl Show for Freshness
+
+pub(all) enum HeaderEncoding {
+  ArbyteGrin
+  ChainCoda
+}
+pub impl Eq for HeaderEncoding
+pub impl Show for HeaderEncoding
+
+pub(all) enum PayloadRef {
+  Inline(Bytes)
+}
+pub impl Show for PayloadRef
+
+pub(all) struct WorkPromise {
+  promise_id : @hash.Hash
+  input_hash : @hash.Hash
+  transform_id : @hash.Hash
+  policy_id : @hash.Hash
+  state : WorkPromiseState
+  result_hash : @hash.Hash?
+  result_envelope_id : @hash.Hash?
+  cost_hint : UInt?
+}
+pub fn WorkPromise::complete(Self, @hash.Hash, @hash.Hash) -> Self
+pub fn WorkPromise::fail(Self) -> Self
+pub fn WorkPromise::new(@hash.Hash, @hash.Hash, @hash.Hash) -> Self
+pub fn WorkPromise::promise(Self) -> Self
+pub fn WorkPromise::start(Self) -> Self
+pub impl Show for WorkPromise
+
+pub(all) enum WorkPromiseState {
+  ABSENT
+  PROMISED
+  RUNNING
+  STALE
+  FRESH
+  FAILED
+}
+pub impl Eq for WorkPromiseState
+pub impl Show for WorkPromiseState
+
+// Type aliases
+
+// Traits
+

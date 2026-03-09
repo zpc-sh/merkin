@@ -1,0 +1,89 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "nocsi/merkin/daemon"
+
+import {
+  "nocsi/merkin/hash",
+  "nocsi/merkin/storage",
+  "nocsi/merkin/tree",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) enum DaemonMode {
+  Receiver
+  Proxy
+  PassThrough
+  Hybrid
+}
+pub impl Eq for DaemonMode
+pub impl Show for DaemonMode
+
+pub(all) struct DaemonNode {
+  node_id : String
+  mode : DaemonMode
+  oci : OciFacility
+  union_store : @storage.UnionStore
+  mut index_tree : @tree.MerkinTree
+  mut policy : @storage.ReplicationPolicy
+  mut queue_stats : @storage.QueueStats
+  mut live_replicas : UInt
+}
+pub fn DaemonNode::add_store(Self, &@storage.StoreNode) -> Unit
+pub fn DaemonNode::can_passthrough_oci(Self) -> Bool
+pub fn DaemonNode::can_proxy_oci(Self) -> Bool
+pub fn DaemonNode::can_receive_oci(Self) -> Bool
+pub fn DaemonNode::capabilities(Self) -> OciFacility
+pub fn DaemonNode::diff_from_sparse(Self, @tree.SparseMerkinTree, Array[String]) -> @tree.TreeDiff
+pub fn DaemonNode::diff_views(Self, Array[String], Array[String]) -> @tree.TreeDiff
+pub fn DaemonNode::handle_get(Self, @hash.Hash, lane? : @storage.ReplicationLane) -> Bytes?
+pub fn DaemonNode::handle_oci_put(Self, OciPutRequest) -> OciPutResult
+pub fn DaemonNode::indexed_node_count(Self) -> Int
+pub fn DaemonNode::new(String, DaemonMode, @storage.ReplicationPolicy, oci? : OciFacility?, live_replicas? : UInt) -> Self
+pub fn DaemonNode::set_live_replicas(Self, UInt) -> Unit
+pub fn DaemonNode::set_policy(Self, @storage.ReplicationPolicy) -> Unit
+pub fn DaemonNode::set_queue_stats(Self, @storage.QueueStats) -> Unit
+pub fn DaemonNode::sparse_view(Self, Array[String]) -> @tree.SparseMerkinTree
+
+pub(all) enum OciDisposition {
+  Stored
+  Forwarded
+  Bypassed
+  Rejected
+}
+pub impl Eq for OciDisposition
+pub impl Show for OciDisposition
+
+pub(all) struct OciFacility {
+  receiver : Bool
+  proxy : Bool
+  passthrough : Bool
+}
+pub fn OciFacility::from_mode(DaemonMode) -> Self
+pub impl Eq for OciFacility
+pub impl Show for OciFacility
+
+pub(all) struct OciPutRequest {
+  payload : Bytes
+  lane : @storage.ReplicationLane
+  event : @storage.ReplicationEvent
+  path : Array[String]
+  sealed_epoch : Bool
+}
+pub fn OciPutRequest::default(Bytes) -> Self
+pub impl Show for OciPutRequest
+
+pub(all) struct OciPutResult {
+  disposition : OciDisposition
+  digest : @hash.Hash
+  receipt : @storage.ReplicationReceipt?
+  reason : String?
+}
+pub impl Show for OciPutResult
+
+// Type aliases
+
+// Traits
+

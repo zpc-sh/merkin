@@ -1,0 +1,38 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "nocsi/merkin/store"
+
+import {
+  "nocsi/merkin/hash",
+  "nocsi/merkin/model",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct AnchorStore {
+  items : Map[String, @model.Anchor]
+}
+pub fn AnchorStore::get(Self, @hash.Hash) -> @model.Anchor?
+pub fn AnchorStore::new() -> Self
+pub fn AnchorStore::put(Self, @model.Anchor) -> String
+
+pub(all) struct ArtifactStore {
+  items : Map[String, @model.Artifact]
+}
+pub fn ArtifactStore::get(Self, @hash.Hash) -> @model.Artifact?
+pub fn ArtifactStore::new() -> Self
+pub fn ArtifactStore::put(Self, @model.Artifact) -> String
+
+pub(all) struct EnvelopeStore {
+  items : Map[String, @model.Envelope]
+}
+pub fn EnvelopeStore::get(Self, @hash.Hash) -> @model.Envelope?
+pub fn EnvelopeStore::new() -> Self
+pub fn EnvelopeStore::put(Self, @model.Envelope) -> String
+
+// Type aliases
+
+// Traits
+
