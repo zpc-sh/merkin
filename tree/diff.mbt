@@ -127,12 +127,12 @@ fn node_state_name(state : NodeState) -> String {
 
 ///|
 fn diff_join(items : Array[String], sep : String) -> String {
-  let mut out = ""
+  let b = StringBuilder::new(size_hint=items.length() * 32)
   for i = 0; i < items.length(); i = i + 1 {
     if i > 0 {
-      out = out + sep
+      b.write_string(sep)
     }
-    out = out + items[i]
+    b.write_string(items[i])
   }
-  out
+  b.to_string()
 }
