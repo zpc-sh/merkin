@@ -1,4 +1,5 @@
 import {
+  "moonbitlang/core/encoding/utf8" @utf8,
   "nocsi/merkin/hash" @hash,
   "nocsi/merkin/model" @model,
   "nocsi/merkin/store" @store,

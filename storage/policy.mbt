@@ -561,50 +561,51 @@ fn policy_material(
     )
   }
 
-  let material = version.to_string() +
-    "|" +
-    active_epoch.to_string() +
-    "|" +
-    quorum_write.to_string() +
-    "|" +
-    quorum_read.to_string() +
-    "|" +
-    idempotency.scope +
-    "|" +
-    bool_to_string(idempotency.include_epoch) +
-    "|" +
-    backpressure.max_inflight_ops.to_string() +
-    "|" +
-    backpressure.max_inflight_bytes.to_string() +
-    "|" +
-    backpressure.max_pending_ops.to_string() +
-    "|" +
-    backpressure.max_pending_bytes.to_string() +
-    "|" +
-    bool_to_string(oci.enabled) +
-    "|" +
-    oci.repository +
-    "|" +
-    oci.artifact_media_type +
-    "|" +
-    oci_tag_mode_name(oci.tag_mode) +
-    "|" +
-    join(target_chunks, "||") +
-    "|" +
-    join(tree_chunks, "||")
-  string_to_bytes(material)
+  let b = StringBuilder::new()
+  b.write_string(version.to_string())
+  b.write_string("|")
+  b.write_string(active_epoch.to_string())
+  b.write_string("|")
+  b.write_string(quorum_write.to_string())
+  b.write_string("|")
+  b.write_string(quorum_read.to_string())
+  b.write_string("|")
+  b.write_string(idempotency.scope)
+  b.write_string("|")
+  b.write_string(bool_to_string(idempotency.include_epoch))
+  b.write_string("|")
+  b.write_string(backpressure.max_inflight_ops.to_string())
+  b.write_string("|")
+  b.write_string(backpressure.max_inflight_bytes.to_string())
+  b.write_string("|")
+  b.write_string(backpressure.max_pending_ops.to_string())
+  b.write_string("|")
+  b.write_string(backpressure.max_pending_bytes.to_string())
+  b.write_string("|")
+  b.write_string(bool_to_string(oci.enabled))
+  b.write_string("|")
+  b.write_string(oci.repository)
+  b.write_string("|")
+  b.write_string(oci.artifact_media_type)
+  b.write_string("|")
+  b.write_string(oci_tag_mode_name(oci.tag_mode))
+  b.write_string("|")
+  b.write_string(join(target_chunks, "||"))
+  b.write_string("|")
+  b.write_string(join(tree_chunks, "||"))
+  string_to_bytes(b.to_string())
 }
 
 ///|
 fn join(items : Array[String], sep : String) -> String {
-  let mut out = ""
+  let b = StringBuilder::new()
   for i = 0; i < items.length(); i = i + 1 {
     if i > 0 {
-      out = out + sep
+      b.write_string(sep)
     }
-    out = out + items[i]
+    b.write_string(items[i])
   }
-  out
+  b.to_string()
 }
 
 ///|
