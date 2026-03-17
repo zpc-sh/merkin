@@ -191,19 +191,21 @@ fn parse_lane(value : String) -> @storage.ReplicationLane {
 ///|
 fn parse_path(value : String) -> Array[String] {
   let out : Array[String] = []
-  let mut cur = ""
+  let mut cur = StringBuilder::new(size_hint=32)
   for ch in value {
     if ch == '/' {
-      if cur != "" {
-        out.push(cur)
+      let s = cur.to_string()
+      if s != "" {
+        out.push(s)
       }
-      cur = ""
+      cur = StringBuilder::new(size_hint=32)
     } else {
-      cur = cur + ch.to_string()
+      cur.write_char(ch)
     }
   }
-  if cur != "" {
-    out.push(cur)
+  let s = cur.to_string()
+  if s != "" {
+    out.push(s)
   }
   if out.length() == 0 {
     ["ingest", "oci"]
@@ -225,19 +227,21 @@ fn split_csv(value : String) -> Array[String] {
 ///|
 fn split_csv_raw(value : String) -> Array[String] {
   let out : Array[String] = []
-  let mut cur = ""
+  let mut cur = StringBuilder::new(size_hint=32)
   for ch in value {
     if ch == ',' {
-      if cur != "" {
-        out.push(cur)
+      let s = cur.to_string()
+      if s != "" {
+        out.push(s)
       }
-      cur = ""
+      cur = StringBuilder::new(size_hint=32)
     } else {
-      cur = cur + ch.to_string()
+      cur.write_char(ch)
     }
   }
-  if cur != "" {
-    out.push(cur)
+  let s = cur.to_string()
+  if s != "" {
+    out.push(s)
   }
   out
 }
@@ -262,14 +266,14 @@ fn parse_routes(csv : String) -> Array[Array[String]] {
 
 ///|
 fn path_to_string(path : Array[String]) -> String {
-  let mut out = ""
+  let out = StringBuilder::new(size_hint=64)
   for i = 0; i < path.length(); i = i + 1 {
     if i > 0 {
-      out = out + "/"
+      out.write_char('/')
     }
-    out = out + path[i]
+    out.write_string(path[i])
   }
-  out
+  out.to_string()
 }
 
 ///|
