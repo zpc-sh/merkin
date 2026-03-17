@@ -1,5 +1,5 @@
 ///|
-/// Trait representing a node that participates in the content-addressable store.
+///se do
 /// Unified content-addressable store interface.
 pub(open) trait StoreNode {
   node_id(Self) -> String

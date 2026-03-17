@@ -153,15 +153,17 @@ fn state_name(v : QueueItemState) -> String {
 }
 
 ///|
+// Use StringBuilder to avoid O(N²) string concatenation
 fn queue_join(items : Array[String], sep : String) -> String {
-  let mut out = ""
+  let builder = StringBuilder::new()
   for i = 0; i < items.length(); i = i + 1 {
+    total_len = total_len + items[i].length()
     if i > 0 {
-      out = out + sep
+      builder.write_string(sep)
     }
-    out = out + items[i]
+    builder.write_string(items[i])
   }
-  out
+  builder.to_string()
 }
 
 ///|

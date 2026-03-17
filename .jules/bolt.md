@@ -1,3 +1,3 @@
-## 2024-05-14 - [String to Bytes Serialization Format]
-**Learning:** The custom `string_to_bytes` functions in this codebase manually encode strings into a 4-byte-per-character format (UTF-32 Big Endian). Replacing this with a standard UTF-8 encoder like `@utf8.encode(s)` will change the resulting bytes, which are then hashed. This invalidates existing hashes and introduces a critical breaking change in content-addressable storage or cryptographic verification.
-**Action:** When refactoring or optimizing string-to-byte conversion functions, never change the underlying encoding format (e.g., from UTF-32 to UTF-8) unless explicitly instructed, as it silently changes the resulting hashes. Keep the manual character-by-character conversion logic if it's used for consistent hashing.
+## 2024-03-10 - Optimizing String Concatenation in Moonbit
+**Learning:** Moonbit does not currently have a built-in `String::join` or `String::concat` for string arrays. The pattern of `out = out + items[i]` creates many intermediate strings and runs in O(N^2) time.
+**Action:** Use `StringBuilder::new()` and `builder.write_string()` which runs in O(N) time for concatenating strings in loops in Moonbit.
