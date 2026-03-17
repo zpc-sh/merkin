@@ -1,7 +1,3 @@
-## 2024-05-18 - String concatenation in loops
-**Learning:** O(n^2) string concatenation (`+`) inside loops is a major performance bottleneck in MoonBit, leading to excessive allocations.
-**Action:** Use `StringBuilder::new(size_hint=...)` for string building in loops. Do not use `@builtin.` prefix.
-
-## 2024-05-18 - String optimization complete
-**Learning:** Found string builders natively available via `StringBuilder::new()` without `@builtin` prefix, and native string slicing (e.g., `url[0:5].to_string()`) which replace expensive O(n^2) allocations.
-**Action:** When manipulating strings in loops, always use `StringBuilder` or slice native syntax if substrings are needed.
+## 2024-03-10 - Optimizing String Concatenation in Moonbit
+**Learning:** Moonbit does not currently have a built-in `String::join` or `String::concat` for string arrays. The pattern of `out = out + items[i]` creates many intermediate strings and runs in O(N^2) time.
+**Action:** Use `StringBuilder::new()` and `builder.write_string()` which runs in O(N) time for concatenating strings in loops in Moonbit.

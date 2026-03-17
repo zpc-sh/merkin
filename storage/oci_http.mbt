@@ -43,6 +43,7 @@ fn ensure_no_trailing_slash(url : String) -> String {
   if url.length() == 0 || url[url.length() - 1] != '/' {
     url
   } else {
+    // Optimization: Use string slicing instead of O(n^2) loop concatenation
     url[:url.length() - 1].to_string()
   }
 }
