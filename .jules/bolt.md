@@ -1,3 +1,3 @@
-## 2024-05-24 - String Concatenation Performance
-**Learning:** String concatenation using the `+` operator inside a loop has O(n²) time complexity because it allocates a new string object in each iteration.
-**Action:** Always use `StringBuilder` (e.g. `StringBuilder::new()`) when building strings dynamically within loops to ensure O(n) performance. Alternatively, use native functions like `String::join` if available.
+## 2024-03-10 - Optimizing String Concatenation in Moonbit
+**Learning:** Moonbit does not currently have a built-in `String::join` or `String::concat` for string arrays. The pattern of `out = out + items[i]` creates many intermediate strings and runs in O(N^2) time.
+**Action:** Use `StringBuilder::new()` and `builder.write_string()` which runs in O(N) time for concatenating strings in loops in Moonbit.
