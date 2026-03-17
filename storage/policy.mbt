@@ -599,7 +599,15 @@ fn policy_material(
 fn join(items : Array[String], sep : String) -> String {
   // Optimization: Use StringBuilder instead of string concatenation (+) inside loops
   // which prevents O(n^2) allocation and copying.
-  let sb = StringBuilder::new(size_hint=items.length() * 16)
+  // Compute a size hint from the actual item and separator lengths to avoid magic constants.
+  let size = 0
+  for i = 0; i < items.length(); i = i + 1 {
+    size = size + items[i].length()
+  }
+  if items.length() > 0 {
+    size = size + sep.length() * (items.length() - 1)
+  }
+  let sb = StringBuilder::new(size_hint=size)
   for i = 0; i < items.length(); i = i + 1 {
     if i > 0 {
       sb.write_string(sep)
