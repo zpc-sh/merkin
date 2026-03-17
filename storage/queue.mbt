@@ -153,9 +153,16 @@ fn state_name(v : QueueItemState) -> String {
 }
 
 ///|
-// ⚡ Bolt: Replaced O(N²) string concatenation with StringBuilder for O(N) performance
+// Use StringBuilder to avoid O(N²) string concatenation
 fn queue_join(items : Array[String], sep : String) -> String {
-  let out = StringBuilder::new(size_hint=items.length() * 16)
+  let mut total_len = 0
+  for i = 0; i < items.length(); i = i + 1 {
+    total_len = total_len + items[i].length()
+    if i > 0 {
+      total_len = total_len + sep.length()
+    }
+  }
+  let out = StringBuilder::new(size_hint=total_len)
   for i = 0; i < items.length(); i = i + 1 {
     if i > 0 {
       out.write_string(sep)
