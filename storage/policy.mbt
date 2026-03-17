@@ -597,15 +597,14 @@ fn policy_material(
 
 ///|
 fn join(items : Array[String], sep : String) -> String {
-  // ⚡ Bolt: Use StringBuilder for O(n) concatenation instead of O(n^2) string addition
-  let buf = @builtin.StringBuilder::new(size_hint=256)
+  let builder = StringBuilder::new()
   for i = 0; i < items.length(); i = i + 1 {
     if i > 0 {
-      buf.write_string(sep)
+      builder.write_string(sep)
     }
-    buf.write_string(items[i])
+    builder.write_string(items[i])
   }
-  buf.to_string()
+  builder.to_string()
 }
 
 ///|
