@@ -597,14 +597,14 @@ fn policy_material(
 
 ///|
 fn join(items : Array[String], sep : String) -> String {
-  let mut out = ""
+  let builder = StringBuilder::new()
   for i = 0; i < items.length(); i = i + 1 {
     if i > 0 {
-      out = out + sep
+      builder.write_string(sep)
     }
-    out = out + items[i]
+    builder.write_string(items[i])
   }
-  out
+  builder.to_string()
 }
 
 ///|
