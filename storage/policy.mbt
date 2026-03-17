@@ -596,9 +596,19 @@ fn policy_material(
 }
 
 ///|
-// ⚡ Bolt: Replaced O(N²) string concatenation with StringBuilder for O(N) performance
+// Use StringBuilder to avoid quadratic-time string concatenation.
 fn join(items : Array[String], sep : String) -> String {
-  let out = StringBuilder::new(size_hint=items.length() * 16)
+  let mut total_len = 0
+  for item in items {
+    total_len = total_len + item.length()
+  }
+  let sep_len = sep.length()
+  let sep_total = if items.length() > 1 {
+    sep_len * (items.length() - 1)
+  } else {
+    0
+  }
+  let out = StringBuilder::new(size_hint=total_len + sep_total)
   for i = 0; i < items.length(); i = i + 1 {
     if i > 0 {
       out.write_string(sep)
