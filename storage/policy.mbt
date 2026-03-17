@@ -596,6 +596,7 @@ fn policy_material(
 }
 
 ///|
+// Use StringBuilder to avoid quadratic-time string concatenation.
 fn join(items : Array[String], sep : String) -> String {
   let builder = StringBuilder::new()
   for i = 0; i < items.length(); i = i + 1 {
