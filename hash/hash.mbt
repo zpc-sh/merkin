@@ -110,14 +110,15 @@ fn bytes_concat(a : Bytes, b : Bytes) -> Bytes {
 ///|
 /// Convert bytes to lowercase hex text.
 fn bytes_to_hex(data : Bytes) -> String {
-  let mut s = ""
+  let b = StringBuilder::new(size_hint=data.length() * 2)
   for i = 0; i < data.length(); i = i + 1 {
-    let b = data[i].to_uint()
-    let hi = b >> 4
-    let lo = b & 0x0FU
-    s = s + nibble_to_hex(hi) + nibble_to_hex(lo)
+    let val = data[i].to_uint()
+    let hi = val >> 4
+    let lo = val & 0x0FU
+    b.write_string(nibble_to_hex(hi))
+    b.write_string(nibble_to_hex(lo))
   }
-  s
+  b.to_string()
 }
 
 ///|
