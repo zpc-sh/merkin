@@ -43,11 +43,8 @@ fn ensure_no_trailing_slash(url : String) -> String {
   if url.length() == 0 || url[url.length() - 1] != '/' {
     url
   } else {
-    let mut out = ""
-    for i = 0; i < url.length() - 1; i = i + 1 {
-      out = out + url[i].to_string()
-    }
-    out
+    // Optimization: Use string slicing instead of O(n^2) loop concatenation
+    url[:url.length() - 1].to_string()
   }
 }
 

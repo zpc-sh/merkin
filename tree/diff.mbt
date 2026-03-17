@@ -127,16 +127,12 @@ fn node_state_name(state : NodeState) -> String {
 
 ///|
 fn diff_join(items : Array[String], sep : String) -> String {
-  // Optimization: Use StringBuilder instead of string concatenation (+) inside loops
-  // which prevents O(n^2) allocation and copying.
-  // Heuristic: average item length is ~16 characters (e.g., typical IDs), used only for preallocation.
-  let avg_item_length_hint = 16U
-  let sb = StringBuilder::new(size_hint=items.length() * avg_item_length_hint)
+  let builder = StringBuilder::new()
   for i = 0; i < items.length(); i = i + 1 {
     if i > 0 {
-      sb.write_string(sep)
+      builder.write_string(sep)
     }
-    sb.write_string(items[i])
+    builder.write_string(items[i])
   }
-  sb.to_string()
+  builder.to_string()
 }
