@@ -156,7 +156,9 @@ fn state_name(v : QueueItemState) -> String {
 fn queue_join(items : Array[String], sep : String) -> String {
   // Optimization: Use StringBuilder instead of string concatenation (+) inside loops
   // which prevents O(n^2) allocation and copying.
-  let sb = StringBuilder::new(size_hint=items.length() * 16)
+  // Heuristic: assume an average of ~16 bytes per item (including separators) for initial capacity.
+  let avg_bytes_per_item = 16
+  let sb = StringBuilder::new(size_hint=items.length() * avg_bytes_per_item)
   for i = 0; i < items.length(); i = i + 1 {
     if i > 0 {
       sb.write_string(sep)
