@@ -157,7 +157,7 @@ fn state_name(v : QueueItemState) -> String {
 fn queue_join(items : Array[String], sep : String) -> String {
   let builder = StringBuilder::new()
   for i = 0; i < items.length(); i = i + 1 {
-    total_len = total_len + items[i].length()
+
     if i > 0 {
       builder.write_string(sep)
     }
@@ -168,10 +168,7 @@ fn queue_join(items : Array[String], sep : String) -> String {
 
 ///|
 fn queue_string_to_bytes(s : String) -> Bytes {
-  let mut total = 0
-  for _ch in s {
-    total = total + 4
-  }
+  let total = s.length() * 4
   let buf = FixedArray::make(total, b'\x00')
   let mut pos = 0
   for ch in s {

@@ -697,10 +697,7 @@ fn idempotency_state_name(v : IdempotencyState) -> String {
 
 ///|
 fn string_to_bytes(s : String) -> Bytes {
-  let mut total = 0
-  for _ch in s {
-    total = total + 4
-  }
+  let total = s.length() * 4
   let buf = FixedArray::make(total, b'\x00')
   let mut pos = 0
   for ch in s {
