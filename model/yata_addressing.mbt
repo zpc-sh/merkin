@@ -1,0 +1,471 @@
+///|
+/// Address policy for cross-overlay and peer translation.
+pub(all) struct YataAddressHint {
+  overlay : String
+  peer : String
+  mode : String
+  gap : UInt
+  view : String
+} derive(Show)
+
+///|
+/// Human-sized address view for protocol export.
+pub(all) struct YataAddress {
+  uri : String
+  scheme : String
+  authority : String
+  anchor : String
+  hole_id : @hash.Hash
+  overlay : String
+  peer : String
+  mode : String
+  track : YataTrack
+  view : String
+} derive(Show)
+
+///|
+/// Address parser diagnostics.
+pub(all) struct YataAddressParseIssue {
+  /// 1-based line index.
+  line : Int
+  code : String
+  message : String
+} derive(Show)
+
+///|
+/// Strict parse outcome.
+pub(all) struct YataAddressParseOutcome {
+  address : YataAddress?
+  issues : Array[YataAddressParseIssue]
+  ok : Bool
+} derive(Show)
+
+///|
+/// Relative parsing context.
+pub(all) struct YataAddressContext {
+  authority : String
+  anchor : String
+} derive(Show)
+
+///|
+/// Render a hole as a cognitive URI from the active perspective.
+pub fn YataHole::to_cog_uri(
+  self : YataHole,
+  authority : String,
+  hint : YataAddressHint,
+  track : YataTrack,
+) -> String {
+  let mut b = StringBuilder::new()
+  b.write_string("cog://")
+  b.write_string(authority)
+  b.write_string("/")
+  b.write_string(self.anchor)
+  b.write_string("?")
+  b.write_string("overlay=")
+  if hint.overlay.length() > 0 {
+    b.write_string(hint.overlay)
+  } else {
+    b.write_string("program")
+  }
+  b.write_string("&peer=")
+  b.write_string(hint.peer)
+  b.write_string("&mode=")
+  b.write_string(hint.mode)
+  b.write_string("&gap=")
+  b.write_string(hint.gap.to_string())
+  b.write_string("&track=")
+  b.write_string(yata_track_token(track))
+  b.write_string("&id=")
+  b.write_string(self.hole_id.key())
+  if hint.view.length() > 0 {
+    b.write_string("#")
+    b.write_string(hint.view)
+  } else {
+    b.write_string("#overlay")
+  }
+  b.to_string()
+}
+
+///|
+/// Render a hole as substrate URI (base layer equivalent).
+pub fn YataHole::to_substrate_uri(
+  self : YataHole,
+  authority : String,
+  hint : YataAddressHint,
+  track : YataTrack,
+) -> String {
+  let mut b = StringBuilder::new()
+  b.write_string("substrate://")
+  b.write_string(authority)
+  b.write_string("/")
+  b.write_string(self.anchor)
+  b.write_string("?")
+  b.write_string("overlay=")
+  if hint.overlay.length() > 0 {
+    b.write_string(hint.overlay)
+  } else {
+    b.write_string("program")
+  }
+  b.write_string("&peer=")
+  b.write_string(hint.peer)
+  b.write_string("&mode=")
+  b.write_string(hint.mode)
+  b.write_string("&gap=")
+  b.write_string(hint.gap.to_string())
+  b.write_string("&track=")
+  b.write_string(yata_track_token(track))
+  b.write_string("&id=")
+  b.write_string(self.hole_id.key())
+  if hint.view.length() > 0 {
+    b.write_string("#")
+    b.write_string(hint.view)
+  } else {
+    b.write_string("#overlay")
+  }
+  b.to_string()
+}
+
+///|
+/// Parse a minimal subset of cognitive URI back to address metadata.
+pub fn YataAddress::parse(raw : String) -> YataAddress? {
+  let outcome = YataAddress::parse_strict(raw)
+  if outcome.ok {
+    outcome.address
+  } else {
+    None
+  }
+}
+
+///|
+/// Parse a relative URI against a perspective context.
+pub fn YataAddress::parse_in_context(raw : String, context : YataAddressContext) -> YataAddress? {
+  let outcome = YataAddress::parse_in_context_strict(raw, context)
+  if outcome.ok {
+    outcome.address
+  } else {
+    None
+  }
+}
+
+///|
+/// Strict parse for context-relative forms.
+/// Supported forms:
+/// - `./notes/foo.md?overlay=...`
+/// - `../notes/foo.md?overlay=...`
+/// - `?overlay=...`
+/// - `id=...&overlay=...`
+pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressContext) -> YataAddressParseOutcome {
+  if raw == "" {
+    return {
+      address: None,
+      issues: [{ line: 1, code: "EMPTY_INPUT", message: "empty uri" }],
+      ok: false,
+    }
+  }
+  if context.authority == "" {
+    return {
+      address: None,
+      issues: [{ line: 1, code: "MISSING_CONTEXT", message: "context authority is required" }],
+      ok: false,
+    }
+  }
+
+  if raw.starts_with("cog://") || raw.starts_with("substrate://") {
+    return YataAddress::parse_strict(raw)
+  }
+
+  let hash_parts = raw.split("#")
+  let before_hash = hash_parts[0]
+  let view = if hash_parts.length() > 1 { hash_parts[1] } else { "overlay" }
+  if hash_parts.length() > 2 {
+    return {
+      address: None,
+      issues: [{ line: 1, code: "MULTI_HASH", message: "uri contains multiple `#`" }],
+      ok: false,
+    }
+  }
+
+  let query_parts = before_hash.split("?")
+  let route = query_parts[0]
+  let mut query = ""
+  if query_parts.length() >= 2 {
+    query = join_from_index(query_parts, 1, "?")
+  }
+
+  let mut normalized_anchor : String = context.anchor
+  if route != "" {
+    if route.starts_with("./") || route.starts_with("../") {
+      normalized_anchor = resolve_relative_anchor(context.anchor, route)
+    } else if route.starts_with("id=") && query == "" {
+      query = route
+    } else if route != "" {
+      normalized_anchor = route
+    }
+  }
+
+  let mut normalized_uri = "cog://" + context.authority + "/" + normalized_anchor
+  if query == "" {
+    normalized_uri = normalized_uri + "?"
+  } else {
+    normalized_uri = normalized_uri + "?" + query
+  }
+  normalized_uri = normalized_uri + "#" + view
+  YataAddress::parse_strict(normalized_uri)
+}
+
+///|
+/// Strict parse with unknown-key reporting.
+pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
+  let mut issues : Array[YataAddressParseIssue] = []
+
+  let hashes = raw.split("#")
+  if hashes.length() == 0 {
+    return { address: None, issues: [{ line: 1, code: "EMPTY_INPUT", message: "empty uri" }], ok: false }
+  }
+  let before_hash = hashes[0]
+  let view = if hashes.length() > 1 { hashes[1] } else { "overlay" }
+  if hashes.length() > 2 {
+    issues.push({ line: 1, code: "MULTI_HASH", message: "uri contains multiple `#`" })
+  }
+
+  let before_and_query = before_hash.split("?")
+  if before_and_query.length() < 2 {
+    issues.push({ line: 1, code: "MISSING_QUERY", message: "missing `?` query separator" })
+    return { address: None, issues: issues, ok: false }
+  }
+  let before = before_and_query[0]
+  let query_raw = before_and_query[1]
+
+  let mut scheme = ""
+  let mut authority = ""
+  let mut anchor = ""
+  if before.starts_with("cog://") {
+    scheme = "cog"
+    let rem = split_after_raw(before, "cog://")
+    let route = rem.split("/")
+    if route.length() >= 2 {
+      authority = route[0]
+      anchor = route[1]
+      if route.length() > 2 {
+        let mut index = 2
+        while index < route.length() {
+          anchor = anchor + "/" + route[index]
+          index = index + 1
+        }
+      }
+    } else {
+      issues.push({ line: 1, code: "BAD_ROUTE", message: "cog uri requires authority and anchor" })
+    }
+  } else if before.starts_with("substrate://") {
+    scheme = "substrate"
+    let rem = split_after_raw(before, "substrate://")
+    let route = rem.split("/")
+    if route.length() >= 2 {
+      authority = route[0]
+      anchor = route[1]
+      if route.length() > 2 {
+        let mut index = 2
+        while index < route.length() {
+          anchor = anchor + "/" + route[index]
+          index = index + 1
+        }
+      }
+    } else {
+      issues.push({ line: 1, code: "BAD_ROUTE", message: "substrate uri requires authority and anchor" })
+    }
+  } else {
+    issues.push({ line: 1, code: "BAD_SCHEME", message: "scheme must be `cog` or `substrate`" })
+    return { address: None, issues: issues, ok: false }
+  }
+
+  let mut overlay = ""
+  let mut peer = ""
+  let mut mode = ""
+  let mut gap : UInt = 0U
+  let mut track = Program
+  let mut hash_token = ""
+
+  let query_pairs = query_raw.split("&")
+  for pair in query_pairs {
+    if pair.length() == 0 {
+      continue
+    }
+    let pieces = pair.split("=")
+    if pieces.length() != 2 {
+      issues.push({ line: 1, code: "BAD_QUERY_PAIR", message: "query pairs must be `key=value`" })
+      continue
+    }
+    let key = pieces[0]
+    let value = pieces[1]
+    if key == "overlay" {
+      overlay = value
+      continue
+    }
+    if key == "peer" {
+      peer = value
+      continue
+    }
+    if key == "mode" {
+      mode = value
+      continue
+    }
+    if key == "gap" {
+      match parse_u32_opt(Some(value)) {
+        Some(v) => gap = v
+        None => {
+          issues.push({ line: 1, code: "BAD_GAP", message: "gap must be unsigned integer" })
+        }
+      }
+      continue
+    }
+    if key == "track" {
+      if value == "git" {
+        track = Git
+      } else if value == "program" {
+        track = Program
+      } else {
+        issues.push({ line: 1, code: "BAD_TRACK", message: "track must be `program` or `git`" })
+      }
+      continue
+    }
+    if key == "id" {
+      hash_token = value
+      continue
+    }
+    issues.push({ line: 1, code: "UNKNOWN_QUERY_KEY", message: "query key not recognized" })
+  }
+
+  if overlay == "" {
+    issues.push({ line: 1, code: "MISSING_OVERLAY", message: "overlay is recommended" })
+  }
+  if authority == "" {
+    issues.push({ line: 1, code: "MISSING_AUTHORITY", message: "authority is required" })
+  }
+  if anchor == "" {
+    issues.push({ line: 1, code: "MISSING_ANCHOR", message: "anchor/path is required" })
+  }
+
+  if issues.length() > 0 {
+    { address: None, issues: issues, ok: false }
+  } else {
+    let parsed = {
+      uri: raw,
+      scheme: scheme,
+      authority: authority,
+      anchor: anchor,
+      hole_id: if hash_token == "" { @hash.Hash::of_bytes(string_to_bytes("")) } else { @hash.Hash::of_bytes(string_to_bytes(hash_token)) },
+      overlay: overlay,
+      peer: peer,
+      mode: mode,
+      track: track,
+      view: view,
+    }
+    { address: Some(parsed), issues: [], ok: true }
+  }
+}
+
+fn join_from_index(parts : Array[String], index : Int, separator : String) -> String {
+  if parts.length() <= index {
+    ""
+  } else {
+    let mut out = parts[index]
+    let mut i = index + 1
+    while i < parts.length() {
+      out = out + separator + parts[i]
+      i = i + 1
+    }
+    out
+  }
+}
+
+fn resolve_relative_anchor(base_anchor : String, route : String) -> String {
+  let base_parts = base_anchor.split("/")
+  let mut keep : Int = base_parts.length()
+  if keep > 0 {
+    keep = keep - 1
+  }
+
+  let mut resolved : Array[String] = []
+  let mut i : Int = 0
+  while i < keep {
+    if base_parts[i] != "" {
+      resolved.push(base_parts[i])
+    }
+    i = i + 1
+  }
+
+  let route_parts = route.split("/")
+  let mut j : Int = 0
+  while j < route_parts.length() {
+    let segment = route_parts[j]
+    if segment == "" || segment == "." {
+      j = j + 1
+      continue
+    }
+    if segment == ".." {
+      if resolved.length() > 0 {
+        let mut trimmed : Array[String] = []
+        let mut k : Int = 0
+        while k < resolved.length() - 1 {
+          trimmed.push(resolved[k])
+          k = k + 1
+        }
+        resolved = trimmed
+      }
+      j = j + 1
+      continue
+    }
+    resolved.push(segment)
+    j = j + 1
+  }
+
+  if resolved.length() == 0 {
+    ""
+  } else {
+    let mut out = resolved[0]
+    let mut r : Int = 1
+    while r < resolved.length() {
+      out = out + "/" + resolved[r]
+      r = r + 1
+    }
+    out
+  }
+}
+
+fn split_after_raw(raw : String, prefix : String) -> String {
+  let chunks = raw.split(prefix)
+  if chunks.length() < 2 {
+    return raw
+  }
+  chunks[1]
+}
+
+fn parse_u32_opt(raw : String?) -> UInt? {
+  match raw {
+    Some(text) => {
+      if text.length() == 0 {
+        return None
+      }
+      let bytes = string_to_bytes(text)
+      let mut i : Int = 0
+      let mut out : UInt = 0U
+      while i < bytes.length() {
+        let b = bytes[i].to_int()
+        if b < 48 || b > 57 {
+          return None
+        }
+        out = out * 10U + (b - 48U)
+        i = i + 1
+      }
+      Some(out)
+    }
+    None => None
+  }
+}
+
+fn yata_track_token(track : YataTrack) -> String {
+  match track {
+    Program => "program"
+    Git => "git"
+  }
+}

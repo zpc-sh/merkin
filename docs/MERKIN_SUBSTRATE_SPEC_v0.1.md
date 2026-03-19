@@ -196,6 +196,7 @@ Minimum:
 
 ### 5.5 Finger + AI disclosure + Gopher
 - `GET /.well-known/finger.plan` (plan file; not pollable)
+- `finger.plan` is a track-backed, timestamp-agnostic `.plan` artifact generated from Yata graph state (program track).
 - `GET /aicheck` (machine-readable, ethical AI inventory endpoint)
 - `GET /ai` (canonical version of `/aicheck`, may content-negotiate HTML/JSON)
 - `gopher://…` (AI-first text presentation; stable symbol-native rendering)
