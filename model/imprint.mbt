@@ -260,11 +260,8 @@ fn mode_to_tag(mode : MirageMode) -> String {
 
 ///|
 fn string_to_bytes(s : String) -> Bytes {
-  let mut total = 0
-  for _ch in s {
-    total = total + 4
-  }
-  let buf = FixedArray::make(total, b'\x00')
+  let len = s.length()
+  let buf = FixedArray::make(len * 4, b'\x00')
   let mut pos = 0
   for ch in s {
     let code = ch.to_uint()
@@ -274,5 +271,14 @@ fn string_to_bytes(s : String) -> Bytes {
     buf[pos + 3] = (code & 0xFFU).to_byte()
     pos = pos + 4
   }
-  Bytes::from_array(buf)
+  let real_len = pos
+  if real_len == len * 4 {
+    Bytes::from_array(buf)
+  } else {
+    let real_buf = FixedArray::make(real_len, b'\x00')
+    for i = 0; i < real_len; i = i + 1 {
+      real_buf[i] = buf[i]
+    }
+    Bytes::from_array(real_buf)
+  }
 }
