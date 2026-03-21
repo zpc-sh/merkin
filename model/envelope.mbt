@@ -58,9 +58,7 @@ fn header_to_bytes(header : Array[String]) -> Bytes {
     if i > 0 {
       total = total + 1 // null separator
     }
-    for _ch in sym {
-      total = total + 4 // UCS-4 encoding (4 bytes per char)
-    }
+    total = total + sym.length() * 4 // UCS-4 encoding (4 bytes per code unit)
   }
   // Second pass: fill buffer
   let buf = FixedArray::make(total, b'\x00')
@@ -79,7 +77,15 @@ fn header_to_bytes(header : Array[String]) -> Bytes {
       pos = pos + 4
     }
   }
-  Bytes::from_array(buf)
+  if pos == total {
+    Bytes::from_array(buf)
+  } else {
+    let exact_buf = FixedArray::make(pos, b'\x00')
+    for i = 0; i < pos; i = i + 1 {
+      exact_buf[i] = buf[i]
+    }
+    Bytes::from_array(exact_buf)
+  }
 }
 
 ///|

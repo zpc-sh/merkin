@@ -336,10 +336,7 @@ impl StoreNode for OciHttpCasNode with put_blob(
 
 ///|
 fn oci_http_string_to_bytes(s : String) -> Bytes {
-  let mut total = 0
-  for _ch in s {
-    total = total + 4
-  }
+  let total = s.length() * 4
   let buf = FixedArray::make(total, b'\x00')
   let mut pos = 0
   for ch in s {
@@ -350,5 +347,13 @@ fn oci_http_string_to_bytes(s : String) -> Bytes {
     buf[pos + 3] = (code & 0xFFU).to_byte()
     pos = pos + 4
   }
-  Bytes::from_array(buf)
+  if pos == total {
+    Bytes::from_array(buf)
+  } else {
+    let exact_buf = FixedArray::make(pos, b'\x00')
+    for i = 0; i < pos; i = i + 1 {
+      exact_buf[i] = buf[i]
+    }
+    Bytes::from_array(exact_buf)
+  }
 }
