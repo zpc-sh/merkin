@@ -107,17 +107,12 @@ pub fn Imprint::new(
   horizon : UInt,
   mode : MirageMode,
 ) -> Imprint {
-  let confidence = infer_confidence(surface_projection, route_projection, contract_graph, horizon)
+  let confidence = infer_confidence(
+    surface_projection, route_projection, contract_graph, horizon,
+  )
   let material = imprint_material(
-    source,
-    kind,
-    surface_projection,
-    route_projection,
-    contract_graph,
-    parent_imprint,
-    horizon,
-    mode,
-    confidence,
+    source, kind, surface_projection, route_projection, contract_graph, parent_imprint,
+    horizon, mode, confidence,
   )
   let imprint_id = @hash.Hash::of_bytes(string_to_bytes(material))
   {
@@ -165,8 +160,15 @@ fn infer_confidence(
   contracts : Array[String],
   horizon : UInt,
 ) -> UInt {
-  let score = surface.length() * 12U + route.length() * 8U + contracts.length() * 10U + horizon * 3U
-  if score > 100U { 100U } else { score }
+  let score = surface.length() * 12U +
+    route.length() * 8U +
+    contracts.length() * 10U +
+    horizon * 3U
+  if score > 100U {
+    100U
+  } else {
+    score
+  }
 }
 
 ///|
@@ -260,10 +262,7 @@ fn mode_to_tag(mode : MirageMode) -> String {
 
 ///|
 fn string_to_bytes(s : String) -> Bytes {
-  let mut total = 0
-  for _ch in s {
-    total = total + 4
-  }
+  let total = s.length() * 4
   let buf = FixedArray::make(total, b'\x00')
   let mut pos = 0
   for ch in s {
@@ -274,5 +273,13 @@ fn string_to_bytes(s : String) -> Bytes {
     buf[pos + 3] = (code & 0xFFU).to_byte()
     pos = pos + 4
   }
-  Bytes::from_array(buf)
+  if pos == total {
+    Bytes::from_array(buf)
+  } else {
+    let exact_buf = FixedArray::make(pos, b'\x00')
+    for i = 0; i < pos; i = i + 1 {
+      exact_buf[i] = buf[i]
+    }
+    Bytes::from_array(exact_buf)
+  }
 }
