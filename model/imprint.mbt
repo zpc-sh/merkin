@@ -212,11 +212,17 @@ fn join_strings(items : Array[String], sep : String) -> String {
   if items.length() == 0 {
     return ""
   }
-  let mut out = items[0]
+  let mut total_len = items[0].length()
   for i = 1; i < items.length(); i = i + 1 {
-    out = out + sep + items[i]
+    total_len = total_len + sep.length() + items[i].length()
   }
-  out
+  let b = StringBuilder::new(size_hint=total_len)
+  b.write_string(items[0])
+  for i = 1; i < items.length(); i = i + 1 {
+    b.write_string(sep)
+    b.write_string(items[i])
+  }
+  b.to_string()
 }
 
 ///|
