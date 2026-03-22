@@ -368,13 +368,21 @@ fn join_from_index(parts : Array[String], index : Int, separator : String) -> St
   if parts.length() <= index {
     ""
   } else {
-    let mut out = parts[index]
+    let mut total_len = parts[index].length()
     let mut i = index + 1
     while i < parts.length() {
-      out = out + separator + parts[i]
+      total_len = total_len + separator.length() + parts[i].length()
       i = i + 1
     }
-    out
+    let b = StringBuilder::new(size_hint=total_len)
+    b.write_string(parts[index])
+    i = index + 1
+    while i < parts.length() {
+      b.write_string(separator)
+      b.write_string(parts[i])
+      i = i + 1
+    }
+    b.to_string()
   }
 }
 
@@ -422,13 +430,21 @@ fn resolve_relative_anchor(base_anchor : String, route : String) -> String {
   if resolved.length() == 0 {
     ""
   } else {
-    let mut out = resolved[0]
+    let mut total_len = resolved[0].length()
     let mut r : Int = 1
     while r < resolved.length() {
-      out = out + "/" + resolved[r]
+      total_len = total_len + 1 + resolved[r].length()
       r = r + 1
     }
-    out
+    let b = StringBuilder::new(size_hint=total_len)
+    b.write_string(resolved[0])
+    r = 1
+    while r < resolved.length() {
+      b.write_string("/")
+      b.write_string(resolved[r])
+      r = r + 1
+    }
+    b.to_string()
   }
 }
 
