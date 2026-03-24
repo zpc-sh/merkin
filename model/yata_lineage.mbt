@@ -82,7 +82,10 @@ pub(all) struct YataPlan {
 
 ///|
 /// Create a projected subgraph by explicit id set.
-pub fn YataGraph::project(self : YataGraph, ids : Array[@hash.Hash]) -> YataGraph {
+pub fn YataGraph::project(
+  self : YataGraph,
+  ids : Array[@hash.Hash],
+) -> YataGraph {
   let mut out : Array[YataHole] = []
   for hole in self.holes {
     if array_contains_hash(ids, hole.hole_id) {
@@ -116,14 +119,22 @@ pub fn YataGraph::reparent(
 
 ///|
 /// Deterministic ancestry list for one hole. Great for replay-like lineage.
-pub fn YataGraph::transitive_ancestry(self : YataGraph, root : @hash.Hash, max_depth : UInt) -> Array[@hash.Hash] {
+pub fn YataGraph::transitive_ancestry(
+  self : YataGraph,
+  root : @hash.Hash,
+  max_depth : UInt,
+) -> Array[@hash.Hash] {
   collect_ancestry(self, root, max_depth, [])
 }
 
 ///|
 /// Replay the causal chain that leads into this hole.
 /// Returns dependencies-first order to permit deterministic forward processing.
-pub fn YataGraph::lineage_replay(self : YataGraph, root : @hash.Hash, max_depth : UInt) -> Array[YataReplayStep] {
+pub fn YataGraph::lineage_replay(
+  self : YataGraph,
+  root : @hash.Hash,
+  max_depth : UInt,
+) -> Array[YataReplayStep] {
   let ids = self.transitive_ancestry(root, max_depth)
   let mut out : Array[YataReplayStep] = []
   let mut seq : UInt = 0U
@@ -165,8 +176,19 @@ pub fn YataGraph::to_plan(
     material.push(entry.candidate_count.to_string())
     entries.push(entry)
   }
-  let material_hash = @hash.Hash::of_bytes(string_to_bytes(join_by(material, ",")))
-  { track, mode, generator, note, material_hash, self_report: None, git_report: None, entries }
+  let material_hash = @hash.Hash::of_bytes(
+    string_to_bytes(join_by(material, ",")),
+  )
+  {
+    track,
+    mode,
+    generator,
+    note,
+    material_hash,
+    self_report: None,
+    git_report: None,
+    entries,
+  }
 }
 
 ///|
@@ -281,40 +303,42 @@ pub fn YataPlan::to_wire(self : YataPlan) -> String {
   b.to_string()
 }
 
-fn reparent_hole_dependency(hole : YataHole, old_dep : @hash.Hash, new_dep : @hash.Hash?) -> YataHole {
+///|
+fn reparent_hole_dependency(
+  hole : YataHole,
+  old_dep : @hash.Hash,
+  new_dep : @hash.Hash?,
+) -> YataHole {
   let mut next_deps : Array[@hash.Hash] = []
   let mut replaced = false
   for dep in hole.dependencies {
     if dep == old_dep {
       replaced = true
       match new_dep {
-        Some(next) => {
+        Some(next) =>
           if !array_contains_hash(next_deps, next) {
             next_deps.push(next)
           }
-        }
         None => ()
       }
-    } else {
-      if !array_contains_hash(next_deps, dep) {
-        next_deps.push(dep)
-      }
+    } else if !array_contains_hash(next_deps, dep) {
+      next_deps.push(dep)
     }
   }
   if !replaced {
     match new_dep {
-      Some(next) => {
+      Some(next) =>
         if !array_contains_hash(next_deps, next) {
           next_deps.push(next)
         }
-      }
       None => ()
     }
   }
   { ..hole, dependencies: next_deps }
 }
 
-fn collect_ancestry(
+///|
+fn YataGraph::collect_ancestry(
   self : YataGraph,
   cursor : @hash.Hash,
   depth : UInt,
@@ -341,17 +365,26 @@ fn collect_ancestry(
   }
 }
 
+///|
 fn join_by(items : Array[String], sep : String) -> String {
   if items.length() == 0 {
     return ""
   }
-  let mut out = items[0]
+  let mut total_len = items[0].length()
   for i = 1; i < items.length(); i = i + 1 {
-    out = out + sep + items[i]
+    total_len = total_len + sep.length() + items[i].length()
   }
-  out
+  // O(N) string concatenation optimization
+  let b = StringBuilder::new(size_hint=total_len)
+  b.write_string(items[0])
+  for i = 1; i < items.length(); i = i + 1 {
+    b.write_string(sep)
+    b.write_string(items[i])
+  }
+  b.to_string()
 }
 
+///|
 fn yat_state_tag(state : YataState) -> String {
   match state {
     Open => "open"
@@ -362,6 +395,7 @@ fn yat_state_tag(state : YataState) -> String {
   }
 }
 
+///|
 fn yat_track_tag(track : YataTrack) -> String {
   match track {
     Program => "program"
@@ -369,6 +403,7 @@ fn yat_track_tag(track : YataTrack) -> String {
   }
 }
 
+///|
 fn yat_mode_tag(mode : YataPlanMode) -> String {
   match mode {
     Full => "full"
@@ -376,6 +411,7 @@ fn yat_mode_tag(mode : YataPlanMode) -> String {
   }
 }
 
+///|
 fn array_contains_hash(items : Array[@hash.Hash], target : @hash.Hash) -> Bool {
   for item in items {
     if item == target {
@@ -385,8 +421,9 @@ fn array_contains_hash(items : Array[@hash.Hash], target : @hash.Hash) -> Bool {
   false
 }
 
+///|
 fn YataHole::to_plan_entry(self : YataHole) -> YataPlanEntry {
-  { 
+  {
     hole_id: self.hole_id,
     anchor: self.anchor,
     state: yat_state_tag(self.state),
