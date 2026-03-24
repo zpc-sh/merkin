@@ -107,17 +107,12 @@ pub fn Imprint::new(
   horizon : UInt,
   mode : MirageMode,
 ) -> Imprint {
-  let confidence = infer_confidence(surface_projection, route_projection, contract_graph, horizon)
+  let confidence = infer_confidence(
+    surface_projection, route_projection, contract_graph, horizon,
+  )
   let material = imprint_material(
-    source,
-    kind,
-    surface_projection,
-    route_projection,
-    contract_graph,
-    parent_imprint,
-    horizon,
-    mode,
-    confidence,
+    source, kind, surface_projection, route_projection, contract_graph, parent_imprint,
+    horizon, mode, confidence,
   )
   let imprint_id = @hash.Hash::of_bytes(string_to_bytes(material))
   {
@@ -165,8 +160,15 @@ fn infer_confidence(
   contracts : Array[String],
   horizon : UInt,
 ) -> UInt {
-  let score = surface.length() * 12U + route.length() * 8U + contracts.length() * 10U + horizon * 3U
-  if score > 100U { 100U } else { score }
+  let score = surface.length() * 12U +
+    route.length() * 8U +
+    contracts.length() * 10U +
+    horizon * 3U
+  if score > 100U {
+    100U
+  } else {
+    score
+  }
 }
 
 ///|
@@ -212,11 +214,18 @@ fn join_strings(items : Array[String], sep : String) -> String {
   if items.length() == 0 {
     return ""
   }
-  let mut out = items[0]
+  let mut total_len = items[0].length()
   for i = 1; i < items.length(); i = i + 1 {
-    out = out + sep + items[i]
+    total_len = total_len + sep.length() + items[i].length()
   }
-  out
+  // O(N) string concatenation optimization
+  let b = StringBuilder::new(size_hint=total_len)
+  b.write_string(items[0])
+  for i = 1; i < items.length(); i = i + 1 {
+    b.write_string(sep)
+    b.write_string(items[i])
+  }
+  b.to_string()
 }
 
 ///|
