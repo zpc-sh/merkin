@@ -1,3 +1,3 @@
-## 2024-03-10 - Optimizing String Concatenation in Moonbit
-**Learning:** Moonbit does not currently have a built-in `String::join` or `String::concat` for string arrays. The pattern of `out = out + items[i]` creates many intermediate strings and runs in O(N^2) time.
-**Action:** Use `StringBuilder::new()` and `builder.write_string()` which runs in O(N) time for concatenating strings in loops in Moonbit.
+## 2024-03-25 - UCS-4 string to bytes optimization
+**Learning:** For performant UCS-4 string to bytes conversion, pre-allocate a `FixedArray` using `s.length() * 4` as an upper bound rather than using a double-loop. Handle surrogate pair over-allocation by checking if the final `pos < buf.length()` and copying the used portion into an exact-sized `FixedArray` before converting to `Bytes`. Do not impose arbitrary length limits unless explicitly requested, to avoid introducing regressions.
+**Action:** Next time optimizing string iteration, I will use `s.length() * 4` for allocation size while correctly handling edge cases like surrogate pairs through buffer truncation.
