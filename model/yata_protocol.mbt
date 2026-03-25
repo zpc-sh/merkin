@@ -92,7 +92,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     }
     if line.starts_with("track=") {
       match parse_value(line, "track=") {
-        Some(value) => {
+        Some(value) =>
           if value == "program" {
             track = Program
           } else if value == "git" {
@@ -104,21 +104,19 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
               message: "track must be `program` or `git`",
             })
           }
-        }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `track=` field",
           })
-        }
       }
       i = i + 1
       continue
     }
     if line.starts_with("mode=") {
       match parse_value(line, "mode=") {
-        Some(value) => {
+        Some(value) =>
           if value == "compact" {
             mode = Compact
           } else if value == "full" {
@@ -130,14 +128,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
               message: "mode must be `full` or `compact`",
             })
           }
-        }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `mode=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -145,13 +141,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("generator=") {
       match parse_value(line, "generator=") {
         Some(value) => generator = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `generator=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -159,13 +154,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("note=") {
       match parse_value(line, "note=") {
         Some(value) => note = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `note=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -173,13 +167,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("entries=") {
       match parse_u32_opt(parse_value(line, "entries=")) {
         Some(value) => expected_entries = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "entries must be an unsigned integer",
           })
-        }
       }
       i = i + 1
       continue
@@ -198,7 +191,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     }
     if line.starts_with("self_report=") {
       match parse_value(line, "self_report=") {
-        Some(value) => {
+        Some(value) =>
           if value == "1" {
             self_report_enabled = true
           } else {
@@ -208,14 +201,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
               message: "self_report must be `1` to enable report metadata",
             })
           }
-        }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -223,13 +214,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("self_report_overlay=") {
       match parse_value(line, "self_report_overlay=") {
         Some(value) => self_report_overlay = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report_overlay=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -237,13 +227,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("self_report_peer=") {
       match parse_value(line, "self_report_peer=") {
         Some(value) => self_report_peer = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report_peer=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -251,13 +240,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("self_report_authority=") {
       match parse_value(line, "self_report_authority=") {
         Some(value) => self_report_authority = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report_authority=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -265,13 +253,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("self_report_anchor=") {
       match parse_value(line, "self_report_anchor=") {
         Some(value) => self_report_anchor_hint = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report_anchor=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -279,13 +266,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("self_report_gap=") {
       match parse_u32_opt(parse_value(line, "self_report_gap=")) {
         Some(value) => self_report_gap = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "self_report_gap must be an unsigned integer",
           })
-        }
       }
       i = i + 1
       continue
@@ -293,20 +279,19 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("self_report_view=") {
       match parse_value(line, "self_report_view=") {
         Some(value) => self_report_view_hint = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report_view=`",
           })
-        }
       }
       i = i + 1
       continue
     }
     if line.starts_with("git_report=") {
       match parse_value(line, "git_report=") {
-        Some(value) => {
+        Some(value) =>
           if value == "1" {
             git_report_enabled = true
           } else {
@@ -316,14 +301,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
               message: "git_report must be `1` to enable report metadata",
             })
           }
-        }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -331,13 +314,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("git_report_branch=") {
       match parse_value(line, "git_report_branch=") {
         Some(value) => git_report_branch = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report_branch=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -345,13 +327,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("git_report_remote=") {
       match parse_value(line, "git_report_remote=") {
         Some(value) => git_report_remote = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report_remote=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -359,13 +340,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("git_report_merge_base=") {
       match parse_value(line, "git_report_merge_base=") {
         Some(value) => git_report_merge_base = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report_merge_base=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -373,13 +353,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("git_report_head=") {
       match parse_value(line, "git_report_head=") {
         Some(value) => git_report_head = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report_head=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -387,13 +366,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("git_report_commit_count=") {
       match parse_u32_opt(parse_value(line, "git_report_commit_count=")) {
         Some(value) => git_report_commit_count = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "git_report_commit_count must be an unsigned integer",
           })
-        }
       }
       i = i + 1
       continue
@@ -401,13 +379,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("git_report_refs=") {
       match parse_value(line, "git_report_refs=") {
         Some(value) => git_report_refs = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report_refs=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -415,13 +392,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.starts_with("- ") {
       match parse_entry_line_strict(line) {
         Some(entry) => entries.push(entry)
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_ENTRY",
             message: "invalid `.plan` entry format",
           })
-        }
       }
       i = i + 1
       continue
@@ -498,19 +474,20 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
   }
 
   if issues.length() > 0 {
-    { plan: None, issues: issues, ok: false }
+    { plan: None, issues, ok: false }
   } else {
     let material = match material_hash {
-      Some(raw_hash) => {
+      Some(raw_hash) =>
         if raw_hash.starts_with("blake3:") {
-          @hash.Hash::of_bytes(string_to_bytes(split_after(raw_hash, "blake3:")))
+          @hash.Hash::of_bytes(
+            string_to_bytes(split_after(raw_hash, "blake3:")),
+          )
         } else if raw_hash.starts_with("0x") {
           @hash.Hash::of_bytes(string_to_bytes(split_after(raw_hash, "0x")))
         } else {
           @hash.Hash::of_bytes(string_to_bytes(raw_hash))
         }
-      }
-      None => @hash.Hash::of_bytes(string_to_bytes("")),
+      None => @hash.Hash::of_bytes(string_to_bytes(""))
     }
     {
       plan: Some({
@@ -579,12 +556,13 @@ pub fn YataPlan::validate(self : YataPlan) -> YataPlanCursor {
   {
     expected_entries: expected,
     observed_entries: observed,
-    ready_count: ready_count,
-    unresolved_count: unresolved_count,
-    warnings: warnings,
+    ready_count,
+    unresolved_count,
+    warnings,
   }
 }
 
+///|
 fn parse_entry_line_strict(line : String) -> YataPlanEntry? {
   let tokens = line.split(" ")
   if tokens.length() != 9 {
@@ -620,46 +598,42 @@ fn parse_entry_line_strict(line : String) -> YataPlanEntry? {
   }
 
   let maybe_ready = parse_bool_opt(parse_value(ready_token, "ready="))
-  let maybe_candidate_count = parse_u32_opt(parse_value(candidates_token, "candidates="))
+  let maybe_candidate_count = parse_u32_opt(
+    parse_value(candidates_token, "candidates="),
+  )
   let maybe_confidence = parse_u32_opt(parse_value(conf_token, "conf_floor="))
   match parse_value(provenance_field, "provenance=") {
-    Some(p) => {
-      if parse_u32_opt(Some(p)) == None {
-        return None
-      }
-    }
+    Some(p) => if parse_u32_opt(Some(p)) == None { return None }
     None => return None
   }
   match maybe_ready {
     Some(ready) => {
       let selected = parse_value(selected_field, "selected=")
       match maybe_candidate_count {
-        Some(candidate_count) => {
+        Some(candidate_count) =>
           match maybe_confidence {
             Some(confidence_floor) => {
               let mut selected_candidate : String? = None
               match selected {
-                Some(value) => {
+                Some(value) =>
                   if value != "none" {
                     selected_candidate = Some(value)
                   }
-                }
                 None => return None
               }
               Some({
                 hole_id: parse_hash_token(hole_id_token),
                 anchor: anchor_token,
                 state: state_token,
-                candidate_count: candidate_count,
-                ready: ready,
-                selected_candidate: selected_candidate,
+                candidate_count,
+                ready,
+                selected_candidate,
                 provenance: [],
-                confidence_floor: confidence_floor,
+                confidence_floor,
               })
             }
             None => None
           }
-        }
         None => None
       }
     }
@@ -667,6 +641,7 @@ fn parse_entry_line_strict(line : String) -> YataPlanEntry? {
   }
 }
 
+///|
 fn parse_value(raw : String, prefix : String) -> String? {
   if raw.starts_with(prefix) {
     Some(split_after(raw, prefix))
@@ -675,6 +650,7 @@ fn parse_value(raw : String, prefix : String) -> String? {
   }
 }
 
+///|
 fn parse_u32_opt(raw : String?) -> UInt? {
   match raw {
     Some(text) => {
@@ -698,9 +674,10 @@ fn parse_u32_opt(raw : String?) -> UInt? {
   }
 }
 
+///|
 fn parse_bool_opt(raw : String?) -> Bool? {
   match raw {
-    Some(value) => {
+    Some(value) =>
       if value == "true" {
         Some(true)
       } else if value == "false" {
@@ -708,11 +685,11 @@ fn parse_bool_opt(raw : String?) -> Bool? {
       } else {
         None
       }
-    }
     None => None
   }
 }
 
+///|
 fn split_after(raw : String, prefix : String) -> String {
   let chunks = raw.split(prefix)
   if chunks.length() < 2 {
@@ -722,6 +699,7 @@ fn split_after(raw : String, prefix : String) -> String {
   }
 }
 
+///|
 fn parse_hash_token(token : String) -> @hash.Hash {
   if token.starts_with("blake3:") {
     @hash.Hash::of_bytes(string_to_bytes(split_after(token, "blake3:")))

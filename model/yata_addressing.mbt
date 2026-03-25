@@ -138,7 +138,10 @@ pub fn YataAddress::parse(raw : String) -> YataAddress? {
 
 ///|
 /// Parse a relative URI against a perspective context.
-pub fn YataAddress::parse_in_context(raw : String, context : YataAddressContext) -> YataAddress? {
+pub fn YataAddress::parse_in_context(
+  raw : String,
+  context : YataAddressContext,
+) -> YataAddress? {
   let outcome = YataAddress::parse_in_context_strict(raw, context)
   if outcome.ok {
     outcome.address
@@ -154,7 +157,10 @@ pub fn YataAddress::parse_in_context(raw : String, context : YataAddressContext)
 /// - `../notes/foo.md?overlay=...`
 /// - `?overlay=...`
 /// - `id=...&overlay=...`
-pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressContext) -> YataAddressParseOutcome {
+pub fn YataAddress::parse_in_context_strict(
+  raw : String,
+  context : YataAddressContext,
+) -> YataAddressParseOutcome {
   if raw == "" {
     return {
       address: None,
@@ -165,7 +171,13 @@ pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressC
   if context.authority == "" {
     return {
       address: None,
-      issues: [{ line: 1, code: "MISSING_CONTEXT", message: "context authority is required" }],
+      issues: [
+        {
+          line: 1,
+          code: "MISSING_CONTEXT",
+          message: "context authority is required",
+        },
+      ],
       ok: false,
     }
   }
@@ -180,7 +192,9 @@ pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressC
   if hash_parts.length() > 2 {
     return {
       address: None,
-      issues: [{ line: 1, code: "MULTI_HASH", message: "uri contains multiple `#`" }],
+      issues: [
+        { line: 1, code: "MULTI_HASH", message: "uri contains multiple `#`" },
+      ],
       ok: false,
     }
   }
@@ -203,7 +217,10 @@ pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressC
     }
   }
 
-  let mut normalized_uri = "cog://" + context.authority + "/" + normalized_anchor
+  let mut normalized_uri = "cog://" +
+    context.authority +
+    "/" +
+    normalized_anchor
   if query == "" {
     normalized_uri = normalized_uri + "?"
   } else {
@@ -220,18 +237,30 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
 
   let hashes = raw.split("#")
   if hashes.length() == 0 {
-    return { address: None, issues: [{ line: 1, code: "EMPTY_INPUT", message: "empty uri" }], ok: false }
+    return {
+      address: None,
+      issues: [{ line: 1, code: "EMPTY_INPUT", message: "empty uri" }],
+      ok: false,
+    }
   }
   let before_hash = hashes[0]
   let view = if hashes.length() > 1 { hashes[1] } else { "overlay" }
   if hashes.length() > 2 {
-    issues.push({ line: 1, code: "MULTI_HASH", message: "uri contains multiple `#`" })
+    issues.push({
+      line: 1,
+      code: "MULTI_HASH",
+      message: "uri contains multiple `#`",
+    })
   }
 
   let before_and_query = before_hash.split("?")
   if before_and_query.length() < 2 {
-    issues.push({ line: 1, code: "MISSING_QUERY", message: "missing `?` query separator" })
-    return { address: None, issues: issues, ok: false }
+    issues.push({
+      line: 1,
+      code: "MISSING_QUERY",
+      message: "missing `?` query separator",
+    })
+    return { address: None, issues, ok: false }
   }
   let before = before_and_query[0]
   let query_raw = before_and_query[1]
@@ -254,7 +283,11 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
         }
       }
     } else {
-      issues.push({ line: 1, code: "BAD_ROUTE", message: "cog uri requires authority and anchor" })
+      issues.push({
+        line: 1,
+        code: "BAD_ROUTE",
+        message: "cog uri requires authority and anchor",
+      })
     }
   } else if before.starts_with("substrate://") {
     scheme = "substrate"
@@ -271,11 +304,19 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
         }
       }
     } else {
-      issues.push({ line: 1, code: "BAD_ROUTE", message: "substrate uri requires authority and anchor" })
+      issues.push({
+        line: 1,
+        code: "BAD_ROUTE",
+        message: "substrate uri requires authority and anchor",
+      })
     }
   } else {
-    issues.push({ line: 1, code: "BAD_SCHEME", message: "scheme must be `cog` or `substrate`" })
-    return { address: None, issues: issues, ok: false }
+    issues.push({
+      line: 1,
+      code: "BAD_SCHEME",
+      message: "scheme must be `cog` or `substrate`",
+    })
+    return { address: None, issues, ok: false }
   }
 
   let mut overlay = ""
@@ -292,7 +333,11 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
     }
     let pieces = pair.split("=")
     if pieces.length() != 2 {
-      issues.push({ line: 1, code: "BAD_QUERY_PAIR", message: "query pairs must be `key=value`" })
+      issues.push({
+        line: 1,
+        code: "BAD_QUERY_PAIR",
+        message: "query pairs must be `key=value`",
+      })
       continue
     }
     let key = pieces[0]
@@ -312,9 +357,12 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
     if key == "gap" {
       match parse_u32_opt(Some(value)) {
         Some(v) => gap = v
-        None => {
-          issues.push({ line: 1, code: "BAD_GAP", message: "gap must be unsigned integer" })
-        }
+        None =>
+          issues.push({
+            line: 1,
+            code: "BAD_GAP",
+            message: "gap must be unsigned integer",
+          })
       }
       continue
     }
@@ -324,7 +372,11 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
       } else if value == "program" {
         track = Program
       } else {
-        issues.push({ line: 1, code: "BAD_TRACK", message: "track must be `program` or `git`" })
+        issues.push({
+          line: 1,
+          code: "BAD_TRACK",
+          message: "track must be `program` or `git`",
+        })
       }
       continue
     }
@@ -332,39 +384,64 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
       hash_token = value
       continue
     }
-    issues.push({ line: 1, code: "UNKNOWN_QUERY_KEY", message: "query key not recognized" })
+    issues.push({
+      line: 1,
+      code: "UNKNOWN_QUERY_KEY",
+      message: "query key not recognized",
+    })
   }
 
   if overlay == "" {
-    issues.push({ line: 1, code: "MISSING_OVERLAY", message: "overlay is recommended" })
+    issues.push({
+      line: 1,
+      code: "MISSING_OVERLAY",
+      message: "overlay is recommended",
+    })
   }
   if authority == "" {
-    issues.push({ line: 1, code: "MISSING_AUTHORITY", message: "authority is required" })
+    issues.push({
+      line: 1,
+      code: "MISSING_AUTHORITY",
+      message: "authority is required",
+    })
   }
   if anchor == "" {
-    issues.push({ line: 1, code: "MISSING_ANCHOR", message: "anchor/path is required" })
+    issues.push({
+      line: 1,
+      code: "MISSING_ANCHOR",
+      message: "anchor/path is required",
+    })
   }
 
   if issues.length() > 0 {
-    { address: None, issues: issues, ok: false }
+    { address: None, issues, ok: false }
   } else {
     let parsed = {
       uri: raw,
-      scheme: scheme,
-      authority: authority,
-      anchor: anchor,
-      hole_id: if hash_token == "" { @hash.Hash::of_bytes(string_to_bytes("")) } else { @hash.Hash::of_bytes(string_to_bytes(hash_token)) },
-      overlay: overlay,
-      peer: peer,
-      mode: mode,
-      track: track,
-      view: view,
+      scheme,
+      authority,
+      anchor,
+      hole_id: if hash_token == "" {
+        @hash.Hash::of_bytes(string_to_bytes(""))
+      } else {
+        @hash.Hash::of_bytes(string_to_bytes(hash_token))
+      },
+      overlay,
+      peer,
+      mode,
+      track,
+      view,
     }
     { address: Some(parsed), issues: [], ok: true }
   }
 }
 
-fn join_from_index(parts : Array[String], index : Int, separator : String) -> String {
+///|
+fn join_from_index(
+  parts : Array[String],
+  index : Int,
+  separator : String,
+) -> String {
   if parts.length() <= index {
     ""
   } else {
@@ -378,6 +455,7 @@ fn join_from_index(parts : Array[String], index : Int, separator : String) -> St
   }
 }
 
+///|
 fn resolve_relative_anchor(base_anchor : String, route : String) -> String {
   let base_parts = base_anchor.split("/")
   let mut keep : Int = base_parts.length()
@@ -432,6 +510,7 @@ fn resolve_relative_anchor(base_anchor : String, route : String) -> String {
   }
 }
 
+///|
 fn split_after_raw(raw : String, prefix : String) -> String {
   let chunks = raw.split(prefix)
   if chunks.length() < 2 {
@@ -440,6 +519,7 @@ fn split_after_raw(raw : String, prefix : String) -> String {
   chunks[1]
 }
 
+///|
 fn parse_u32_opt(raw : String?) -> UInt? {
   match raw {
     Some(text) => {
@@ -463,6 +543,7 @@ fn parse_u32_opt(raw : String?) -> UInt? {
   }
 }
 
+///|
 fn yata_track_token(track : YataTrack) -> String {
   match track {
     Program => "program"
