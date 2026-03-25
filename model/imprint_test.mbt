@@ -13,7 +13,12 @@ test "Router imprint is deterministic and has a stable ID" {
 test "Mirage is hollow and traceable" {
   let route = ["observe", "summarize"]
   let contracts = ["contract:defense", "contract:projection"]
-  let imprint = @model.lift_router_imprint("router://defense", route, contracts, None)
+  let imprint = @model.lift_router_imprint(
+    "router://defense",
+    route,
+    contracts,
+    None,
+  )
   let mirage = imprint.to_mirage()
   assert_true(mirage.has_private_payload == false)
   assert_eq(mirage.source_imprint, imprint.imprint_id)
@@ -34,7 +39,12 @@ test "Parent lineage is preserved across lifted imprints" {
     1U,
     @model.Defense,
   )
-  let child = @model.lift_router_imprint("router://child", ["route", "step"], [], Some(parent.imprint_id))
+  let child = @model.lift_router_imprint(
+    "router://child",
+    ["route", "step"],
+    [],
+    Some(parent.imprint_id),
+  )
   match child.parent_imprint {
     Some(parent_ref) => assert_eq(parent_ref, parent.imprint_id)
     None => assert_true(false)

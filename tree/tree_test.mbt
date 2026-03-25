@@ -60,3 +60,14 @@ test "MerkinNode enqueue work marks dirty" {
   assert_eq(node2.work_queue_refs.length(), 1)
   assert_eq(node2.state, @tree.DIRTY)
 }
+
+///|
+test "MerkinNode add_child marks dirty" {
+  let node_id = @hash.Hash::of_bytes(b"\x10")
+  let child_id = @hash.Hash::of_bytes(b"\x20")
+  let node = @tree.MerkinNode::leaf(node_id)
+  let node2 = node.add_child(child_id)
+  assert_eq(node2.children.length(), 1)
+  assert_eq(node2.children[0].node_id, child_id)
+  assert_eq(node2.state, @tree.DIRTY)
+}
