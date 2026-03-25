@@ -247,3 +247,17 @@ test "UnionStore respects policy availability gating" {
   }
   assert_eq(skipped_policy, 1)
 }
+
+///|
+test "UnionStore node_count returns correct number of nodes" {
+  let union = @storage.UnionStore::new()
+  assert_eq(union.node_count(), 0)
+
+  let local_node = @storage.ArtifactCasNode::new("local-1", @storage.Local)
+  union.add_node(local_node.as_store_node())
+  assert_eq(union.node_count(), 1)
+
+  let remote_node = @storage.ArtifactCasNode::new("remote-1", @storage.Remote)
+  union.add_node(remote_node.as_store_node())
+  assert_eq(union.node_count(), 2)
+}
