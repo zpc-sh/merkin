@@ -96,6 +96,15 @@ test "Anchor optional refs and replication vector" {
 }
 
 ///|
+test "Anchor set_time" {
+  let hash = @hash.Hash::of_bytes(b"\xCC")
+  let a = @model.Anchor::new(hash)
+  assert_true(a.anchored_at is None)
+  let a2 = a.set_time("2023-10-27T10:00:00Z")
+  assert_eq(a2.anchored_at, Some("2023-10-27T10:00:00Z"))
+}
+
+///|
 test "WorkPromise lifecycle" {
   let ih = @hash.Hash::of_bytes(b"\x01")
   let th = @hash.Hash::of_bytes(b"\x02")
