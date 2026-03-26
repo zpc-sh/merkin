@@ -253,6 +253,20 @@ pub fn DaemonNode::handle_oci_put(
 ) -> OciPutResult {
   let digest = @hash.Hash::of_bytes(request.payload)
 
+  if !self.policy.tree_accepts(
+      request.path,
+      request.lane,
+      request.sealed_epoch,
+      self.live_replicas,
+    ) {
+    return {
+      disposition: Rejected,
+      digest,
+      receipt: None,
+      reason: Some("policy rejected"),
+    }
+  }
+
   if self.oci.receiver {
     let receipt = self.union_store.put_blob(
       request.payload,
