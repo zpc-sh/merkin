@@ -247,3 +247,75 @@ test "UnionStore respects policy availability gating" {
   }
   assert_eq(skipped_policy, 1)
 }
+
+///|
+test "UnionStore restore_ledger reverts idempotency state" {
+  let local_node = ArtifactCasNode::new("local-1", Local)
+  let union = UnionStore::new()
+  union.add_node(local_node.as_store_node())
+
+  let policy = sample_policy()
+  let payload1 = b"payload-1"
+  let payload2 = b"payload-2"
+  let queue = QueueStats::idle()
+
+  // Put first blob to modify ledger state
+  let first_receipt = union.put_blob(
+    payload1,
+    Hot,
+    Ingest,
+    ["ingest", "hot"],
+    false,
+    1U,
+    queue,
+    policy,
+  )
+  assert_eq(first_receipt.committed_count, 1U)
+
+  // Take snapshot
+  let snapshot = union.ledger_snapshot()
+
+  // Put second blob to change state again
+  let second_receipt = union.put_blob(
+    payload2,
+    Hot,
+    Ingest,
+    ["ingest", "hot"],
+    false,
+    1U,
+    queue,
+    policy,
+  )
+  assert_eq(second_receipt.committed_count, 1U)
+
+  // Restore snapshot
+  union.restore_ledger(snapshot)
+
+  // Verify that putting the first blob again is treated as a duplicate (ledger remembers it)
+  let dup_first = union.put_blob(
+    payload1,
+    Hot,
+    Ingest,
+    ["ingest", "hot"],
+    false,
+    1U,
+    queue,
+    policy,
+  )
+  assert_eq(dup_first.committed_count, 0U)
+  assert_eq(dup_first.dispatches[0].state, Duplicate)
+
+  // Verify that putting the second blob again is NOT treated as a duplicate (ledger forgot it)
+  let dup_second = union.put_blob(
+    payload2,
+    Hot,
+    Ingest,
+    ["ingest", "hot"],
+    false,
+    1U,
+    queue,
+    policy,
+  )
+  assert_eq(dup_second.committed_count, 1U)
+  assert_eq(dup_second.dispatches[0].state, Committed)
+}
