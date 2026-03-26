@@ -145,7 +145,9 @@ pub fn YataHole::new(
   dependencies : Array[@hash.Hash],
   provenance : Array[String],
 ) -> YataHole {
-  let material = hole_material(anchor, contract, refinements, dependencies, provenance)
+  let material = hole_material(
+    anchor, contract, refinements, dependencies, provenance,
+  )
   let hole_id = @hash.Hash::of_bytes(string_to_bytes(material))
   {
     hole_id,
@@ -162,35 +164,44 @@ pub fn YataHole::new(
 
 ///|
 /// Add a refinement constraint.
-pub fn YataHole::add_refinement(self : YataHole, refinement : YataRefinement) -> YataHole {
+pub fn YataHole::add_refinement(
+  self : YataHole,
+  refinement : YataRefinement,
+) -> YataHole {
   let mut refinements = self.refinements
   refinements.push(refinement)
-  { ..self, refinements: refinements }
+  { ..self, refinements, }
 }
 
 ///|
 /// Add a dependency edge.
-pub fn YataHole::add_dependency(self : YataHole, dependency : @hash.Hash) -> YataHole {
+pub fn YataHole::add_dependency(
+  self : YataHole,
+  dependency : @hash.Hash,
+) -> YataHole {
   let mut dependencies = self.dependencies
   dependencies.push(dependency)
-  { ..self, dependencies: dependencies }
+  { ..self, dependencies, }
 }
 
 ///|
 /// Add a candidate proposal.
-pub fn YataHole::propose(self : YataHole, candidate : YataCandidate) -> YataHole {
+pub fn YataHole::propose(
+  self : YataHole,
+  candidate : YataCandidate,
+) -> YataHole {
   let mut candidates = self.candidates
   candidates.push(candidate)
-  {
-    ..self,
-    candidates,
-    state: Converging,
-  }
+  { ..self, candidates, state: Converging }
 }
 
 ///|
 /// Select a candidate and optional witness provenance.
-pub fn YataHole::seal(self : YataHole, candidate_id : String, witness : YataWitness?) -> YataHole {
+pub fn YataHole::seal(
+  self : YataHole,
+  candidate_id : String,
+  witness : YataWitness?,
+) -> YataHole {
   match witness {
     Some(w) => {
       let mut next = self.provenance
@@ -202,13 +213,12 @@ pub fn YataHole::seal(self : YataHole, candidate_id : String, witness : YataWitn
         provenance: next,
       }
     }
-    None => {
+    None =>
       {
         ..self,
         selected_candidate: Some(candidate_id),
         state: Sealed(candidate_id),
       }
-    }
   }
 }
 
@@ -234,12 +244,11 @@ pub fn YataHole::abandon(self : YataHole, reason : String) -> YataHole {
 pub fn YataHole::is_ready(self : YataHole, graph : YataGraph) -> Bool {
   for dependency in self.dependencies {
     match graph.get(dependency) {
-      Some(hole) => {
+      Some(hole) =>
         match hole.state {
           Resolved(_) => continue
           _ => return false
         }
-      }
       None => return false
     }
   }
@@ -254,12 +263,11 @@ pub fn YataHole::best_candidate(self : YataHole) -> YataCandidate? {
   for candidate in self.candidates {
     let score = candidate.confidence
     match best {
-      Some(current) => {
+      Some(current) =>
         if score >= current.confidence && score >= best_score {
           best = Some(candidate)
           best_score = score
         }
-      }
       None => {
         best = Some(candidate)
         best_score = score
@@ -286,7 +294,7 @@ pub fn YataGraph::new() -> YataGraph {
 pub fn YataGraph::add(self : YataGraph, hole : YataHole) -> YataGraph {
   let mut holes = self.holes
   holes.push(hole)
-  { holes: holes }
+  { holes, }
 }
 
 ///|
@@ -334,7 +342,8 @@ pub fn YataGraph::ready_set(self : YataGraph) -> Array[YataHole] {
   out
 }
 
-fn max_candidate_confidence(self : YataHole) -> UInt {
+///|
+fn YataHole::max_candidate_confidence(self : YataHole) -> UInt {
   let mut max : UInt = 0
   for candidate in self.candidates {
     if candidate.confidence > max {
@@ -344,10 +353,12 @@ fn max_candidate_confidence(self : YataHole) -> UInt {
   max
 }
 
+///|
 fn state_to_trace(actor : String, proof_token : String) -> String {
   actor + ":" + proof_token
 }
 
+///|
 fn hole_material(
   anchor : String,
   contract : YataContract,
