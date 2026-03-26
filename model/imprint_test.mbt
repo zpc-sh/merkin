@@ -40,3 +40,47 @@ test "Parent lineage is preserved across lifted imprints" {
     None => assert_true(false)
   }
 }
+
+///|
+test "Mirage mapping translates all fields correctly" {
+  let parent_hash = @hash.Hash::of_bytes(b"\x01\x02\x03\x04")
+  let surface = ["tag1", "tag2"]
+  let route = ["route1", "route2"]
+  let contracts = ["contract1"]
+
+  let imprint = @model.Imprint::new(
+    "router://test_source",
+    @model.Router,
+    surface,
+    route,
+    contracts,
+    Some(parent_hash),
+    5U,
+    @model.Temporal,
+  )
+
+  let mirage = imprint.to_mirage()
+
+  assert_eq(mirage.mirage_id, imprint.imprint_id)
+  assert_eq(mirage.source_imprint, imprint.imprint_id)
+  assert_eq(mirage.source, "router://test_source")
+  assert_eq(mirage.kind, @model.Router)
+
+  // appearance includes mode + surface_projection
+  assert_eq(mirage.appearance.length(), 3)
+  assert_eq(mirage.appearance[0], "mode:temporal")
+  assert_eq(mirage.appearance[1], "tag1")
+  assert_eq(mirage.appearance[2], "tag2")
+
+  assert_eq(mirage.route_projection.length(), 2)
+  assert_eq(mirage.route_projection[0], "route1")
+  assert_eq(mirage.route_projection[1], "route2")
+
+  assert_eq(mirage.contract_graph.length(), 1)
+  assert_eq(mirage.contract_graph[0], "contract1")
+
+  assert_eq(mirage.horizon, 5U)
+  assert_eq(mirage.mode, @model.Temporal)
+  assert_eq(mirage.confidence, imprint.confidence)
+  assert_eq(mirage.has_private_payload, false)
+}
