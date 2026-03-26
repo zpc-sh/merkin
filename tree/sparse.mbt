@@ -62,15 +62,38 @@ pub fn MerkinTree::sparse(
     None => ()
   }
 
-  // N passes are sufficient to lift matches to root in a finite tree.
-  for _i = 0; _i < self.nodes.length(); _i = _i + 1 {
-    for parent_key, parent in self.nodes {
-      for child_ref in parent.children {
-        let child_key = hash_to_key(child_ref.node_id)
-        if included.get(child_key) is Some(_) {
-          included[parent_key] = true
-        }
+  // Precompute child-to-parents mapping
+  let parent_map : Map[String, Array[String]] = {}
+  for parent_key, parent in self.nodes {
+    for child_ref in parent.children {
+      let child_key = hash_to_key(child_ref.node_id)
+      match parent_map.get(child_key) {
+        Some(parents) => parents.push(parent_key)
+        None => parent_map[child_key] = [parent_key]
       }
+    }
+  }
+
+  // Lift matches to root using a work queue (BFS)
+  let queue : Array[String] = []
+  for key, _ in included {
+    queue.push(key)
+  }
+
+  while queue.length() > 0 {
+    match queue.pop() {
+      Some(child_key) =>
+        match parent_map.get(child_key) {
+          Some(parents) =>
+            for parent_key in parents {
+              if included.get(parent_key) is None {
+                included[parent_key] = true
+                queue.push(parent_key)
+              }
+            }
+          None => ()
+        }
+      None => break
     }
   }
 
