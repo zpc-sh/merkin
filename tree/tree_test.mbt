@@ -60,3 +60,9 @@ test "MerkinNode enqueue work marks dirty" {
   assert_eq(node2.work_queue_refs.length(), 1)
   assert_eq(node2.state, @tree.DIRTY)
 }
+
+///|
+test "MerkinTree active_root_key without hot_root" {
+  let tree = @tree.MerkinTree::new()
+  assert_eq(tree.active_root_key(), None)
+}
