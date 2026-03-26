@@ -81,7 +81,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("kind:") {
+    if line.has_prefix("kind:") {
       issues.push({
         line: line_no,
         code: "BAD_KIND",
@@ -90,7 +90,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("track=") {
+    if line.has_prefix("track=") {
       match parse_value(line, "track=") {
         Some(value) => {
           if value == "program" {
@@ -116,7 +116,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("mode=") {
+    if line.has_prefix("mode=") {
       match parse_value(line, "mode=") {
         Some(value) => {
           if value == "compact" {
@@ -142,7 +142,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("generator=") {
+    if line.has_prefix("generator=") {
       match parse_value(line, "generator=") {
         Some(value) => generator = value
         None => {
@@ -156,7 +156,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("note=") {
+    if line.has_prefix("note=") {
       match parse_value(line, "note=") {
         Some(value) => note = value
         None => {
@@ -170,7 +170,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("entries=") {
+    if line.has_prefix("entries=") {
       match parse_u32_opt(parse_value(line, "entries=")) {
         Some(value) => expected_entries = value
         None => {
@@ -184,7 +184,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("material_hash=") {
+    if line.has_prefix("material_hash=") {
       material_hash = parse_value(line, "material_hash=")
       if material_hash == None {
         issues.push({
@@ -196,7 +196,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("self_report=") {
+    if line.has_prefix("self_report=") {
       match parse_value(line, "self_report=") {
         Some(value) => {
           if value == "1" {
@@ -220,7 +220,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("self_report_overlay=") {
+    if line.has_prefix("self_report_overlay=") {
       match parse_value(line, "self_report_overlay=") {
         Some(value) => self_report_overlay = value
         None => {
@@ -234,7 +234,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("self_report_peer=") {
+    if line.has_prefix("self_report_peer=") {
       match parse_value(line, "self_report_peer=") {
         Some(value) => self_report_peer = value
         None => {
@@ -248,7 +248,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("self_report_authority=") {
+    if line.has_prefix("self_report_authority=") {
       match parse_value(line, "self_report_authority=") {
         Some(value) => self_report_authority = value
         None => {
@@ -262,7 +262,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("self_report_anchor=") {
+    if line.has_prefix("self_report_anchor=") {
       match parse_value(line, "self_report_anchor=") {
         Some(value) => self_report_anchor_hint = value
         None => {
@@ -276,7 +276,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("self_report_gap=") {
+    if line.has_prefix("self_report_gap=") {
       match parse_u32_opt(parse_value(line, "self_report_gap=")) {
         Some(value) => self_report_gap = value
         None => {
@@ -290,7 +290,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("self_report_view=") {
+    if line.has_prefix("self_report_view=") {
       match parse_value(line, "self_report_view=") {
         Some(value) => self_report_view_hint = value
         None => {
@@ -304,7 +304,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("git_report=") {
+    if line.has_prefix("git_report=") {
       match parse_value(line, "git_report=") {
         Some(value) => {
           if value == "1" {
@@ -328,7 +328,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("git_report_branch=") {
+    if line.has_prefix("git_report_branch=") {
       match parse_value(line, "git_report_branch=") {
         Some(value) => git_report_branch = value
         None => {
@@ -342,7 +342,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("git_report_remote=") {
+    if line.has_prefix("git_report_remote=") {
       match parse_value(line, "git_report_remote=") {
         Some(value) => git_report_remote = value
         None => {
@@ -356,7 +356,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("git_report_merge_base=") {
+    if line.has_prefix("git_report_merge_base=") {
       match parse_value(line, "git_report_merge_base=") {
         Some(value) => git_report_merge_base = value
         None => {
@@ -370,7 +370,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("git_report_head=") {
+    if line.has_prefix("git_report_head=") {
       match parse_value(line, "git_report_head=") {
         Some(value) => git_report_head = value
         None => {
@@ -384,7 +384,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("git_report_commit_count=") {
+    if line.has_prefix("git_report_commit_count=") {
       match parse_u32_opt(parse_value(line, "git_report_commit_count=")) {
         Some(value) => git_report_commit_count = value
         None => {
@@ -398,7 +398,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("git_report_refs=") {
+    if line.has_prefix("git_report_refs=") {
       match parse_value(line, "git_report_refs=") {
         Some(value) => git_report_refs = value
         None => {
@@ -412,7 +412,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
-    if line.starts_with("- ") {
+    if line.has_prefix("- ") {
       match parse_entry_line_strict(line) {
         Some(entry) => entries.push(entry)
         None => {
@@ -502,9 +502,9 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
   } else {
     let material = match material_hash {
       Some(raw_hash) => {
-        if raw_hash.starts_with("blake3:") {
+        if raw_hash.has_prefix("blake3:") {
           @hash.Hash::of_bytes(string_to_bytes(split_after(raw_hash, "blake3:")))
-        } else if raw_hash.starts_with("0x") {
+        } else if raw_hash.has_prefix("0x") {
           @hash.Hash::of_bytes(string_to_bytes(split_after(raw_hash, "0x")))
         } else {
           @hash.Hash::of_bytes(string_to_bytes(raw_hash))
@@ -587,7 +587,7 @@ pub fn YataPlan::validate(self : YataPlan) -> YataPlanCursor {
 
 fn parse_entry_line_strict(line : String) -> YataPlanEntry? {
   let tokens = line.split(" ")
-  if tokens.length() != 9 {
+  if tokens.count() != 9 {
     return None
   }
   if tokens[0] != "-" {
@@ -603,19 +603,19 @@ fn parse_entry_line_strict(line : String) -> YataPlanEntry? {
   let selected_field = tokens[7]
   let provenance_field = tokens[8]
 
-  if !ready_token.starts_with("ready=") {
+  if !ready_token.has_prefix("ready=") {
     return None
   }
-  if !candidates_token.starts_with("candidates=") {
+  if !candidates_token.has_prefix("candidates=") {
     return None
   }
-  if !conf_token.starts_with("conf_floor=") {
+  if !conf_token.has_prefix("conf_floor=") {
     return None
   }
-  if !selected_field.starts_with("selected=") {
+  if !selected_field.has_prefix("selected=") {
     return None
   }
-  if !provenance_field.starts_with("provenance=") {
+  if !provenance_field.has_prefix("provenance=") {
     return None
   }
 
@@ -668,7 +668,7 @@ fn parse_entry_line_strict(line : String) -> YataPlanEntry? {
 }
 
 fn parse_value(raw : String, prefix : String) -> String? {
-  if raw.starts_with(prefix) {
+  if raw.has_prefix(prefix) {
     Some(split_after(raw, prefix))
   } else {
     None
@@ -715,7 +715,7 @@ fn parse_bool_opt(raw : String?) -> Bool? {
 
 fn split_after(raw : String, prefix : String) -> String {
   let chunks = raw.split(prefix)
-  if chunks.length() < 2 {
+  if chunks.count() < 2 {
     ""
   } else {
     chunks[1]
@@ -723,9 +723,9 @@ fn split_after(raw : String, prefix : String) -> String {
 }
 
 fn parse_hash_token(token : String) -> @hash.Hash {
-  if token.starts_with("blake3:") {
+  if token.has_prefix("blake3:") {
     @hash.Hash::of_bytes(string_to_bytes(split_after(token, "blake3:")))
-  } else if token.starts_with("0x") {
+  } else if token.has_prefix("0x") {
     @hash.Hash::of_bytes(string_to_bytes(split_after(token, "0x")))
   } else {
     @hash.Hash::of_bytes(string_to_bytes(token))

@@ -65,3 +65,11 @@ test "OciCasNode latest tag mode publishes latest" {
     reg.resolve_tag("registry.example.com/merkin/latest", "latest") is Some(_),
   )
 }
+
+///|
+test "InMemoryOciRegistry non-existent blob and tag operations" {
+  let reg = @storage.InMemoryOciRegistry::new()
+  assert_false!(reg.has_blob("repo/b", "non-existent-digest"))
+  assert_eq!(reg.get_blob("repo/b", "non-existent-digest"), None)
+  assert_eq!(reg.resolve_tag("repo/b", "non-existent-tag"), None)
+}
