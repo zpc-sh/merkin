@@ -68,6 +68,16 @@ pub(all) struct YataPlanGitReport {
 } derive(Show)
 
 ///|
+/// Lightweight git snapshot that can be projected into `.plan` git metadata.
+pub(all) struct YataGitSnapshot {
+  branch : String
+  remote : String
+  merge_base : String
+  head : String
+  refs : Array[String]
+} derive(Show)
+
+///|
 /// `.plan` payload that can be emitted without timestamps.
 pub(all) struct YataPlan {
   track : YataTrack
@@ -185,6 +195,43 @@ pub fn YataPlan::with_git_report(
   git_report : YataPlanGitReport,
 ) -> YataPlan {
   { ..self, git_report: Some(git_report) }
+}
+
+///|
+/// Build a git report from a lightweight snapshot.
+/// `commit_count` is derived from the number of refs.
+pub fn YataGitSnapshot::to_report(self : YataGitSnapshot) -> YataPlanGitReport {
+  {
+    branch: self.branch,
+    remote: self.remote,
+    merge_base: self.merge_base,
+    head: self.head,
+    commit_count: self.refs.length(),
+    refs: join_by(self.refs, ","),
+  }
+}
+
+///|
+/// One-shot `.plan` snapshot with optional self-report and git metadata envelopes.
+pub fn YataGraph::snapshot_with_reports(
+  self : YataGraph,
+  track : YataTrack,
+  mode : YataPlanMode,
+  generator : String,
+  note : String,
+  self_report : YataPlanSelfReport?,
+  git_snapshot : YataGitSnapshot?,
+) -> YataPlan {
+  let mut plan = self.to_plan(track, mode, generator, note)
+  match self_report {
+    Some(report) => plan = plan.with_self_report(report)
+    None => ()
+  }
+  match git_snapshot {
+    Some(snapshot) => plan = plan.with_git_report(snapshot.to_report())
+    None => ()
+  }
+  plan
 }
 
 ///|
