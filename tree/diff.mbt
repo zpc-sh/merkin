@@ -85,34 +85,41 @@ fn union_sorted_keys(
 
 ///|
 fn node_signature(node : MerkinNode) -> String {
-  let children : Array[String] = []
-  for child in node.children {
-    children.push(child.node_id.key())
+  let builder = StringBuilder::new()
+
+  builder.write_string(node.node_id.key())
+  builder.write_string("|")
+  builder.write_string(node_state_name(node.state))
+  builder.write_string("|")
+  builder.write_string(node.mass.to_string())
+  builder.write_string("|")
+  builder.write_string(node.heat.to_string())
+  builder.write_string("|")
+
+  for i = 0; i < node.children.length(); i = i + 1 {
+    if i > 0 {
+      builder.write_string(",")
+    }
+    builder.write_string(node.children[i].node_id.key())
+  }
+  builder.write_string("|")
+
+  for i = 0; i < node.envelope_refs.length(); i = i + 1 {
+    if i > 0 {
+      builder.write_string(",")
+    }
+    builder.write_string(node.envelope_refs[i].envelope_id.key())
+  }
+  builder.write_string("|")
+
+  for i = 0; i < node.work_queue_refs.length(); i = i + 1 {
+    if i > 0 {
+      builder.write_string(",")
+    }
+    builder.write_string(node.work_queue_refs[i].promise_id.key())
   }
 
-  let envelopes : Array[String] = []
-  for envelope_ref in node.envelope_refs {
-    envelopes.push(envelope_ref.envelope_id.key())
-  }
-
-  let work_items : Array[String] = []
-  for work_ref in node.work_queue_refs {
-    work_items.push(work_ref.promise_id.key())
-  }
-
-  node.node_id.key() +
-  "|" +
-  node_state_name(node.state) +
-  "|" +
-  node.mass.to_string() +
-  "|" +
-  node.heat.to_string() +
-  "|" +
-  diff_join(children, ",") +
-  "|" +
-  diff_join(envelopes, ",") +
-  "|" +
-  diff_join(work_items, ",")
+  builder.to_string()
 }
 
 ///|
@@ -123,16 +130,4 @@ fn node_state_name(state : NodeState) -> String {
     DEFERRED => "deferred"
     SEALED => "sealed"
   }
-}
-
-///|
-fn diff_join(items : Array[String], sep : String) -> String {
-  let builder = StringBuilder::new()
-  for i = 0; i < items.length(); i = i + 1 {
-    if i > 0 {
-      builder.write_string(sep)
-    }
-    builder.write_string(items[i])
-  }
-  builder.to_string()
 }
