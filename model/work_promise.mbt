@@ -31,8 +31,8 @@ pub fn WorkPromise::new(
   policy_id : @hash.Hash,
 ) -> WorkPromise {
   // promise_id = H(input_hash.digest ++ transform_id.digest ++ policy_id.digest)
-  let material = bytes_concat(
-    bytes_concat(input_hash.digest, transform_id.digest),
+  let material = @hash.bytes_concat(
+    @hash.bytes_concat(input_hash.digest, transform_id.digest),
     policy_id.digest,
   )
   let promise_id = @hash.Hash::of_bytes(material)
@@ -81,14 +81,3 @@ pub fn WorkPromise::fail(self : WorkPromise) -> WorkPromise {
   { ..self, state: FAILED }
 }
 
-///|
-fn bytes_concat(a : Bytes, b : Bytes) -> Bytes {
-  let buf = FixedArray::make(a.length() + b.length(), b'\x00')
-  for i = 0; i < a.length(); i = i + 1 {
-    buf[i] = a[i]
-  }
-  for i = 0; i < b.length(); i = i + 1 {
-    buf[a.length() + i] = b[i]
-  }
-  Bytes::from_array(buf)
-}
