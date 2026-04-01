@@ -161,7 +161,9 @@ test "OciRegistryHttpTransport put/get/has blob" {
   )
 
   let payload = b"http-blob"
-  let digest = transport.put_blob(payload)
+  let digest_opt = transport.put_blob(payload)
+  assert_true(digest_opt is Some(_))
+  let digest = digest_opt.unwrap()
   assert_true(transport.has_blob(digest))
   match transport.get_blob(digest) {
     Some(bytes) => assert_eq(bytes, payload)
@@ -195,7 +197,9 @@ test "OciHttpCasNode participates in StoreNode flow" {
   )
   let node = @storage.OciHttpCasNode::new("oci-http-1", transport)
 
-  let digest = node.put_blob(b"oci-http-payload")
+  let digest_opt = node.put_blob(b"oci-http-payload")
+  assert_true(digest_opt is Some(_))
+  let digest = digest_opt.unwrap()
   assert_true(node.has_blob(digest))
   assert_true(node.get_blob(digest) is Some(_))
 }

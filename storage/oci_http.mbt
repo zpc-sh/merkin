@@ -82,7 +82,7 @@ fn OciRegistryHttpTransport::manifest_url(
 pub fn OciRegistryHttpTransport::put_blob(
   self : OciRegistryHttpTransport,
   payload : Bytes,
-) -> String {
+) -> String? {
   let digest = @hash.Hash::of_bytes(payload).key()
 
   let start = self.client.round_trip({
@@ -92,7 +92,7 @@ pub fn OciRegistryHttpTransport::put_blob(
     body: None,
   })
   if start.status != 202U {
-    abort("OCI upload start failed")
+    return None
   }
 
   let location = match start.headers.get("Location") {
@@ -109,10 +109,10 @@ pub fn OciRegistryHttpTransport::put_blob(
     body: Some(payload),
   })
   if finalize.status != 201U && finalize.status != 202U {
-    abort("OCI upload finalize failed")
+    return None
   }
 
-  digest
+  Some(digest)
 }
 
 ///|
@@ -152,7 +152,7 @@ pub fn OciRegistryHttpTransport::put_tag(
   self : OciRegistryHttpTransport,
   tag : String,
   digest : String,
-) -> Unit {
+) -> Bool {
   let body = oci_http_string_to_bytes(
     "{\"mediaType\":\"application/vnd.oci.image.manifest.v1+json\",\"config\":{\"digest\":\"" +
     digest +
@@ -166,9 +166,9 @@ pub fn OciRegistryHttpTransport::put_tag(
   })
   if resp.status == 200U || resp.status == 201U || resp.status == 202U {
     self.tag_digest_cache[tag] = digest
-    return
+    return true
   }
-  abort("OCI put tag failed")
+  false
 }
 
 ///|
@@ -228,9 +228,9 @@ pub fn OciHttpCasNode::set_availability(
 }
 
 ///|
-fn OciHttpCasNode::publish_tag(self : OciHttpCasNode, digest : String) -> Unit {
+fn OciHttpCasNode::publish_tag(self : OciHttpCasNode, digest : String) -> Bool {
   match self.tag_mode {
-    DigestOnly => ()
+    DigestOnly => true
     EpochTag =>
       self.transport.put_tag("epoch-" + self.epoch.to_string(), digest)
     LatestTag => self.transport.put_tag("latest", digest)
@@ -241,12 +241,19 @@ fn OciHttpCasNode::publish_tag(self : OciHttpCasNode, digest : String) -> Unit {
 fn OciHttpCasNode::put_blob_inner(
   self : OciHttpCasNode,
   bytes : Bytes,
-) -> @hash.Hash {
+) -> @hash.Hash? {
   let digest = @hash.Hash::of_bytes(bytes)
-  let oci_digest = self.transport.put_blob(bytes)
-  self.digest_map[digest.key()] = oci_digest
-  self.publish_tag(oci_digest)
-  digest
+  match self.transport.put_blob(bytes) {
+    Some(oci_digest) => {
+      self.digest_map[digest.key()] = oci_digest
+      if self.publish_tag(oci_digest) {
+        Some(digest)
+      } else {
+        None
+      }
+    }
+    None => None
+  }
 }
 
 ///|
@@ -275,7 +282,7 @@ fn OciHttpCasNode::get_blob_inner(
 pub fn OciHttpCasNode::put_blob(
   self : OciHttpCasNode,
   bytes : Bytes,
-) -> @hash.Hash {
+) -> @hash.Hash? {
   self.put_blob_inner(bytes)
 }
 
@@ -330,7 +337,7 @@ impl StoreNode for OciHttpCasNode with get_blob(
 impl StoreNode for OciHttpCasNode with put_blob(
   self : OciHttpCasNode,
   bytes : Bytes,
-) -> @hash.Hash {
+) -> @hash.Hash? {
   self.put_blob_inner(bytes)
 }
 

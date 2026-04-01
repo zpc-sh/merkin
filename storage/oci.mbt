@@ -147,12 +147,12 @@ fn OciCasNode::maybe_publish_tag(
 }
 
 ///|
-fn OciCasNode::put_blob_inner(self : OciCasNode, bytes : Bytes) -> @hash.Hash {
+fn OciCasNode::put_blob_inner(self : OciCasNode, bytes : Bytes) -> @hash.Hash? {
   let digest = @hash.Hash::of_bytes(bytes)
   let oci_digest = self.registry.put_blob(self.repository, bytes)
   self.digest_map[digest.key()] = oci_digest
   self.maybe_publish_tag(oci_digest)
-  digest
+  Some(digest)
 }
 
 ///|
@@ -172,7 +172,7 @@ fn OciCasNode::get_blob_inner(self : OciCasNode, digest : @hash.Hash) -> Bytes? 
 }
 
 ///|
-pub fn OciCasNode::put_blob(self : OciCasNode, bytes : Bytes) -> @hash.Hash {
+pub fn OciCasNode::put_blob(self : OciCasNode, bytes : Bytes) -> @hash.Hash? {
   self.put_blob_inner(bytes)
 }
 
@@ -218,6 +218,6 @@ impl StoreNode for OciCasNode with get_blob(
 }
 
 ///|
-impl StoreNode for OciCasNode with put_blob(self : OciCasNode, bytes : Bytes) -> @hash.Hash {
+impl StoreNode for OciCasNode with put_blob(self : OciCasNode, bytes : Bytes) -> @hash.Hash? {
   self.put_blob_inner(bytes)
 }
