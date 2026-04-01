@@ -15,10 +15,14 @@ pub(all) struct YataAddress {
   scheme : String
   authority : String
   anchor : String
+  cas_alg : String
+  cas_digest : String
+  id_token : String
   hole_id : @hash.Hash
   overlay : String
   peer : String
   mode : String
+  gap : UInt
   track : YataTrack
   view : String
 } derive(Show)
@@ -59,7 +63,7 @@ pub fn YataHole::to_cog_uri(
   b.write_string("cog://")
   b.write_string(authority)
   b.write_string("/")
-  b.write_string(self.anchor)
+  b.write_string(normalize_anchor_path(self.anchor))
   b.write_string("?")
   b.write_string("overlay=")
   if hint.overlay.length() > 0 {
@@ -98,7 +102,7 @@ pub fn YataHole::to_substrate_uri(
   b.write_string("substrate://")
   b.write_string(authority)
   b.write_string("/")
-  b.write_string(self.anchor)
+  b.write_string(normalize_anchor_path(self.anchor))
   b.write_string("?")
   b.write_string("overlay=")
   if hint.overlay.length() > 0 {
@@ -126,6 +130,63 @@ pub fn YataHole::to_substrate_uri(
 }
 
 ///|
+/// Render a hole as content-addressed URI with optional anchor hint.
+pub fn YataHole::to_cas_uri(
+  self : YataHole,
+  authority : String,
+  hint : YataAddressHint,
+  track : YataTrack,
+  cas_alg : String,
+) -> String {
+  let mut alg = cas_alg
+  if alg == "" {
+    alg = "blake3"
+  }
+  let mut digest = self.hole_id.key()
+  if digest.starts_with("blake3:") {
+    digest = split_after_raw(digest, "blake3:")
+  } else if digest.starts_with("0x") {
+    digest = split_after_raw(digest, "0x")
+  }
+  let normalized_anchor = normalize_anchor_path(self.anchor)
+  let mut b = StringBuilder::new()
+  b.write_string("cas://")
+  b.write_string(authority)
+  b.write_string("/")
+  b.write_string(alg)
+  b.write_string("/")
+  b.write_string(digest)
+  b.write_string("?")
+  b.write_string("overlay=")
+  if hint.overlay.length() > 0 {
+    b.write_string(hint.overlay)
+  } else {
+    b.write_string("program")
+  }
+  b.write_string("&peer=")
+  b.write_string(hint.peer)
+  b.write_string("&mode=")
+  b.write_string(hint.mode)
+  b.write_string("&gap=")
+  b.write_string(hint.gap.to_string())
+  b.write_string("&track=")
+  b.write_string(yata_track_token(track))
+  b.write_string("&id=")
+  b.write_string(self.hole_id.key())
+  if normalized_anchor != "" {
+    b.write_string("&anchor=")
+    b.write_string(normalized_anchor)
+  }
+  if hint.view.length() > 0 {
+    b.write_string("#")
+    b.write_string(hint.view)
+  } else {
+    b.write_string("#overlay")
+  }
+  b.to_string()
+}
+
+///|
 /// Parse a minimal subset of cognitive URI back to address metadata.
 pub fn YataAddress::parse(raw : String) -> YataAddress? {
   let outcome = YataAddress::parse_strict(raw)
@@ -133,6 +194,34 @@ pub fn YataAddress::parse(raw : String) -> YataAddress? {
     outcome.address
   } else {
     None
+  }
+}
+
+///|
+/// Re-emit this address in canonical wire form.
+pub fn YataAddress::to_wire_canonical(self : YataAddress) -> String {
+  build_canonical_uri(
+    self.scheme,
+    self.authority,
+    self.anchor,
+    self.cas_alg,
+    self.cas_digest,
+    self.overlay,
+    self.peer,
+    self.mode,
+    self.gap,
+    self.track,
+    self.id_token,
+    self.view,
+  )
+}
+
+///|
+/// Canonicalize a raw address if it parses.
+pub fn YataAddress::canonicalize(raw : String) -> String? {
+  match YataAddress::parse(raw) {
+    Some(address) => Some(address.to_wire_canonical())
+    None => None
   }
 }
 
@@ -170,7 +259,7 @@ pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressC
     }
   }
 
-  if raw.starts_with("cog://") || raw.starts_with("substrate://") {
+  if raw.starts_with("cog://") || raw.starts_with("substrate://") || raw.starts_with("cas://") {
     return YataAddress::parse_strict(raw)
   }
 
@@ -192,14 +281,14 @@ pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressC
     query = join_from_index(query_parts, 1, "?")
   }
 
-  let mut normalized_anchor : String = context.anchor
+  let mut normalized_anchor : String = normalize_anchor_path(context.anchor)
   if route != "" {
     if route.starts_with("./") || route.starts_with("../") {
-      normalized_anchor = resolve_relative_anchor(context.anchor, route)
+      normalized_anchor = resolve_relative_anchor(normalized_anchor, route)
     } else if route.starts_with("id=") && query == "" {
       query = route
     } else if route != "" {
-      normalized_anchor = route
+      normalized_anchor = normalize_anchor_path(route)
     }
   }
 
@@ -239,42 +328,81 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
   let mut scheme = ""
   let mut authority = ""
   let mut anchor = ""
+  let mut cas_alg = ""
+  let mut cas_digest = ""
   if before.starts_with("cog://") {
     scheme = "cog"
     let rem = split_after_raw(before, "cog://")
     let route = rem.split("/")
-    if route.length() >= 2 {
+    if route.length() >= 1 {
       authority = route[0]
-      anchor = route[1]
-      if route.length() > 2 {
-        let mut index = 2
-        while index < route.length() {
-          anchor = anchor + "/" + route[index]
-          index = index + 1
+      let mut segments : Array[String] = []
+      let mut index = 1
+      while index < route.length() {
+        if route[index] != "" {
+          segments.push(route[index])
         }
+        index = index + 1
       }
-    } else {
+      anchor = normalize_anchor_path(join_by(segments, "/"))
+    }
+    if authority == "" || anchor == "" {
       issues.push({ line: 1, code: "BAD_ROUTE", message: "cog uri requires authority and anchor" })
     }
   } else if before.starts_with("substrate://") {
     scheme = "substrate"
     let rem = split_after_raw(before, "substrate://")
     let route = rem.split("/")
-    if route.length() >= 2 {
+    if route.length() >= 1 {
       authority = route[0]
-      anchor = route[1]
-      if route.length() > 2 {
-        let mut index = 2
-        while index < route.length() {
-          anchor = anchor + "/" + route[index]
-          index = index + 1
+      let mut segments : Array[String] = []
+      let mut index = 1
+      while index < route.length() {
+        if route[index] != "" {
+          segments.push(route[index])
         }
+        index = index + 1
       }
-    } else {
+      anchor = normalize_anchor_path(join_by(segments, "/"))
+    }
+    if authority == "" || anchor == "" {
       issues.push({ line: 1, code: "BAD_ROUTE", message: "substrate uri requires authority and anchor" })
     }
+  } else if before.starts_with("cas://") {
+    scheme = "cas"
+    let rem = split_after_raw(before, "cas://")
+    let route = rem.split("/")
+    if route.length() >= 1 {
+      authority = route[0]
+      let mut segments : Array[String] = []
+      let mut index = 1
+      while index < route.length() {
+        if route[index] != "" {
+          segments.push(route[index])
+        }
+        index = index + 1
+      }
+      if segments.length() >= 2 {
+        cas_alg = segments[0]
+        cas_digest = segments[1]
+        if segments.length() > 2 {
+          let mut j = 2
+          while j < segments.length() {
+            cas_digest = cas_digest + "/" + segments[j]
+            j = j + 1
+          }
+        }
+      }
+    }
+    if authority == "" || cas_alg == "" || cas_digest == "" {
+      issues.push({
+        line: 1,
+        code: "BAD_ROUTE",
+        message: "cas uri requires authority, algorithm, and digest",
+      })
+    }
   } else {
-    issues.push({ line: 1, code: "BAD_SCHEME", message: "scheme must be `cog` or `substrate`" })
+    issues.push({ line: 1, code: "BAD_SCHEME", message: "scheme must be `cog`, `substrate`, or `cas`" })
     return { address: None, issues: issues, ok: false }
   }
 
@@ -332,6 +460,18 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
       hash_token = value
       continue
     }
+    if key == "anchor" {
+      anchor = normalize_anchor_path(value)
+      continue
+    }
+    if key == "cas_alg" {
+      cas_alg = value
+      continue
+    }
+    if key == "cas_digest" {
+      cas_digest = value
+      continue
+    }
     issues.push({ line: 1, code: "UNKNOWN_QUERY_KEY", message: "query key not recognized" })
   }
 
@@ -341,24 +481,51 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
   if authority == "" {
     issues.push({ line: 1, code: "MISSING_AUTHORITY", message: "authority is required" })
   }
-  if anchor == "" {
-    issues.push({ line: 1, code: "MISSING_ANCHOR", message: "anchor/path is required" })
+  if scheme == "cas" && cas_alg == "" {
+    issues.push({ line: 1, code: "MISSING_CAS_ALG", message: "cas algorithm is required" })
+  }
+  if scheme == "cas" && cas_digest == "" {
+    issues.push({ line: 1, code: "MISSING_CAS_DIGEST", message: "cas digest is required" })
+  }
+  if hash_token == "" && cas_digest != "" {
+    hash_token = cas_digest
+  }
+  if anchor == "" && hash_token == "" {
+    issues.push({ line: 1, code: "MISSING_TARGET", message: "anchor/path or id is required" })
   }
 
   if issues.length() > 0 {
     { address: None, issues: issues, ok: false }
   } else {
+    let canonical_uri = build_canonical_uri(
+      scheme,
+      authority,
+      anchor,
+      cas_alg,
+      cas_digest,
+      overlay,
+      peer,
+      mode,
+      gap,
+      track,
+      hash_token,
+      view,
+    )
     let parsed = {
-      uri: raw,
+      uri: canonical_uri,
       scheme: scheme,
       authority: authority,
       anchor: anchor,
+      cas_alg: cas_alg,
+      cas_digest: cas_digest,
+      id_token: hash_token,
       hole_id: if hash_token == "" { @hash.Hash::of_bytes(string_to_bytes("")) } else { @hash.Hash::of_bytes(string_to_bytes(hash_token)) },
       overlay: overlay,
       peer: peer,
       mode: mode,
       track: track,
       view: view,
+      gap: gap,
     }
     { address: Some(parsed), issues: [], ok: true }
   }
@@ -375,6 +542,95 @@ fn join_from_index(parts : Array[String], index : Int, separator : String) -> St
       i = i + 1
     }
     out
+  }
+}
+
+fn build_canonical_uri(
+  scheme : String,
+  authority : String,
+  anchor : String,
+  cas_alg : String,
+  cas_digest : String,
+  overlay : String,
+  peer : String,
+  mode : String,
+  gap : UInt,
+  track : YataTrack,
+  hash_token : String,
+  view : String,
+) -> String {
+  let mut b = StringBuilder::new()
+  b.write_string(scheme)
+  b.write_string("://")
+  b.write_string(authority)
+  b.write_string("/")
+  if scheme == "cas" {
+    b.write_string(cas_alg)
+    b.write_string("/")
+    b.write_string(cas_digest)
+  } else {
+    b.write_string(anchor)
+  }
+  b.write_string("?overlay=")
+  b.write_string(overlay)
+  b.write_string("&peer=")
+  b.write_string(peer)
+  b.write_string("&mode=")
+  b.write_string(mode)
+  b.write_string("&gap=")
+  b.write_string(gap.to_string())
+  b.write_string("&track=")
+  b.write_string(yata_track_token(track))
+  if hash_token != "" {
+    b.write_string("&id=")
+    b.write_string(hash_token)
+  }
+  if scheme == "cas" && anchor != "" {
+    b.write_string("&anchor=")
+    b.write_string(anchor)
+  }
+  b.write_string("#")
+  if view == "" {
+    b.write_string("overlay")
+  } else {
+    b.write_string(view)
+  }
+  b.to_string()
+}
+
+fn normalize_anchor_path(raw_anchor : String) -> String {
+  if raw_anchor == "" {
+    return ""
+  }
+  let parts = raw_anchor.split("/")
+  let mut resolved : Array[String] = []
+  let mut i : Int = 0
+  while i < parts.length() {
+    let segment = parts[i]
+    if segment == "" || segment == "." {
+      i = i + 1
+      continue
+    }
+    if segment == ".." {
+      if resolved.length() > 0 {
+        let mut trimmed : Array[String] = []
+        let mut j : Int = 0
+        while j < resolved.length() - 1 {
+          trimmed.push(resolved[j])
+          j = j + 1
+        }
+        resolved = trimmed
+      }
+      i = i + 1
+      continue
+    }
+    resolved.push(segment)
+    i = i + 1
+  }
+  if resolved.length() == 0 {
+    ""
+  } else {
+    join_by(resolved, "/")
   }
 }
 
