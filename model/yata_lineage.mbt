@@ -197,7 +197,7 @@ pub fn YataGraph::to_plan(
     material.push(entry.candidate_count.to_string())
     entries.push(entry)
   }
-  let material_hash = @hash.Hash::of_bytes(string_to_bytes(join_by(material, ",")))
+  let material_hash = @hash.Hash::of_bytes(@hash.string_to_bytes(join_by(material, ",")))
   {
     track,
     mode,

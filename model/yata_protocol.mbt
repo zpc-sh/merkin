@@ -720,14 +720,14 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     let material = match material_hash {
       Some(raw_hash) => {
         if raw_hash.has_prefix("blake3:") {
-          @hash.Hash::of_bytes(string_to_bytes(split_after(raw_hash, "blake3:")))
+          @hash.Hash::of_bytes(@hash.string_to_bytes(split_after(raw_hash, "blake3:")))
         } else if raw_hash.has_prefix("0x") {
-          @hash.Hash::of_bytes(string_to_bytes(split_after(raw_hash, "0x")))
+          @hash.Hash::of_bytes(@hash.string_to_bytes(split_after(raw_hash, "0x")))
         } else {
-          @hash.Hash::of_bytes(string_to_bytes(raw_hash))
+          @hash.Hash::of_bytes(@hash.string_to_bytes(raw_hash))
         }
       }
-      None => @hash.Hash::of_bytes(string_to_bytes(""))
+      None => @hash.Hash::of_bytes(@hash.string_to_bytes(""))
     }
     {
       plan: Some({
@@ -781,7 +781,7 @@ pub fn YataPlan::validate(self : YataPlan) -> YataPlanCursor {
     } else {
       unresolved_count = unresolved_count + 1U
     }
-    if entry.hole_id == @hash.Hash::of_bytes(string_to_bytes("")) {
+    if entry.hole_id == @hash.Hash::of_bytes(@hash.string_to_bytes("")) {
       warnings.push({
         line: 0,
         code: "EMPTY_HOLE_ID",
@@ -901,7 +901,7 @@ fn parse_u32_opt_plan(raw : String?) -> UInt? {
       if text == "" {
         return None
       }
-      let bytes = string_to_bytes(text)
+      let bytes = @hash.string_to_bytes(text)
       let mut out : UInt = 0U
       let mut i : Int = 0
       while i < bytes.length() {
@@ -924,7 +924,7 @@ fn parse_i32_opt(raw : String?) -> Int? {
       if text == "" {
         return None
       }
-      let bytes = string_to_bytes(text)
+      let bytes = @hash.string_to_bytes(text)
       let mut i : Int = 0
       let mut sign : Int = 1
       if bytes.length() > 0 && bytes[0].to_uint() == 45U {
@@ -983,10 +983,10 @@ fn split_parts(raw : String, separator : String) -> Array[String] {
 
 fn parse_hash_token(token : String) -> @hash.Hash {
   if token.has_prefix("blake3:") {
-    @hash.Hash::of_bytes(string_to_bytes(split_after(token, "blake3:")))
+    @hash.Hash::of_bytes(@hash.string_to_bytes(split_after(token, "blake3:")))
   } else if token.has_prefix("0x") {
-    @hash.Hash::of_bytes(string_to_bytes(split_after(token, "0x")))
+    @hash.Hash::of_bytes(@hash.string_to_bytes(split_after(token, "0x")))
   } else {
-    @hash.Hash::of_bytes(string_to_bytes(token))
+    @hash.Hash::of_bytes(@hash.string_to_bytes(token))
   }
 }

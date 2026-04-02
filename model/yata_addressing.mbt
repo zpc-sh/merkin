@@ -519,7 +519,7 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
       cas_alg: cas_alg,
       cas_digest: cas_digest,
       id_token: hash_token,
-      hole_id: if hash_token == "" { @hash.Hash::of_bytes(string_to_bytes("")) } else { @hash.Hash::of_bytes(string_to_bytes(hash_token)) },
+      hole_id: if hash_token == "" { @hash.Hash::of_bytes(@hash.string_to_bytes("")) } else { @hash.Hash::of_bytes(@hash.string_to_bytes(hash_token)) },
       overlay: overlay,
       peer: peer,
       mode: mode,
@@ -702,7 +702,7 @@ fn parse_u32_opt(raw : String?) -> UInt? {
       if text.length() == 0 {
         return None
       }
-      let bytes = string_to_bytes(text)
+      let bytes = @hash.string_to_bytes(text)
       let mut i : Int = 0
       let mut out : UInt = 0U
       while i < bytes.length() {

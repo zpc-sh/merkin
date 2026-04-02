@@ -119,7 +119,7 @@ pub fn Imprint::new(
     mode,
     confidence,
   )
-  let imprint_id = @hash.Hash::of_bytes(string_to_bytes(material))
+  let imprint_id = @hash.Hash::of_bytes(@hash.string_to_bytes(material))
   {
     imprint_id,
     source,
@@ -258,21 +258,3 @@ fn mode_to_tag(mode : MirageMode) -> String {
   }
 }
 
-///|
-fn string_to_bytes(s : String) -> Bytes {
-  let mut total = 0
-  for _ch in s {
-    total = total + 4
-  }
-  let buf = FixedArray::make(total, b'\x00')
-  let mut pos = 0
-  for ch in s {
-    let code = ch.to_uint()
-    buf[pos] = ((code >> 24) & 0xFFU).to_byte()
-    buf[pos + 1] = ((code >> 16) & 0xFFU).to_byte()
-    buf[pos + 2] = ((code >> 8) & 0xFFU).to_byte()
-    buf[pos + 3] = (code & 0xFFU).to_byte()
-    pos = pos + 4
-  }
-  Bytes::from_array(buf)
-}
