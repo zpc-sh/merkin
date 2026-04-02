@@ -59,7 +59,7 @@ pub fn YataHole::to_cog_uri(
   hint : YataAddressHint,
   track : YataTrack,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string("cog://")
   b.write_string(authority)
   b.write_string("/")
@@ -98,7 +98,7 @@ pub fn YataHole::to_substrate_uri(
   hint : YataAddressHint,
   track : YataTrack,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string("substrate://")
   b.write_string(authority)
   b.write_string("/")
@@ -149,7 +149,7 @@ pub fn YataHole::to_cas_uri(
     digest = split_after_raw(digest, "0x")
   }
   let normalized_anchor = normalize_anchor_path(self.anchor)
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string("cas://")
   b.write_string(authority)
   b.write_string("/")
@@ -535,13 +535,15 @@ fn join_from_index(parts : Array[String], index : Int, separator : String) -> St
   if parts.length() <= index {
     ""
   } else {
-    let mut out = parts[index]
+    let b = StringBuilder::new()
+    b.write_string(parts[index])
     let mut i = index + 1
     while i < parts.length() {
-      out = out + separator + parts[i]
+      b.write_string(separator)
+      b.write_string(parts[i])
       i = i + 1
     }
-    out
+    b.to_string()
   }
 }
 
@@ -559,7 +561,7 @@ fn build_canonical_uri(
   hash_token : String,
   view : String,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string(scheme)
   b.write_string("://")
   b.write_string(authority)
@@ -678,13 +680,15 @@ fn resolve_relative_anchor(base_anchor : String, route : String) -> String {
   if resolved.length() == 0 {
     ""
   } else {
-    let mut out = resolved[0]
+    let b = StringBuilder::new()
+    b.write_string(resolved[0])
     let mut r : Int = 1
     while r < resolved.length() {
-      out = out + "/" + resolved[r]
+      b.write_string("/")
+      b.write_string(resolved[r])
       r = r + 1
     }
-    out
+    b.to_string()
   }
 }
 

@@ -250,7 +250,7 @@ pub fn YataGraph::emit_plan(
 ///|
 /// Stable wire format for `.plan`.
 pub fn YataPlan::to_wire(self : YataPlan) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string("kind: merkin.yata.plan")
   b.write_string("\ntrack=")
   b.write_string(yat_track_tag(self.track))
@@ -392,11 +392,13 @@ fn join_by(items : Array[String], sep : String) -> String {
   if items.length() == 0 {
     return ""
   }
-  let mut out = items[0]
+  let b = StringBuilder::new()
+  b.write_string(items[0])
   for i = 1; i < items.length(); i = i + 1 {
-    out = out + sep + items[i]
+    b.write_string(sep)
+    b.write_string(items[i])
   }
-  out
+  b.to_string()
 }
 
 fn yat_state_tag(state : YataState) -> String {

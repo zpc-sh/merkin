@@ -450,7 +450,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       message: "expected `material_hash=` field",
     })
   }
-  if expected_entries > 0U && entries.length() != expected_entries {
+  if expected_entries > 0U && entries.length().reinterpret_as_uint() != expected_entries {
     issues.push({
       line: 0,
       code: "ENTRY_COUNT_MISMATCH",
@@ -689,7 +689,7 @@ fn parse_u32_opt(raw : String?) -> UInt? {
         if b < 48 || b > 57 {
           return None
         }
-        out = out * 10U + (b - 48U)
+        out = out * 10U + (b.reinterpret_as_uint() - 48U)
         i = i + 1
       }
       Some(out)

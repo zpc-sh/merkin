@@ -182,7 +182,7 @@ fn imprint_material(
   mode : MirageMode,
   confidence : UInt,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string(kind.to_string())
   b.write_string("|")
   b.write_string(source)
@@ -212,11 +212,13 @@ fn join_strings(items : Array[String], sep : String) -> String {
   if items.length() == 0 {
     return ""
   }
-  let mut out = items[0]
+  let b = StringBuilder::new()
+  b.write_string(items[0])
   for i = 1; i < items.length(); i = i + 1 {
-    out = out + sep + items[i]
+    b.write_string(sep)
+    b.write_string(items[i])
   }
-  out
+  b.to_string()
 }
 
 ///|
