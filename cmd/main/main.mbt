@@ -37,7 +37,7 @@ fn main {
       println("passthrough=\{caps.passthrough}")
     }
     "put" => {
-      let payload = string_to_bytes(
+      let payload = @hash.string_to_bytes(
         value_after(args, "--payload", "hello-merkin"),
       )
       let lane = parse_lane(value_after(args, "--lane", "hot"))
@@ -592,7 +592,7 @@ fn seed_routes(
 ) -> Unit {
   for i = 0; i < routes.length(); i = i + 1 {
     let path = routes[i]
-    let payload = string_to_bytes(
+    let payload = @hash.string_to_bytes(
       "route-" + i.to_string() + ":" + path_to_string(path),
     )
     ignore(
@@ -720,21 +720,3 @@ fn attach_targets(
   }
 }
 
-///|
-fn string_to_bytes(s : String) -> Bytes {
-  let mut total = 0
-  for _ch in s {
-    total = total + 4
-  }
-  let buf = FixedArray::make(total, b'\x00')
-  let mut pos = 0
-  for ch in s {
-    let code = ch.to_uint()
-    buf[pos] = ((code >> 24) & 0xFFU).to_byte()
-    buf[pos + 1] = ((code >> 16) & 0xFFU).to_byte()
-    buf[pos + 2] = ((code >> 8) & 0xFFU).to_byte()
-    buf[pos + 3] = (code & 0xFFU).to_byte()
-    pos = pos + 4
-  }
-  Bytes::from_array(buf)
-}

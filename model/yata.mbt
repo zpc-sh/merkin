@@ -146,7 +146,7 @@ pub fn YataHole::new(
   provenance : Array[String],
 ) -> YataHole {
   let material = hole_material(anchor, contract, refinements, dependencies, provenance)
-  let hole_id = @hash.Hash::of_bytes(string_to_bytes(material))
+  let hole_id = @hash.Hash::of_bytes(@hash.string_to_bytes(material))
   {
     hole_id,
     anchor,
