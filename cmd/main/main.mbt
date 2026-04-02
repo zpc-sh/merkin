@@ -97,6 +97,226 @@ fn main {
       println("growth=\{growth}")
       println("token_diff=\{token_diff}")
     }
+    "conv-turn" => {
+      let host = @daemon.ConversationHost::new()
+      let hall = host.create_hall(
+        value_after(args, "--hall", "saba"),
+        value_after(args, "--policy-profile", "debate-default"),
+      )
+      let track = parse_conv_track(value_after(args, "--track", "program"))
+      match host.create_thread(
+        hall.hall_id,
+        value_after(args, "--topic", "ai-debate"),
+        track,
+      ) {
+        Some(thread) => {
+          let envelope : @daemon.LengthEnvelope = {
+            input_len_min: parse_uint(value_after(args, "--input-min", "1"), 1U),
+            input_len_max: parse_uint(value_after(args, "--input-max", "12000"), 12000U),
+            output_len_min: parse_uint(value_after(args, "--output-min", "1"), 1U),
+            output_len_max: parse_uint(value_after(args, "--output-max", "24000"), 24000U),
+          }
+          let outcome = host.append_turn(
+            thread.thread_id,
+            {
+              actor_overlay: value_after(args, "--overlay", "chatgpt"),
+              actor_role: parse_actor_role(value_after(args, "--actor-role", "ai")),
+              content: value_after(args, "--content", "debate turn"),
+              length_envelope: envelope,
+              idempotency_key: value_after(args, "--idempotency-key", ""),
+            },
+          )
+          println("accepted=\{outcome.accepted}")
+          println("issues=\{outcome.issues.length()}")
+          match outcome.turn_id {
+            Some(turn_id) => println("turn_id=\{turn_id}")
+            None => println("turn_id=none")
+          }
+          match outcome.turn_seq {
+            Some(turn_seq) => println("turn_seq=\{turn_seq}")
+            None => println("turn_seq=none")
+          }
+          match outcome.checkpoint_id {
+            Some(checkpoint_id) => println("checkpoint_id=\{checkpoint_id}")
+            None => println("checkpoint_id=none")
+          }
+          for issue in outcome.issues {
+            println("issue=\{issue.code}:\{issue.message}")
+          }
+          for addr in outcome.canonical_addresses {
+            println("address=\{addr}")
+          }
+        }
+        None => println("thread=create_failed")
+      }
+    }
+    "conv-replay" => {
+      let host = @daemon.ConversationHost::new()
+      let hall = host.create_hall(
+        value_after(args, "--hall", "saba"),
+        value_after(args, "--policy-profile", "debate-default"),
+      )
+      let track = parse_conv_track(value_after(args, "--track", "program"))
+      match host.create_thread(
+        hall.hall_id,
+        value_after(args, "--topic", "ai-debate"),
+        track,
+      ) {
+        Some(thread) => {
+          let envelope : @daemon.LengthEnvelope = {
+            input_len_min: parse_uint(value_after(args, "--input-min", "1"), 1U),
+            input_len_max: parse_uint(value_after(args, "--input-max", "12000"), 12000U),
+            output_len_min: parse_uint(value_after(args, "--output-min", "1"), 1U),
+            output_len_max: parse_uint(value_after(args, "--output-max", "24000"), 24000U),
+          }
+          let first = host.append_turn(
+            thread.thread_id,
+            {
+              actor_overlay: value_after(args, "--overlay", "chatgpt"),
+              actor_role: parse_actor_role(value_after(args, "--actor-role", "ai")),
+              content: value_after(args, "--content", "debate turn"),
+              length_envelope: envelope,
+              idempotency_key: "seed-1",
+            },
+          )
+          println("seed_accepted=\{first.accepted}")
+
+          if parse_bool(value_after(args, "--seed-non-replayable", "false"), false) {
+            ignore(
+              host.append_turn(
+                thread.thread_id,
+                {
+                  actor_overlay: value_after(args, "--overlay", "chatgpt"),
+                  actor_role: parse_actor_role(value_after(args, "--actor-role", "ai")),
+                  content: "non-replayable-seed",
+                  length_envelope: {
+                    input_len_min: 1U,
+                    input_len_max: 200U,
+                    output_len_min: 1U,
+                    output_len_max: 2U,
+                  },
+                  idempotency_key: "seed-2",
+                },
+              ),
+            )
+          }
+
+          let to_seq_value = value_after(args, "--to-seq", "")
+          let to_seq = if to_seq_value == "" {
+            None
+          } else {
+            Some(parse_uint(to_seq_value, 1U))
+          }
+          let replay = host.replay(
+            thread.thread_id,
+            {
+              from_seq: parse_uint(value_after(args, "--from-seq", "1"), 1U),
+              to_seq,
+              length_guard_enforced: parse_bool(value_after(args, "--enforce-length", "true"), true),
+            },
+          )
+          println("replay_ok=\{replay.ok}")
+          println("replayed=\{replay.replayed_count}")
+          println("non_replayable=\{replay.non_replayable_count}")
+          println("issues=\{replay.issues.length()}")
+          for issue in replay.issues {
+            println("issue=\{issue.code}:\{issue.message}")
+          }
+        }
+        None => println("thread=create_failed")
+      }
+    }
+    "conv-embed" => {
+      let host = @daemon.ConversationHost::new()
+      let hall = host.create_hall(
+        value_after(args, "--hall", "saba"),
+        value_after(args, "--policy-profile", "debate-default"),
+      )
+      let track = parse_conv_track(value_after(args, "--track", "program"))
+      match host.create_thread(
+        hall.hall_id,
+        value_after(args, "--topic", "ai-debate"),
+        track,
+      ) {
+        Some(thread) => {
+          ignore(
+            host.append_turn(
+              thread.thread_id,
+              @daemon.TurnRequest::default(value_after(args, "--content", "seed turn")),
+            ),
+          )
+          let action = parse_embedding_action(value_after(args, "--embedding-action", "observe"))
+          match host.record_embedding(
+            thread.thread_id,
+            value_after(args, "--file-ref", "docs/sample.bin"),
+            value_after(args, "--file-type", "bin"),
+            value_after(args, "--mime-type", "application/octet-stream"),
+            parse_bool(value_after(args, "--embedding-found", "true"), true),
+            parse_uint(value_after(args, "--embedding-count", "1"), 1U),
+            action,
+            parse_bool(value_after(args, "--embedding-ephemeral", "true"), true),
+            parse_uint(value_after(args, "--purge-after-turns", "1"), 1U),
+            value_after(args, "--embedding-note", "runtime scan"),
+          ) {
+            Some(record) => {
+              println("embedding_recorded=true")
+              println("record_id=\{record.record_id}")
+              println("thread_id=\{record.thread_id}")
+              println("file_ref=\{record.file_ref}")
+              println("file_type=\{record.file_type}")
+              println("found=\{record.found}")
+              println("count=\{record.count}")
+              println("ephemeral=\{record.ephemeral}")
+              println("purge_after_turns=\{record.purge_after_turns}")
+            }
+            None => println("embedding_recorded=false")
+          }
+        }
+        None => println("thread=create_failed")
+      }
+    }
+    "conv-embed-purge" => {
+      let host = @daemon.ConversationHost::new()
+      let hall = host.create_hall(
+        value_after(args, "--hall", "saba"),
+        value_after(args, "--policy-profile", "debate-default"),
+      )
+      let track = parse_conv_track(value_after(args, "--track", "program"))
+      match host.create_thread(
+        hall.hall_id,
+        value_after(args, "--topic", "ai-debate"),
+        track,
+      ) {
+        Some(thread) => {
+          ignore(host.append_turn(thread.thread_id, @daemon.TurnRequest::default("turn-1")))
+          ignore(
+            host.record_embedding(
+              thread.thread_id,
+              value_after(args, "--file-ref", "docs/sample.bin"),
+              value_after(args, "--file-type", "bin"),
+              value_after(args, "--mime-type", "application/octet-stream"),
+              true,
+              1U,
+              parse_embedding_action(value_after(args, "--embedding-action", "flip-aot")),
+              true,
+              parse_uint(value_after(args, "--purge-after-turns", "1"), 1U),
+              "ephemeral embedding marker",
+            ),
+          )
+          ignore(host.append_turn(thread.thread_id, @daemon.TurnRequest::default("turn-2")))
+          let before = host.embedding_timeline(thread.thread_id)
+          let purged = host.purge_embedding_records(
+            thread.thread_id,
+            parse_uint(value_after(args, "--current-turn-seq", "2"), 2U),
+          )
+          let after = host.embedding_timeline(thread.thread_id)
+          println("before=\{before.length()}")
+          println("purged=\{purged}")
+          println("after=\{after.length()}")
+        }
+        None => println("thread=create_failed")
+      }
+    }
     _ => {
       // demo: put then read
       let payload = b"demo-payload"
@@ -124,8 +344,20 @@ fn print_usage() -> Unit {
   println(
     "  moon run cmd/main -- daemon --action diff --left-routes alpha/doc --right-routes beta/doc",
   )
+  println(
+    "  moon run cmd/main -- daemon --action conv-turn --hall saba --topic debate --content \"Opening statement\"",
+  )
+  println(
+    "  moon run cmd/main -- daemon --action conv-replay --seed-non-replayable true --enforce-length true",
+  )
+  println(
+    "  moon run cmd/main -- daemon --action conv-embed --file-ref docs/sample.bin --embedding-action flip-aot",
+  )
+  println(
+    "  moon run cmd/main -- daemon --action conv-embed-purge --purge-after-turns 1 --current-turn-seq 2",
+  )
   println("Flags:")
-  println("  --action capabilities|put|sparse|diff|demo")
+  println("  --action capabilities|put|sparse|diff|conv-turn|conv-replay|conv-embed|conv-embed-purge|demo")
   println("  --mode receiver|proxy|passthrough|hybrid")
   println("  --node-id <id>")
   println("  --targets <comma-separated ids>")
@@ -139,6 +371,32 @@ fn print_usage() -> Unit {
   println("  --right-routes c/d (for diff)")
   println("  --left-tokens a,b (for diff)")
   println("  --right-tokens a,b (for diff)")
+  println("  --hall <name> (for conv-*)")
+  println("  --policy-profile <name> (for conv-*)")
+  println("  --topic <text> (for conv-*)")
+  println("  --track program|git (for conv-*)")
+  println("  --overlay <name> (for conv-*)")
+  println("  --actor-role ai|human|system (for conv-*)")
+  println("  --content <text> (for conv-*)")
+  println("  --idempotency-key <text> (for conv-turn)")
+  println("  --input-min <uint> (for conv-*)")
+  println("  --input-max <uint> (for conv-*)")
+  println("  --output-min <uint> (for conv-*)")
+  println("  --output-max <uint> (for conv-*)")
+  println("  --from-seq <uint> (for conv-replay)")
+  println("  --to-seq <uint> (for conv-replay)")
+  println("  --enforce-length true|false (for conv-replay)")
+  println("  --seed-non-replayable true|false (for conv-replay)")
+  println("  --file-ref <path> (for conv-embed*)")
+  println("  --file-type <type> (for conv-embed*)")
+  println("  --mime-type <mime> (for conv-embed*)")
+  println("  --embedding-found true|false (for conv-embed)")
+  println("  --embedding-count <uint> (for conv-embed)")
+  println("  --embedding-action observe|flip-aot|purge (for conv-embed*)")
+  println("  --embedding-ephemeral true|false (for conv-embed)")
+  println("  --purge-after-turns <uint> (for conv-embed*)")
+  println("  --embedding-note <text> (for conv-embed)")
+  println("  --current-turn-seq <uint> (for conv-embed-purge)")
 }
 
 ///|
@@ -167,6 +425,32 @@ fn parse_mode(value : String) -> @daemon.DaemonMode {
 }
 
 ///|
+fn parse_conv_track(value : String) -> @daemon.ConversationTrack {
+  match value {
+    "git" => @daemon.Git
+    _ => @daemon.Program
+  }
+}
+
+///|
+fn parse_actor_role(value : String) -> @daemon.ConversationActorRole {
+  match value {
+    "human" => @daemon.Human
+    "system" => @daemon.System
+    _ => @daemon.Ai
+  }
+}
+
+///|
+fn parse_embedding_action(value : String) -> @daemon.ConversationEmbeddingAction {
+  match value {
+    "flip-aot" => @daemon.FlipAot
+    "purge" => @daemon.Purge
+    _ => @daemon.Observe
+  }
+}
+
+///|
 fn mode_name(mode : @daemon.DaemonMode) -> String {
   match mode {
     @daemon.Receiver => "receiver"
@@ -186,6 +470,31 @@ fn parse_lane(value : String) -> @storage.ReplicationLane {
     "archive" => @storage.ArchiveLane
     _ => @storage.Hot
   }
+}
+
+///|
+fn parse_bool(value : String, fallback : Bool) -> Bool {
+  match value {
+    "true" => true
+    "false" => false
+    _ => fallback
+  }
+}
+
+///|
+fn parse_uint(value : String, fallback : UInt) -> UInt {
+  if value == "" {
+    return fallback
+  }
+  let mut out : UInt = 0U
+  for ch in value {
+    let code = ch.to_uint()
+    if code < 48U || code > 57U {
+      return fallback
+    }
+    out = out * 10U + (code - 48U)
+  }
+  out
 }
 
 ///|

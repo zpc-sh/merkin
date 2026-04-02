@@ -5,8 +5,10 @@ This document defines the abstract Yata hole model used by merkin.
 Related specifications:
 
 - `docs/YATA_PLAN_SPEC.md` for the full `.plan` wire contract.
+- `docs/YATA_PLAN_GOVERNANCE.md` for ownership, compatibility, and extension policy.
 - `docs/PACTIS_GIT_PARITY_FUNCTION_MAP.md` for Git-equivalent command/function scope in Pactis.
 - `docs/PACTIS_CONVERSATIONAL_API_SPEC.md` for AI-native conversational hosting (Saba/Pactis).
+- `docs/EMBEDDING_EPHEMERAL_METADATA_SPEC.md` for filetype-agnostic embedding detection, flip-ahead-of-time, and purge rules.
 
 ## Core intuition
 
@@ -114,6 +116,8 @@ git_report_refs=...
 - `.plan` instances can carry optional metadata envelopes:
   - `YataPlanSelfReport` and `YataPlan::with_self_report`, which emits `self_report_*` headers and rehydrates during strict parse.
   - `YataPlanGitReport` and `YataPlan::with_git_report`, which emits `git_report_*` headers and rehydrates during strict parse.
+  - `YataPlanTemporalDelta` and `YataPlan::with_temporal_delta`, for signed replay movement vectors.
+  - `YataPlanEmbeddingReport` and `YataPlan::with_embedding_report`, for filetype-agnostic embedding scan summary.
   - `YataGitSnapshot::to_report` can derive git envelope fields from lightweight snapshot refs.
 
 ### Interoperability schema (strict parse)

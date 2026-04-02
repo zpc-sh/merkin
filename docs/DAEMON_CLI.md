@@ -9,12 +9,16 @@ moon run cmd/main -- daemon --action capabilities --mode hybrid --targets local-
 moon run cmd/main -- daemon --action put --mode receiver --targets local-1,oci-1 --payload hello --lane hot --path ingest/oci
 moon run cmd/main -- daemon --action sparse --mode receiver --targets local-1 --routes alpha/doc,beta/doc --tokens alpha
 moon run cmd/main -- daemon --action diff --mode receiver --targets local-1 --left-routes alpha/doc --right-routes beta/doc
+moon run cmd/main -- daemon --action conv-turn --hall saba --topic debate --content "Opening statement" --overlay chatgpt --actor-role ai
+moon run cmd/main -- daemon --action conv-replay --hall saba --topic debate --seed-non-replayable true --enforce-length true
+moon run cmd/main -- daemon --action conv-embed --file-ref docs/sample.bin --embedding-action flip-aot --embedding-count 3
+moon run cmd/main -- daemon --action conv-embed-purge --purge-after-turns 1 --current-turn-seq 2
 moon run cmd/main -- daemon --action demo --mode receiver
 ```
 
 ## Flags
 
-- `--action`: `capabilities | put | sparse | diff | demo`
+- `--action`: `capabilities | put | sparse | diff | conv-turn | conv-replay | conv-embed | conv-embed-purge | demo`
 - `--mode`: `receiver | proxy | passthrough | hybrid`
 - `--node-id`: daemon node id
 - `--targets`: comma-separated target ids
@@ -30,6 +34,28 @@ moon run cmd/main -- daemon --action demo --mode receiver
 - `--right-routes`: incremental route set for `diff`
 - `--left-tokens`: baseline token filter for `diff`
 - `--right-tokens`: comparison token filter for `diff`
+- `--hall`: hall name for conversational actions
+- `--policy-profile`: policy profile for conversational actions
+- `--topic`: thread topic for conversational actions
+- `--track`: `program | git` track for conversational actions
+- `--overlay`: overlay id for conversational actions
+- `--actor-role`: `ai | human | system`
+- `--content`: turn content for conversational actions
+- `--idempotency-key`: optional idempotency key for `conv-turn`
+- `--input-min`, `--input-max`, `--output-min`, `--output-max`: length envelope bounds
+- `--from-seq`, `--to-seq`: replay window for `conv-replay`
+- `--enforce-length`: enforce non-replayable turn failures on replay
+- `--seed-non-replayable`: create one intentionally non-replayable turn before replay
+- `--file-ref`: file reference for embedding metadata
+- `--file-type`: file type label for embedding metadata
+- `--mime-type`: mime type for embedding metadata
+- `--embedding-found`: `true | false`
+- `--embedding-count`: unsigned finding count
+- `--embedding-action`: `observe | flip-aot | purge`
+- `--embedding-ephemeral`: `true | false`
+- `--purge-after-turns`: purge window measured in turn age
+- `--embedding-note`: optional embedding metadata note
+- `--current-turn-seq`: turn sequence horizon for purge execution
 
 ## Mode Semantics
 
@@ -51,3 +77,5 @@ Receiver mode also maintains an in-memory Merkin index tree per daemon node, ena
 - diff between token projections (`daemon.diff_views(...)`)
 
 This is intentionally structured so networked OCI transports, persistent ledgers, and persisted tree snapshots can be added without changing CLI shape.
+
+Conversational actions use the in-memory host scaffold in `daemon/conversation.mbt` and are intended as a bridge to the Pactis/Saba API contracts in `docs/PACTIS_CONVERSATIONAL_API_SPEC.md` and `docs/PACTIS_CONVERSATIONAL_OPENAPI.yaml`.

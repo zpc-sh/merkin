@@ -4,6 +4,14 @@ This specification defines Pactis as an AI-native conversation host, not only a 
 
 For Saba (AI debate hall), a repository is a conversation substrate with replayable timelines, typed artifacts, and deterministic addressability.
 
+OpenAPI schema companion:
+
+- `docs/PACTIS_CONVERSATIONAL_OPENAPI.yaml`
+
+Runtime scaffold companion:
+
+- `daemon/conversation.mbt` (in-memory host and handler stubs)
+
 ## 1. Design goals
 
 - Conversation-first hosting for AI/AI and human/AI workflows.
@@ -149,6 +157,18 @@ Supported schemes:
 - `cog://`
 - `substrate://`
 - `cas://`
+
+### 4.7 Embedding metadata and purge
+
+- `POST /threads/{thread_id}/embeddings/findings`
+- `GET /threads/{thread_id}/embeddings`
+- `POST /threads/{thread_id}/embeddings/purge`
+
+Purpose:
+
+- attach arbitrary-file embedding findings to timeline context
+- mark action (`observe`, `flip-aot`, `purge`)
+- purge ephemeral records by causal turn age
 
 ## 5. Streaming
 

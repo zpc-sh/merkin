@@ -24,6 +24,8 @@ This document defines the `.plan` wire contract used by Merkin Yata for replay, 
 - `material_hash`: deterministic hash over emitted material
 - `self_report`: optional collaboration envelope
 - `git_report`: optional VCS provenance envelope
+- `temporal_delta`: optional signed movement vector for replay/time-travel
+- `embedding_report`: optional arbitrary-file embedding scan metadata
 - `entries`: array of plan entries
 
 `YataPlanEntry` includes:
@@ -63,6 +65,17 @@ material_hash=<text>
 [git_report_head=<text>]
 [git_report_commit_count=<uint>]
 [git_report_refs=<text>]
+[temporal_delta=1]
+[temporal_delta_turns=<int>]
+[temporal_delta_bytes=<int>]
+[temporal_delta_causal_offset=<int>]
+[embedding_report=1]
+[embedding_report_file_type=<text>]
+[embedding_report_found=<true|false>]
+[embedding_report_count=<uint>]
+[embedding_report_ephemeral=<true|false>]
+[embedding_report_purge_after_turns=<uint>]
+[embedding_report_strategy=<text>]
 - <hole_id> <anchor> <state> ready=<bool> candidates=<uint> conf_floor=<uint> selected=<id|none> provenance=<uint>
 ...
 ```
@@ -95,6 +108,7 @@ Unknown non-empty lines are rejected.
 
 - if `self_report=1`, then `self_report_overlay` is required
 - if `git_report=1`, then `git_report_branch` is required
+- if `embedding_report=1`, then `embedding_report_file_type` is required
 
 ### 4.3 Numeric fields
 
@@ -103,9 +117,17 @@ Unsigned integer required for:
 - `entries`
 - `self_report_gap`
 - `git_report_commit_count`
+- `embedding_report_count`
+- `embedding_report_purge_after_turns`
 - entry `candidates`
 - entry `conf_floor`
 - entry `provenance`
+
+Signed integer required for:
+
+- `temporal_delta_turns`
+- `temporal_delta_bytes`
+- `temporal_delta_causal_offset`
 
 ## 5. Error code catalog
 
@@ -117,8 +139,11 @@ Unsigned integer required for:
 - `BAD_MODE`
 - `MALFORMED_HEADER`
 - `BAD_HEADER_NUMBER`
+- `BAD_HEADER_BOOL`
 - `BAD_SELF_REPORT_FLAG`
 - `BAD_GIT_REPORT_FLAG`
+- `BAD_TEMPORAL_DELTA_FLAG`
+- `BAD_EMBEDDING_REPORT_FLAG`
 - `BAD_ENTRY`
 - `UNRECOGNIZED_LINE`
 - `MISSING_KIND`
@@ -126,6 +151,7 @@ Unsigned integer required for:
 - `ENTRY_COUNT_MISMATCH`
 - `MISSING_SELF_REPORT_OVERLAY`
 - `MISSING_GIT_REPORT_BRANCH`
+- `MISSING_EMBEDDING_FILE_TYPE`
 
 ### 5.2 Validation warnings (`YataPlan::validate`)
 
@@ -176,6 +202,29 @@ git_report_head=def456
 git_report_commit_count=2
 git_report_refs=abc123,def456
 - blake3:... notes/repo.md converging ready=true candidates=1 conf_floor=60 selected=none provenance=0
+```
+
+### 7.3 Program track with temporal delta and embedding report
+
+```text
+kind: merkin.yata.plan
+track=program
+mode=full
+generator=chatgpt
+note=embedding-scan-pass
+material_hash=blake3:...
+temporal_delta=1
+temporal_delta_turns=-2
+temporal_delta_bytes=-8192
+temporal_delta_causal_offset=1
+embedding_report=1
+embedding_report_file_type=pdf
+embedding_report_found=true
+embedding_report_count=3
+embedding_report_ephemeral=true
+embedding_report_purge_after_turns=2
+embedding_report_strategy=flip-aot
+- blake3:... docs/payload.pdf converging ready=false candidates=1 conf_floor=80 selected=none provenance=1
 ```
 
 ## 8. Compatibility and evolution
