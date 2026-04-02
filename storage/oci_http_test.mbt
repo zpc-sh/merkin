@@ -161,7 +161,7 @@ test "OciRegistryHttpTransport put/get/has blob" {
   )
 
   let payload = b"http-blob"
-  let digest = transport.put_blob(payload)
+  let digest = transport.put_blob(payload).unwrap()
   assert_true(transport.has_blob(digest))
   match transport.get_blob(digest) {
     Some(bytes) => assert_eq(bytes, payload)
@@ -178,7 +178,7 @@ test "OciRegistryHttpTransport tag operations" {
     client as &@storage.RegistryRoundTripper,
   )
 
-  transport.put_tag("latest", "blake3:abc123")
+  assert_true(transport.put_tag("latest", "blake3:abc123"))
   match transport.resolve_tag("latest") {
     Some(d) => assert_eq(d, "blake3:manifest-digest")
     None => assert_true(false)
@@ -195,7 +195,7 @@ test "OciHttpCasNode participates in StoreNode flow" {
   )
   let node = @storage.OciHttpCasNode::new("oci-http-1", transport)
 
-  let digest = node.put_blob(b"oci-http-payload")
+  let digest = node.put_blob(b"oci-http-payload").unwrap()
   assert_true(node.has_blob(digest))
   assert_true(node.get_blob(digest) is Some(_))
 }

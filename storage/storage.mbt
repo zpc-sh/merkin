@@ -7,7 +7,7 @@ pub(open) trait StoreNode {
   availability(Self) -> Availability
   has_blob(Self, @hash.Hash) -> Bool
   get_blob(Self, @hash.Hash) -> Bytes?
-  put_blob(Self, Bytes) -> @hash.Hash
+  put_blob(Self, Bytes) -> @hash.Hash?
 }
 
 ///|
@@ -83,15 +83,16 @@ impl StoreNode for ArtifactCasNode with get_blob(
 impl StoreNode for ArtifactCasNode with put_blob(
   self : ArtifactCasNode,
   bytes : Bytes,
-) -> @hash.Hash {
+) -> @hash.Hash? {
   let artifact = @model.Artifact::from_bytes(bytes)
   ignore(self.backend.put(artifact))
-  artifact.content_hash
+  Some(artifact.content_hash)
 }
 
 ///|
 pub(all) enum DispatchState {
   Committed
+  Failed
   Duplicate
   SkippedTree
   SkippedPolicy
@@ -273,15 +274,25 @@ pub fn UnionStore::put_blob(
     }
 
     self.ledger.mark_pending(op_key)
-    let digest = node.put_blob(bytes)
-    self.ledger.mark_committed(op_key)
-    committed = committed + 1U
-    dispatches.push({
-      target_id,
-      state: Committed,
-      op_key: Some(op_key),
-      digest: Some(digest),
-    })
+    match node.put_blob(bytes) {
+      Some(digest) => {
+        self.ledger.mark_committed(op_key)
+        committed = committed + 1U
+        dispatches.push({
+          target_id,
+          state: Committed,
+          op_key: Some(op_key),
+          digest: Some(digest),
+        })
+      }
+      None =>
+        dispatches.push({
+          target_id,
+          state: Failed,
+          op_key: Some(op_key),
+          digest: None,
+        })
+    }
   }
 
   {
