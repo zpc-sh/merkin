@@ -9,7 +9,9 @@ test "Yata lifecycle is abstract and contract-first" {
   let hole = @model.YataHole::new("notes/overview.md", contract, [], [], [])
   assert_eq(hole.state, @model.Open)
   assert_eq(hole.candidates.length(), 0)
-  let candidate = @model.YataCandidate::new("c1", "candidate summary", 50U, "rough draft")
+  let candidate = @model.YataCandidate::new(
+    "c1", "candidate summary", 50U, "rough draft",
+  )
   let active = hole.propose(candidate)
   assert_eq(active.state, @model.Converging)
   assert_eq(active.candidates.length(), 1)
@@ -21,16 +23,15 @@ test "Yata lifecycle is abstract and contract-first" {
 
 ///|
 test "Yata admissibility uses confidence floor against candidates" {
-  let contract = @model.YataContract::new(
-    "TreeShape",
-    [],
-    [],
-    80U,
-  )
+  let contract = @model.YataContract::new("TreeShape", [], [], 80U)
   let hole = @model.YataHole::new("notes/plan.md", contract, [], [], [])
-  let first = hole.propose(@model.YataCandidate::new("low", "low confidence", 12U, "temp"))
+  let first = hole.propose(
+    @model.YataCandidate::new("low", "low confidence", 12U, "temp"),
+  )
   assert_eq(first.admissible(), false)
-  let admitted = first.propose(@model.YataCandidate::new("high", "high confidence", 95U, "good"))
+  let admitted = first.propose(
+    @model.YataCandidate::new("high", "high confidence", 95U, "good"),
+  )
   assert_eq(admitted.admissible(), true)
   match admitted.best_candidate() {
     Some(top) => assert_eq(top.candidate_id, "high")
@@ -40,12 +41,7 @@ test "Yata admissibility uses confidence floor against candidates" {
 
 ///|
 test "Yata dependency readiness is explicit and local" {
-  let contract = @model.YataContract::new(
-    "BinaryBlob",
-    [],
-    [],
-    0U,
-  )
+  let contract = @model.YataContract::new("BinaryBlob", [], [], 0U)
   let base = @model.YataHole::new("notes/base.md", contract, [], [], [])
     .propose(@model.YataCandidate::new("base", "base value", 99U, "r0"))
     .seal("base", None)
@@ -57,7 +53,9 @@ test "Yata dependency readiness is explicit and local" {
     [base.hole_id],
     [],
   )
-  dependent = dependent.propose(@model.YataCandidate::new("child", "child value", 99U, "c1"))
+  dependent = dependent.propose(
+    @model.YataCandidate::new("child", "child value", 99U, "c1"),
+  )
   let unresolved_graph = @model.YataGraph::new().add(dependent).add(base)
   let ready_0 = unresolved_graph.ready_set()
   assert_eq(ready_0.length(), 2)
@@ -76,7 +74,9 @@ test "Yata plan emission is deterministic and track-aware" {
     .propose(@model.YataCandidate::new("c1", "summary", 70U, "proof"))
     .seal("c1", None)
     .resolve()
-  let plan = @model.YataGraph::new().add(hole).to_plan(@model.Program, @model.Full, "chatgpt", "unit")
+  let plan = @model.YataGraph::new()
+    .add(hole)
+    .to_plan(@model.Program, @model.Full, "chatgpt", "unit")
   assert_eq(plan.track, @model.Program)
   assert_eq(plan.mode, @model.Full)
   assert_eq(plan.entries.length(), 1)
@@ -88,12 +88,21 @@ test "Yata plan emission is deterministic and track-aware" {
 test "Yata project and reparent are deterministic transforms" {
   let contract = @model.YataContract::new("Tree", [], [], 0U)
   let root = @model.YataHole::new("notes/root.md", contract, [], [], [])
-  let child = @model.YataHole::new("notes/child.md", contract, [], [root.hole_id], [])
-  let grandchild = @model.YataHole::new("notes/grand.md", contract, [], [child.hole_id], [])
-  let graph = @model.YataGraph::new()
-    .add(root)
-    .add(child)
-    .add(grandchild)
+  let child = @model.YataHole::new(
+    "notes/child.md",
+    contract,
+    [],
+    [root.hole_id],
+    [],
+  )
+  let grandchild = @model.YataHole::new(
+    "notes/grand.md",
+    contract,
+    [],
+    [child.hole_id],
+    [],
+  )
+  let graph = @model.YataGraph::new().add(root).add(child).add(grandchild)
   let subset = graph.project([grandchild.hole_id, child.hole_id])
   assert_eq(subset.holes.length(), 2)
 
@@ -116,8 +125,20 @@ test "Yata project and reparent are deterministic transforms" {
 test "Yata lineage replay follows ancestry before target" {
   let contract = @model.YataContract::new("Timeline", [], [], 0U)
   let root = @model.YataHole::new("notes/root.md", contract, [], [], [])
-  let parent = @model.YataHole::new("notes/parent.md", contract, [], [root.hole_id], [])
-  let target = @model.YataHole::new("notes/target.md", contract, [], [parent.hole_id], [])
+  let parent = @model.YataHole::new(
+    "notes/parent.md",
+    contract,
+    [],
+    [root.hole_id],
+    [],
+  )
+  let target = @model.YataHole::new(
+    "notes/target.md",
+    contract,
+    [],
+    [parent.hole_id],
+    [],
+  )
   let graph = @model.YataGraph::new().add(root).add(parent).add(target)
   let steps = graph.lineage_replay(target.hole_id, 8U)
   assert_eq(steps.length(), 3)
@@ -356,7 +377,10 @@ test "Yata address strict parser normalizes slash-heavy routes" {
     Some(addr) => {
       assert_eq(addr.anchor, "notes/agenda.md")
       assert_eq(addr.gap, 1U)
-      assert_eq(addr.uri, "cog://loc.machine/notes/agenda.md?overlay=chatgpt&peer=chatgpt&mode=surface&gap=1&track=program&id=abc#overlay")
+      assert_eq(
+        addr.uri,
+        "cog://loc.machine/notes/agenda.md?overlay=chatgpt&peer=chatgpt&mode=surface&gap=1&track=program&id=abc#overlay",
+      )
     }
     None => assert_true(false)
   }
@@ -382,10 +406,10 @@ test "Yata CAS parser allows digest-only target without anchor" {
 test "Yata address canonicalize helper rewrites slash-heavy uri" {
   let raw = "substrate://loc.machine////notes///state.md/?overlay=chatgpt&peer=chatgpt&mode=surface&gap=3&track=git&id=abc#overlay"
   match @model.YataAddress::canonicalize(raw) {
-    Some(canonical) => assert_eq(
-      canonical,
-      "substrate://loc.machine/notes/state.md?overlay=chatgpt&peer=chatgpt&mode=surface&gap=3&track=git&id=abc#overlay",
-    )
+    Some(canonical) =>
+      assert_eq(
+        canonical, "substrate://loc.machine/notes/state.md?overlay=chatgpt&peer=chatgpt&mode=surface&gap=3&track=git&id=abc#overlay",
+      )
     None => assert_true(false)
   }
 }

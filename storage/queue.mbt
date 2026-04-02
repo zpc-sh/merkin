@@ -121,25 +121,27 @@ pub fn ReplicationQueue::restore(snapshot : QueueSnapshot) -> ReplicationQueue {
 
 ///|
 fn queue_snapshot_material(items : Array[QueueItem]) -> Bytes {
-  let lines : Array[String] = []
-  for item in items {
-    lines.push(
-      item.op_key.key() +
-      ";" +
-      item.target_id +
-      ";" +
-      lane_name(item.lane) +
-      ";" +
-      event_name(item.event) +
-      ";" +
-      item.digest.key() +
-      ";" +
-      item.size_bytes.to_string() +
-      ";" +
-      state_name(item.state),
-    )
+  let builder = StringBuilder::new()
+  for i = 0; i < items.length(); i = i + 1 {
+    let item = items[i]
+    if i > 0 {
+      builder.write_string("\n")
+    }
+    builder.write_string(item.op_key.key())
+    builder.write_string(";")
+    builder.write_string(item.target_id)
+    builder.write_string(";")
+    builder.write_string(lane_name(item.lane))
+    builder.write_string(";")
+    builder.write_string(event_name(item.event))
+    builder.write_string(";")
+    builder.write_string(item.digest.key())
+    builder.write_string(";")
+    builder.write_string(item.size_bytes.to_string())
+    builder.write_string(";")
+    builder.write_string(state_name(item.state))
   }
-  queue_string_to_bytes(queue_join(lines, "\n"))
+  queue_string_to_bytes(builder.to_string())
 }
 
 ///|
@@ -150,20 +152,6 @@ fn state_name(v : QueueItemState) -> String {
     Done => "done"
     Failed => "failed"
   }
-}
-
-///|
-// Use StringBuilder to avoid O(N²) string concatenation
-fn queue_join(items : Array[String], sep : String) -> String {
-  let builder = StringBuilder::new()
-  for i = 0; i < items.length(); i = i + 1 {
-
-    if i > 0 {
-      builder.write_string(sep)
-    }
-    builder.write_string(items[i])
-  }
-  builder.to_string()
 }
 
 ///|

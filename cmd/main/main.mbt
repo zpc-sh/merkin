@@ -104,28 +104,37 @@ fn main {
         value_after(args, "--policy-profile", "debate-default"),
       )
       let track = parse_conv_track(value_after(args, "--track", "program"))
-      match host.create_thread(
-        hall.hall_id,
-        value_after(args, "--topic", "ai-debate"),
-        track,
-      ) {
+      match
+        host.create_thread(
+          hall.hall_id,
+          value_after(args, "--topic", "ai-debate"),
+          track,
+        ) {
         Some(thread) => {
           let envelope : @daemon.LengthEnvelope = {
             input_len_min: parse_uint(value_after(args, "--input-min", "1"), 1U),
-            input_len_max: parse_uint(value_after(args, "--input-max", "12000"), 12000U),
-            output_len_min: parse_uint(value_after(args, "--output-min", "1"), 1U),
-            output_len_max: parse_uint(value_after(args, "--output-max", "24000"), 24000U),
+            input_len_max: parse_uint(
+              value_after(args, "--input-max", "12000"),
+              12000U,
+            ),
+            output_len_min: parse_uint(
+              value_after(args, "--output-min", "1"),
+              1U,
+            ),
+            output_len_max: parse_uint(
+              value_after(args, "--output-max", "24000"),
+              24000U,
+            ),
           }
-          let outcome = host.append_turn(
-            thread.thread_id,
-            {
-              actor_overlay: value_after(args, "--overlay", "chatgpt"),
-              actor_role: parse_actor_role(value_after(args, "--actor-role", "ai")),
-              content: value_after(args, "--content", "debate turn"),
-              length_envelope: envelope,
-              idempotency_key: value_after(args, "--idempotency-key", ""),
-            },
-          )
+          let outcome = host.append_turn(thread.thread_id, {
+            actor_overlay: value_after(args, "--overlay", "chatgpt"),
+            actor_role: parse_actor_role(
+              value_after(args, "--actor-role", "ai"),
+            ),
+            content: value_after(args, "--content", "debate turn"),
+            length_envelope: envelope,
+            idempotency_key: value_after(args, "--idempotency-key", ""),
+          })
           println("accepted=\{outcome.accepted}")
           println("issues=\{outcome.issues.length()}")
           match outcome.turn_id {
@@ -157,47 +166,58 @@ fn main {
         value_after(args, "--policy-profile", "debate-default"),
       )
       let track = parse_conv_track(value_after(args, "--track", "program"))
-      match host.create_thread(
-        hall.hall_id,
-        value_after(args, "--topic", "ai-debate"),
-        track,
-      ) {
+      match
+        host.create_thread(
+          hall.hall_id,
+          value_after(args, "--topic", "ai-debate"),
+          track,
+        ) {
         Some(thread) => {
           let envelope : @daemon.LengthEnvelope = {
             input_len_min: parse_uint(value_after(args, "--input-min", "1"), 1U),
-            input_len_max: parse_uint(value_after(args, "--input-max", "12000"), 12000U),
-            output_len_min: parse_uint(value_after(args, "--output-min", "1"), 1U),
-            output_len_max: parse_uint(value_after(args, "--output-max", "24000"), 24000U),
+            input_len_max: parse_uint(
+              value_after(args, "--input-max", "12000"),
+              12000U,
+            ),
+            output_len_min: parse_uint(
+              value_after(args, "--output-min", "1"),
+              1U,
+            ),
+            output_len_max: parse_uint(
+              value_after(args, "--output-max", "24000"),
+              24000U,
+            ),
           }
-          let first = host.append_turn(
-            thread.thread_id,
-            {
-              actor_overlay: value_after(args, "--overlay", "chatgpt"),
-              actor_role: parse_actor_role(value_after(args, "--actor-role", "ai")),
-              content: value_after(args, "--content", "debate turn"),
-              length_envelope: envelope,
-              idempotency_key: "seed-1",
-            },
-          )
+          let first = host.append_turn(thread.thread_id, {
+            actor_overlay: value_after(args, "--overlay", "chatgpt"),
+            actor_role: parse_actor_role(
+              value_after(args, "--actor-role", "ai"),
+            ),
+            content: value_after(args, "--content", "debate turn"),
+            length_envelope: envelope,
+            idempotency_key: "seed-1",
+          })
           println("seed_accepted=\{first.accepted}")
 
-          if parse_bool(value_after(args, "--seed-non-replayable", "false"), false) {
+          if parse_bool(
+              value_after(args, "--seed-non-replayable", "false"),
+              false,
+            ) {
             ignore(
-              host.append_turn(
-                thread.thread_id,
-                {
-                  actor_overlay: value_after(args, "--overlay", "chatgpt"),
-                  actor_role: parse_actor_role(value_after(args, "--actor-role", "ai")),
-                  content: "non-replayable-seed",
-                  length_envelope: {
-                    input_len_min: 1U,
-                    input_len_max: 200U,
-                    output_len_min: 1U,
-                    output_len_max: 2U,
-                  },
-                  idempotency_key: "seed-2",
+              host.append_turn(thread.thread_id, {
+                actor_overlay: value_after(args, "--overlay", "chatgpt"),
+                actor_role: parse_actor_role(
+                  value_after(args, "--actor-role", "ai"),
+                ),
+                content: "non-replayable-seed",
+                length_envelope: {
+                  input_len_min: 1U,
+                  input_len_max: 200U,
+                  output_len_min: 1U,
+                  output_len_max: 2U,
                 },
-              ),
+                idempotency_key: "seed-2",
+              }),
             )
           }
 
@@ -207,14 +227,14 @@ fn main {
           } else {
             Some(parse_uint(to_seq_value, 1U))
           }
-          let replay = host.replay(
-            thread.thread_id,
-            {
-              from_seq: parse_uint(value_after(args, "--from-seq", "1"), 1U),
-              to_seq,
-              length_guard_enforced: parse_bool(value_after(args, "--enforce-length", "true"), true),
-            },
-          )
+          let replay = host.replay(thread.thread_id, {
+            from_seq: parse_uint(value_after(args, "--from-seq", "1"), 1U),
+            to_seq,
+            length_guard_enforced: parse_bool(
+              value_after(args, "--enforce-length", "true"),
+              true,
+            ),
+          })
           println("replay_ok=\{replay.ok}")
           println("replayed=\{replay.replayed_count}")
           println("non_replayable=\{replay.non_replayable_count}")
@@ -233,31 +253,40 @@ fn main {
         value_after(args, "--policy-profile", "debate-default"),
       )
       let track = parse_conv_track(value_after(args, "--track", "program"))
-      match host.create_thread(
-        hall.hall_id,
-        value_after(args, "--topic", "ai-debate"),
-        track,
-      ) {
+      match
+        host.create_thread(
+          hall.hall_id,
+          value_after(args, "--topic", "ai-debate"),
+          track,
+        ) {
         Some(thread) => {
           ignore(
             host.append_turn(
               thread.thread_id,
-              @daemon.TurnRequest::default(value_after(args, "--content", "seed turn")),
+              @daemon.TurnRequest::default(
+                value_after(args, "--content", "seed turn"),
+              ),
             ),
           )
-          let action = parse_embedding_action(value_after(args, "--embedding-action", "observe"))
-          match host.record_embedding(
-            thread.thread_id,
-            value_after(args, "--file-ref", "docs/sample.bin"),
-            value_after(args, "--file-type", "bin"),
-            value_after(args, "--mime-type", "application/octet-stream"),
-            parse_bool(value_after(args, "--embedding-found", "true"), true),
-            parse_uint(value_after(args, "--embedding-count", "1"), 1U),
-            action,
-            parse_bool(value_after(args, "--embedding-ephemeral", "true"), true),
-            parse_uint(value_after(args, "--purge-after-turns", "1"), 1U),
-            value_after(args, "--embedding-note", "runtime scan"),
-          ) {
+          let action = parse_embedding_action(
+            value_after(args, "--embedding-action", "observe"),
+          )
+          match
+            host.record_embedding(
+              thread.thread_id,
+              value_after(args, "--file-ref", "docs/sample.bin"),
+              value_after(args, "--file-type", "bin"),
+              value_after(args, "--mime-type", "application/octet-stream"),
+              parse_bool(value_after(args, "--embedding-found", "true"), true),
+              parse_uint(value_after(args, "--embedding-count", "1"), 1U),
+              action,
+              parse_bool(
+                value_after(args, "--embedding-ephemeral", "true"),
+                true,
+              ),
+              parse_uint(value_after(args, "--purge-after-turns", "1"), 1U),
+              value_after(args, "--embedding-note", "runtime scan"),
+            ) {
             Some(record) => {
               println("embedding_recorded=true")
               println("record_id=\{record.record_id}")
@@ -282,13 +311,19 @@ fn main {
         value_after(args, "--policy-profile", "debate-default"),
       )
       let track = parse_conv_track(value_after(args, "--track", "program"))
-      match host.create_thread(
-        hall.hall_id,
-        value_after(args, "--topic", "ai-debate"),
-        track,
-      ) {
+      match
+        host.create_thread(
+          hall.hall_id,
+          value_after(args, "--topic", "ai-debate"),
+          track,
+        ) {
         Some(thread) => {
-          ignore(host.append_turn(thread.thread_id, @daemon.TurnRequest::default("turn-1")))
+          ignore(
+            host.append_turn(
+              thread.thread_id,
+              @daemon.TurnRequest::default("turn-1"),
+            ),
+          )
           ignore(
             host.record_embedding(
               thread.thread_id,
@@ -297,13 +332,20 @@ fn main {
               value_after(args, "--mime-type", "application/octet-stream"),
               true,
               1U,
-              parse_embedding_action(value_after(args, "--embedding-action", "flip-aot")),
+              parse_embedding_action(
+                value_after(args, "--embedding-action", "flip-aot"),
+              ),
               true,
               parse_uint(value_after(args, "--purge-after-turns", "1"), 1U),
               "ephemeral embedding marker",
             ),
           )
-          ignore(host.append_turn(thread.thread_id, @daemon.TurnRequest::default("turn-2")))
+          ignore(
+            host.append_turn(
+              thread.thread_id,
+              @daemon.TurnRequest::default("turn-2"),
+            ),
+          )
           let before = host.embedding_timeline(thread.thread_id)
           let purged = host.purge_embedding_records(
             thread.thread_id,
@@ -357,7 +399,9 @@ fn print_usage() -> Unit {
     "  moon run cmd/main -- daemon --action conv-embed-purge --purge-after-turns 1 --current-turn-seq 2",
   )
   println("Flags:")
-  println("  --action capabilities|put|sparse|diff|conv-turn|conv-replay|conv-embed|conv-embed-purge|demo")
+  println(
+    "  --action capabilities|put|sparse|diff|conv-turn|conv-replay|conv-embed|conv-embed-purge|demo",
+  )
   println("  --mode receiver|proxy|passthrough|hybrid")
   println("  --node-id <id>")
   println("  --targets <comma-separated ids>")
@@ -442,7 +486,9 @@ fn parse_actor_role(value : String) -> @daemon.ConversationActorRole {
 }
 
 ///|
-fn parse_embedding_action(value : String) -> @daemon.ConversationEmbeddingAction {
+fn parse_embedding_action(
+  value : String,
+) -> @daemon.ConversationEmbeddingAction {
   match value {
     "flip-aot" => @daemon.FlipAot
     "purge" => @daemon.Purge
