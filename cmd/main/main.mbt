@@ -317,6 +317,14 @@ fn main {
         None => println("thread=create_failed")
       }
     }
+    "yata-topology" => {
+      run_yata_topology(
+        parse_uint(value_after(args, "--yata-branch-factor", "3"), 3U),
+        parse_uint(value_after(args, "--yata-detached-depth", "2"), 2U),
+        parse_uint(value_after(args, "--yata-max-children", "2"), 2U),
+        parse_uint(value_after(args, "--yata-max-depth", "8"), 8U),
+      )
+    }
     _ => {
       // demo: put then read
       let payload = b"demo-payload"
@@ -356,8 +364,11 @@ fn print_usage() -> Unit {
   println(
     "  moon run cmd/main -- daemon --action conv-embed-purge --purge-after-turns 1 --current-turn-seq 2",
   )
+  println(
+    "  moon run cmd/main -- daemon --action yata-topology --yata-branch-factor 5 --yata-max-children 3",
+  )
   println("Flags:")
-  println("  --action capabilities|put|sparse|diff|conv-turn|conv-replay|conv-embed|conv-embed-purge|demo")
+  println("  --action capabilities|put|sparse|diff|conv-turn|conv-replay|conv-embed|conv-embed-purge|yata-topology|demo")
   println("  --mode receiver|proxy|passthrough|hybrid")
   println("  --node-id <id>")
   println("  --targets <comma-separated ids>")
@@ -397,6 +408,10 @@ fn print_usage() -> Unit {
   println("  --purge-after-turns <uint> (for conv-embed*)")
   println("  --embedding-note <text> (for conv-embed)")
   println("  --current-turn-seq <uint> (for conv-embed-purge)")
+  println("  --yata-branch-factor <uint> (for yata-topology)")
+  println("  --yata-detached-depth <uint> (for yata-topology)")
+  println("  --yata-max-children <uint> (for yata-topology)")
+  println("  --yata-max-depth <uint> (for yata-topology)")
 }
 
 ///|
@@ -628,6 +643,74 @@ fn parse_oci_flags(
     }
   }
   { receiver, proxy, passthrough }
+}
+
+///|
+fn run_yata_topology(
+  branch_factor : UInt,
+  detached_depth : UInt,
+  max_children : UInt,
+  max_depth : UInt,
+) -> Unit {
+  let contract = @model.YataContract::new("CliTopology", [], [], 0U)
+  let root = @model.YataHole::new("cli/root.md", contract, [], [], [])
+  let mut graph = @model.YataGraph::new().add(root)
+
+  let mut i : UInt = 0U
+  while i < branch_factor {
+    let child = @model.YataHole::new(
+      "cli/child-" + i.to_string() + ".md",
+      contract,
+      [],
+      [root.hole_id],
+      [],
+    )
+    graph = graph.add(child)
+    i = i + 1U
+  }
+
+  // Detached chain rooted on a missing dependency id.
+  let phantom = @model.YataHole::new("cli/phantom.md", contract, [], [], [])
+  let first_detached = @model.YataHole::new(
+    "cli/detached-0.md",
+    contract,
+    [],
+    [phantom.hole_id],
+    [],
+  )
+  graph = graph.add(first_detached)
+  let mut prev = first_detached
+  let mut d : UInt = 1U
+  while d < detached_depth {
+    let next = @model.YataHole::new(
+      "cli/detached-" + d.to_string() + ".md",
+      contract,
+      [],
+      [prev.hole_id],
+      [],
+    )
+    graph = graph.add(next)
+    prev = next
+    d = d + 1U
+  }
+
+  let fanout = graph.max_branch_fanout()
+  let hotspots = graph.overbranched(max_children)
+  let missing = graph.holes_with_missing_dependencies()
+  let detached = graph.detached_holes(max_depth)
+
+  println("yata_nodes=\{graph.holes.length()}")
+  println("max_fanout=\{fanout}")
+  println("max_children_threshold=\{max_children}")
+  println("overbranched=\{hotspots.length()}")
+  println("missing_dependencies=\{missing.length()}")
+  println("detached=\{detached.length()}")
+
+  if hotspots.length() == 0 && missing.length() == 0 && detached.length() == 0 {
+    println("topology_status=healthy")
+  } else {
+    println("topology_status=attention")
+  }
 }
 
 ///|
