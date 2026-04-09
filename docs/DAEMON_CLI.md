@@ -2,6 +2,8 @@
 
 `cmd/main` now exposes a daemon-oriented CLI with configurable OCI behavior.
 
+For broader library/module orientation, see `docs/DOCUMENTATION_INDEX.md` and `docs/LIBRARY_API_GUIDE.md`.
+
 ## Commands
 
 ```bash
@@ -13,12 +15,13 @@ moon run cmd/main -- daemon --action conv-turn --hall saba --topic debate --cont
 moon run cmd/main -- daemon --action conv-replay --hall saba --topic debate --seed-non-replayable true --enforce-length true
 moon run cmd/main -- daemon --action conv-embed --file-ref docs/sample.bin --embedding-action flip-aot --embedding-count 3
 moon run cmd/main -- daemon --action conv-embed-purge --purge-after-turns 1 --current-turn-seq 2
+moon run cmd/main -- daemon --action yata-topology --yata-branch-factor 5 --yata-max-children 3 --yata-detached-depth 2
 moon run cmd/main -- daemon --action demo --mode receiver
 ```
 
 ## Flags
 
-- `--action`: `capabilities | put | sparse | diff | conv-turn | conv-replay | conv-embed | conv-embed-purge | demo`
+- `--action`: `capabilities | put | sparse | diff | conv-turn | conv-replay | conv-embed | conv-embed-purge | yata-topology | demo`
 - `--mode`: `receiver | proxy | passthrough | hybrid`
 - `--node-id`: daemon node id
 - `--targets`: comma-separated target ids
@@ -56,6 +59,10 @@ moon run cmd/main -- daemon --action demo --mode receiver
 - `--purge-after-turns`: purge window measured in turn age
 - `--embedding-note`: optional embedding metadata note
 - `--current-turn-seq`: turn sequence horizon for purge execution
+- `--yata-branch-factor`: synthetic child count attached to one root for topology diagnostics
+- `--yata-detached-depth`: synthetic detached chain length for topology diagnostics
+- `--yata-max-children`: threshold used by overbranch hotspot detection
+- `--yata-max-depth`: traversal depth bound for detached-hole detection
 
 ## Mode Semantics
 
@@ -79,3 +86,16 @@ Receiver mode also maintains an in-memory Merkin index tree per daemon node, ena
 This is intentionally structured so networked OCI transports, persistent ledgers, and persisted tree snapshots can be added without changing CLI shape.
 
 Conversational actions use the in-memory host scaffold in `daemon/conversation.mbt` and are intended as a bridge to the Pactis/Saba API contracts in `docs/PACTIS_CONVERSATIONAL_API_SPEC.md` and `docs/PACTIS_CONVERSATIONAL_OPENAPI.yaml`.
+
+## CLI/TUI readiness for first release
+
+You do **not** need to design a full separate client to start using the system:
+
+- The CLI is already scriptable and covers daemon OCI flows, sparse/diff tree inspection, conversational turn/replay, embedding metadata workflows, and Yata topology diagnostics.
+- The new `yata-topology` action exposes balancing and detached-chain checks directly from `cmd/main`, so operators can run release gates from shell/CI without a UI.
+- A TUI can be added later as a thin presentation layer over these same CLI/API surfaces.
+
+Practical recommendation:
+
+1. Keep release gates in CLI + CI first (stable, automatable).
+2. Add a TUI only for operator ergonomics once workflows stabilize.

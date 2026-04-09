@@ -1,5 +1,7 @@
 # Yata Release Checklist (Scaffolding -> v0.3)
 
+> For full cross-project release gating (spec/doc/test readiness), see `docs/FIRST_RELEASE_READINESS.md`.
+
 ## Current state
 
 - Core Yata hole model and graph lifecycle exist.
