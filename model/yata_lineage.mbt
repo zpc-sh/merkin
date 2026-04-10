@@ -115,7 +115,7 @@ pub(all) struct YataPlan {
 ///|
 /// Create a projected subgraph by explicit id set.
 pub fn YataGraph::project(self : YataGraph, ids : Array[@hash.Hash]) -> YataGraph {
-  let mut out : Array[YataHole] = []
+  let out : Array[YataHole] = []
   for hole in self.holes {
     if array_contains_hash(ids, hole.hole_id) {
       out.push(hole)
@@ -135,7 +135,7 @@ pub fn YataGraph::reparent(
   old_dep : @hash.Hash,
   new_dep : @hash.Hash?,
 ) -> YataGraph {
-  let mut next : Array[YataHole] = []
+  let next : Array[YataHole] = []
   for hole in self.holes {
     if hole.hole_id == hole_id {
       next.push(reparent_hole_dependency(hole, old_dep, new_dep))
@@ -157,7 +157,7 @@ pub fn YataGraph::transitive_ancestry(self : YataGraph, root : @hash.Hash, max_d
 /// Returns dependencies-first order to permit deterministic forward processing.
 pub fn YataGraph::lineage_replay(self : YataGraph, root : @hash.Hash, max_depth : UInt) -> Array[YataReplayStep] {
   let ids = self.transitive_ancestry(root, max_depth)
-  let mut out : Array[YataReplayStep] = []
+  let out : Array[YataReplayStep] = []
   let mut seq : UInt = 0U
   for hole_id in ids {
     match self.get(hole_id) {
@@ -188,8 +188,8 @@ pub fn YataGraph::to_plan(
   generator : String,
   note : String,
 ) -> YataPlan {
-  let mut entries : Array[YataPlanEntry] = []
-  let mut material : Array[String] = []
+  let entries : Array[YataPlanEntry] = []
+  let material : Array[String] = []
   for hole in self.holes {
     let entry = hole.to_plan_entry()
     material.push(entry.anchor)
@@ -333,7 +333,7 @@ pub fn YataGraph::emit_plan(
 ///|
 /// Stable wire format for `.plan`.
 pub fn YataPlan::to_wire(self : YataPlan) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string("kind: merkin.yata.plan")
   b.write_string("\ntrack=")
   b.write_string(yat_track_tag(self.track))
@@ -450,7 +450,7 @@ pub fn YataPlan::to_wire(self : YataPlan) -> String {
 }
 
 fn reparent_hole_dependency(hole : YataHole, old_dep : @hash.Hash, new_dep : @hash.Hash?) -> YataHole {
-  let mut next_deps : Array[@hash.Hash] = []
+  let next_deps : Array[@hash.Hash] = []
   let mut replaced = false
   for dep in hole.dependencies {
     if dep == old_dep {

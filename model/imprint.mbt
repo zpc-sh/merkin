@@ -137,7 +137,7 @@ pub fn Imprint::new(
 ///|
 /// Convert an imprint into a hollow, portable mirage.
 pub fn Imprint::to_mirage(self : Imprint) -> Mirage {
-  let mut appearance = [self.mode_name()]
+  let appearance = [self.mode_name()]
   for value in self.surface_projection {
     appearance.push(value)
   }
@@ -182,7 +182,7 @@ fn imprint_material(
   mode : MirageMode,
   confidence : UInt,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string(kind.to_string())
   b.write_string("|")
   b.write_string(source)
