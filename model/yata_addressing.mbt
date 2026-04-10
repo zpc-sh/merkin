@@ -59,7 +59,7 @@ pub fn YataHole::to_cog_uri(
   hint : YataAddressHint,
   track : YataTrack,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string("cog://")
   b.write_string(authority)
   b.write_string("/")
@@ -98,7 +98,7 @@ pub fn YataHole::to_substrate_uri(
   hint : YataAddressHint,
   track : YataTrack,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string("substrate://")
   b.write_string(authority)
   b.write_string("/")
@@ -149,7 +149,7 @@ pub fn YataHole::to_cas_uri(
     digest = split_after_raw(digest, "0x")
   }
   let normalized_anchor = normalize_anchor_path(self.anchor)
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string("cas://")
   b.write_string(authority)
   b.write_string("/")
@@ -305,7 +305,7 @@ pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressC
 ///|
 /// Strict parse with unknown-key reporting.
 pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
-  let mut issues : Array[YataAddressParseIssue] = []
+  let issues : Array[YataAddressParseIssue] = []
 
   let hashes = raw.split("#")
   if hashes.length() == 0 {
@@ -336,7 +336,7 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
     let route = rem.split("/")
     if route.length() >= 1 {
       authority = route[0]
-      let mut segments : Array[String] = []
+      let segments : Array[String] = []
       let mut index = 1
       while index < route.length() {
         if route[index] != "" {
@@ -355,7 +355,7 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
     let route = rem.split("/")
     if route.length() >= 1 {
       authority = route[0]
-      let mut segments : Array[String] = []
+      let segments : Array[String] = []
       let mut index = 1
       while index < route.length() {
         if route[index] != "" {
@@ -374,7 +374,7 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
     let route = rem.split("/")
     if route.length() >= 1 {
       authority = route[0]
-      let mut segments : Array[String] = []
+      let segments : Array[String] = []
       let mut index = 1
       while index < route.length() {
         if route[index] != "" {
@@ -559,7 +559,7 @@ fn build_canonical_uri(
   hash_token : String,
   view : String,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string(scheme)
   b.write_string("://")
   b.write_string(authority)
@@ -613,7 +613,7 @@ fn normalize_anchor_path(raw_anchor : String) -> String {
     }
     if segment == ".." {
       if resolved.length() > 0 {
-        let mut trimmed : Array[String] = []
+        let trimmed : Array[String] = []
         let mut j : Int = 0
         while j < resolved.length() - 1 {
           trimmed.push(resolved[j])
@@ -660,7 +660,7 @@ fn resolve_relative_anchor(base_anchor : String, route : String) -> String {
     }
     if segment == ".." {
       if resolved.length() > 0 {
-        let mut trimmed : Array[String] = []
+        let trimmed : Array[String] = []
         let mut k : Int = 0
         while k < resolved.length() - 1 {
           trimmed.push(resolved[k])
