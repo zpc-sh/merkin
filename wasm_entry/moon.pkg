@@ -1,0 +1,7 @@
+import {
+  "nocsi/merkin/api" @api,
+}
+
+options(
+  "is-main": true,
+)

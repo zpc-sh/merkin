@@ -62,6 +62,37 @@ Yata is *effect-conscious* only by contract:
 
 Each hole remains valid under deferred evaluation and partial truth.
 
+## Topology balancing and detached-chain reasoning
+
+For first release, Yata dependency graphs are treated as DAG-like structures with permissive construction,
+but we explicitly track two failure modes:
+
+1. **Over-branching pressure** (one parent feeding too many child holes).
+2. **Detached chains** (holes that do not connect to any root, or depend on missing nodes).
+
+### Why balancing matters
+
+- Very high fanout from a single parent tends to create noisy candidate churn and slow convergence.
+- A balanced graph is not required for correctness, but is recommended for operational stability.
+- In practice, teams should define policy thresholds per domain (for example: alert when fanout > 16).
+
+### Why detached-chain detection matters
+
+- Missing dependencies can silently strand a hole forever in non-ready states.
+- Rootless cycles can look “active” but never reach a stable, replayable root lineage.
+- Detecting detachment early prevents hidden backlog in long-running agent workflows.
+
+### Runtime support in `model/yata_lineage.mbt`
+
+- `YataGraph::child_fanout(parent_id)` — reverse-edge child count for one hole.
+- `YataGraph::max_branch_fanout()` — max fanout observed in the graph.
+- `YataGraph::overbranched(max_children)` — hotspots that exceed policy threshold.
+- `YataGraph::holes_with_missing_dependencies()` — holes referencing unknown ids.
+- `YataGraph::detached_holes(max_depth)` — holes that cannot reach any zero-dependency root within bounded ancestry traversal.
+
+These checks are diagnostic/operational signals, not hard schema constraints.
+They can be promoted to policy gates by downstream systems when stricter release posture is required.
+
 ## Cognitive address mapping (program track)
 
 Yata entities are intentionally mapped to cognitive addresses, not wall-clock.

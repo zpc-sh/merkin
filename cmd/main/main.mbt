@@ -12,7 +12,16 @@ fn main {
     return
   }
 
-  let action = value_after(args, "--action", "demo")
+  let action = resolve_action(args)
+  if action == "help" {
+    print_usage()
+    return
+  }
+  if action_is_bridge_only(action) {
+    run_bridge_action(args, action)
+    return
+  }
+
   let node_id = value_after(args, "--node-id", "node-1")
   let mode = parse_mode(value_after(args, "--mode", "receiver"))
   let target_ids = split_csv(value_after(args, "--targets", "local-1"))
@@ -317,6 +326,81 @@ fn main {
         None => println("thread=create_failed")
       }
     }
+    "conv-plan" => {
+      let host = @daemon.ConversationHost::new()
+      let hall = host.create_hall(
+        value_after(args, "--hall", "saba"),
+        value_after(args, "--policy-profile", "debate-default"),
+      )
+      let track = parse_conv_track(value_after(args, "--track", "program"))
+      match host.create_thread(
+        hall.hall_id,
+        value_after(args, "--topic", "ai-debate"),
+        track,
+      ) {
+        Some(thread) => {
+          ignore(
+            host.append_turn(
+              thread.thread_id,
+              @daemon.TurnRequest::default(value_after(args, "--content", "seed turn")),
+            ),
+          )
+          ignore(
+            host.record_embedding(
+              thread.thread_id,
+              value_after(args, "--file-ref", "docs/sample.bin"),
+              value_after(args, "--file-type", "bin"),
+              value_after(args, "--mime-type", "application/octet-stream"),
+              parse_bool(value_after(args, "--embedding-found", "true"), true),
+              parse_uint(value_after(args, "--embedding-count", "1"), 1U),
+              parse_embedding_action(value_after(args, "--embedding-action", "observe")),
+              parse_bool(value_after(args, "--embedding-ephemeral", "true"), true),
+              parse_uint(value_after(args, "--purge-after-turns", "1"), 1U),
+              value_after(args, "--embedding-note", "runtime scan"),
+            ),
+          )
+          if parse_bool(value_after(args, "--seed-second-embedding", "false"), false) {
+            ignore(
+              host.record_embedding(
+                thread.thread_id,
+                value_after(args, "--second-file-ref", "docs/second.bin"),
+                value_after(args, "--second-file-type", "bin"),
+                value_after(args, "--second-mime-type", "application/octet-stream"),
+                parse_bool(value_after(args, "--second-embedding-found", "false"), false),
+                parse_uint(value_after(args, "--second-embedding-count", "0"), 0U),
+                parse_embedding_action(value_after(args, "--second-embedding-action", "observe")),
+                parse_bool(value_after(args, "--second-embedding-ephemeral", "true"), true),
+                parse_uint(value_after(args, "--second-purge-after-turns", "1"), 1U),
+                value_after(args, "--second-embedding-note", "second runtime scan"),
+              ),
+            )
+          }
+          match host.emit_embedding_plan(
+            thread.thread_id,
+            value_after(args, "--plan-overlay", "chatgpt"),
+            value_after(args, "--plan-peer", "claude"),
+            value_after(args, "--plan-authority", "substrate://loc/chatgpt"),
+            value_after(args, "--plan-generator", "daemon.conversation"),
+            value_after(args, "--plan-note", "conversation embedding timeline"),
+          ) {
+            Some(wire) => {
+              println("plan_emitted=true")
+              println(wire)
+            }
+            None => println("plan_emitted=false")
+          }
+        }
+        None => println("thread=create_failed")
+      }
+    }
+    "yata-topology" => {
+      run_yata_topology(
+        parse_uint(value_after(args, "--yata-branch-factor", "3"), 3U),
+        parse_uint(value_after(args, "--yata-detached-depth", "2"), 2U),
+        parse_uint(value_after(args, "--yata-max-children", "2"), 2U),
+        parse_uint(value_after(args, "--yata-max-depth", "8"), 8U),
+      )
+    }
     _ => {
       // demo: put then read
       let payload = b"demo-payload"
@@ -334,6 +418,34 @@ fn main {
 ///|
 fn print_usage() -> Unit {
   println("Usage:")
+  println("  moon run cmd/main -- daemon <category> <command> [flags]")
+  println("  moon run cmd/main -- daemon help")
+  println("  moon run cmd/main -- daemon --action <legacy-action> [flags]")
+  println("")
+  println("Categories:")
+  println("  oci: capabilities | put")
+  println("  tree: sparse | diff")
+  println("  conv: turn | replay | embed | embed-purge")
+  println("  yata: topology")
+  println("  cognitive: compile | distributed | measure")
+  println("  adapter: validate")
+  println("")
+  println("Categorical examples:")
+  println("  moon run cmd/main -- daemon oci capabilities --mode receiver")
+  println("  moon run cmd/main -- daemon oci put --payload hello --mode hybrid --targets local-1,oci-1")
+  println("  moon run cmd/main -- daemon tree sparse --routes alpha/doc,beta/doc --tokens alpha")
+  println("  moon run cmd/main -- daemon tree diff --left-routes alpha/doc --right-routes beta/doc")
+  println("  moon run cmd/main -- daemon conv turn --hall saba --topic debate --content \"Opening statement\"")
+  println("  moon run cmd/main -- daemon conv replay --seed-non-replayable true --enforce-length true")
+  println("  moon run cmd/main -- daemon conv embed --file-ref docs/sample.bin --embedding-action flip-aot")
+  println("  moon run cmd/main -- daemon conv embed-purge --purge-after-turns 1 --current-turn-seq 2")
+  println("  moon run cmd/main -- daemon yata topology --yata-branch-factor 5 --yata-max-children 3")
+  println("  moon run cmd/main -- daemon cognitive compile --mode markup --emit-distributed true")
+  println("  moon run cmd/main -- daemon cognitive distributed --compiler-out-dir _build/cognitive/v0.3/latest")
+  println("  moon run cmd/main -- daemon cognitive measure --summary-file _build/cognitive/v0.3/latest/summary.txt")
+  println("  moon run cmd/main -- daemon adapter validate --action status --file /tmp/adapter.json")
+  println("")
+  println("Legacy --action examples:")
   println("  moon run cmd/main -- daemon --action capabilities --mode receiver")
   println(
     "  moon run cmd/main -- daemon --action put --payload hello --mode hybrid --targets local-1,oci-1",
@@ -356,8 +468,14 @@ fn print_usage() -> Unit {
   println(
     "  moon run cmd/main -- daemon --action conv-embed-purge --purge-after-turns 1 --current-turn-seq 2",
   )
+  println(
+    "  moon run cmd/main -- daemon --action conv-plan --file-ref docs/sample.bin --embedding-action observe",
+  )
+  println(
+    "  moon run cmd/main -- daemon --action yata-topology --yata-branch-factor 5 --yata-max-children 3",
+  )
   println("Flags:")
-  println("  --action capabilities|put|sparse|diff|conv-turn|conv-replay|conv-embed|conv-embed-purge|demo")
+  println("  --action capabilities|put|sparse|diff|conv-turn|conv-replay|conv-embed|conv-embed-purge|conv-plan|yata-topology|demo")
   println("  --mode receiver|proxy|passthrough|hybrid")
   println("  --node-id <id>")
   println("  --targets <comma-separated ids>")
@@ -397,6 +515,316 @@ fn print_usage() -> Unit {
   println("  --purge-after-turns <uint> (for conv-embed*)")
   println("  --embedding-note <text> (for conv-embed)")
   println("  --current-turn-seq <uint> (for conv-embed-purge)")
+  println("  --plan-overlay <name> (for conv-plan)")
+  println("  --plan-peer <name> (for conv-plan)")
+  println("  --plan-authority <uri> (for conv-plan)")
+  println("  --plan-generator <name> (for conv-plan)")
+  println("  --plan-note <text> (for conv-plan)")
+  println("  --seed-second-embedding true|false (for conv-plan)")
+  println("  --second-file-ref <path> (for conv-plan)")
+  println("  --second-file-type <type> (for conv-plan)")
+  println("  --second-mime-type <mime> (for conv-plan)")
+  println("  --second-embedding-found true|false (for conv-plan)")
+  println("  --second-embedding-count <uint> (for conv-plan)")
+  println("  --second-embedding-action observe|flip-aot|purge (for conv-plan)")
+  println("  --second-embedding-ephemeral true|false (for conv-plan)")
+  println("  --second-purge-after-turns <uint> (for conv-plan)")
+  println("  --second-embedding-note <text> (for conv-plan)")
+  println("  --yata-branch-factor <uint> (for yata-topology)")
+  println("  --yata-detached-depth <uint> (for yata-topology)")
+  println("  --yata-max-children <uint> (for yata-topology)")
+  println("  --yata-max-depth <uint> (for yata-topology)")
+  println("  --emit-distributed true|false (for cognitive compile bridge)")
+  println("  --distributed-out-dir <dir> (for cognitive compile bridge)")
+  println("  --distributed-cluster-name <name> (for cognitive compile bridge)")
+  println("  --distributed-shards <uint> (for cognitive compile/distributed bridge)")
+  println("  --distributed-replicas <uint> (for cognitive compile/distributed bridge)")
+  println("  --distributed-max-inflight-per-shard <uint> (for cognitive compile/distributed bridge)")
+  println("  --distributed-regions <csv> (for cognitive compile/distributed bridge)")
+  println("  --summary-file <path> (for cognitive distributed/measure bridge)")
+  println("  --compiler-out-dir <dir> (for cognitive distributed bridge)")
+  println("  --coord-minutes-per-hole <uint> (for cognitive measure bridge)")
+  println("  --automation-overhead-minutes <uint> (for cognitive measure bridge)")
+  println("  --fix-minutes-low <uint> (for cognitive measure bridge)")
+  println("  --fix-minutes-high <uint> (for cognitive measure bridge)")
+  println("  --active-delegation-coverage <0..1> (for cognitive measure bridge)")
+  println("  --action submit|status|cancel (for adapter validate bridge)")
+  println("  --file <path> (for adapter validate bridge)")
+  println("  --last-line true|false (for adapter validate bridge)")
+  println("  --full true|false (for adapter validate bridge)")
+}
+
+///|
+fn resolve_action(args : Array[String]) -> String {
+  if args.length() > 2 {
+    let primary = args[2]
+    if primary != "--action" {
+      return parse_categorical_action(args)
+    }
+  }
+  let explicit = value_after(args, "--action", "")
+  if explicit != "" {
+    normalize_direct_action(explicit)
+  } else {
+    "demo"
+  }
+}
+
+///|
+fn parse_categorical_action(args : Array[String]) -> String {
+  if args.length() <= 2 {
+    return "demo"
+  }
+  let primary = args[2]
+  let secondary = if args.length() > 3 { args[3] } else { "" }
+  match primary {
+    "help" => "help"
+    "demo" => "demo"
+    "oci" => map_oci_action(secondary)
+    "tree" => map_tree_action(secondary)
+    "conv" => map_conv_action(secondary)
+    "yata" => map_yata_action(secondary)
+    "cognitive" => map_cognitive_action(secondary)
+    "adapter" => map_adapter_action(secondary)
+    _ => normalize_direct_action(primary)
+  }
+}
+
+///|
+fn map_oci_action(value : String) -> String {
+  match value {
+    "put" => "put"
+    "capabilities" => "capabilities"
+    _ => "capabilities"
+  }
+}
+
+///|
+fn map_tree_action(value : String) -> String {
+  match value {
+    "diff" => "diff"
+    "sparse" => "sparse"
+    _ => "sparse"
+  }
+}
+
+///|
+fn map_conv_action(value : String) -> String {
+  match value {
+    "turn" => "conv-turn"
+    "replay" => "conv-replay"
+    "embed" => "conv-embed"
+    "embed-purge" => "conv-embed-purge"
+    _ => "conv-turn"
+  }
+}
+
+///|
+fn map_yata_action(value : String) -> String {
+  match value {
+    "topology" => "yata-topology"
+    _ => "yata-topology"
+  }
+}
+
+///|
+fn map_cognitive_action(value : String) -> String {
+  match value {
+    "compile" => "cognitive-compile"
+    "distributed" => "cognitive-distributed"
+    "measure" => "cognitive-measure"
+    _ => "cognitive-compile"
+  }
+}
+
+///|
+fn map_adapter_action(value : String) -> String {
+  match value {
+    "validate" => "adapter-validate"
+    _ => "adapter-validate"
+  }
+}
+
+///|
+fn normalize_direct_action(value : String) -> String {
+  match value {
+    "capabilities" => "capabilities"
+    "put" => "put"
+    "sparse" => "sparse"
+    "diff" => "diff"
+    "conv-turn" => "conv-turn"
+    "conv-replay" => "conv-replay"
+    "conv-embed" => "conv-embed"
+    "conv-embed-purge" => "conv-embed-purge"
+    "yata-topology" => "yata-topology"
+    "cognitive-compile" => "cognitive-compile"
+    "cognitive-distributed" => "cognitive-distributed"
+    "cognitive-measure" => "cognitive-measure"
+    "adapter-validate" => "adapter-validate"
+    "turn" => "conv-turn"
+    "replay" => "conv-replay"
+    "embed" => "conv-embed"
+    "embed-purge" => "conv-embed-purge"
+    "topology" => "yata-topology"
+    "compile" => "cognitive-compile"
+    "distributed" => "cognitive-distributed"
+    "measure" => "cognitive-measure"
+    "validate" => "adapter-validate"
+    _ => "demo"
+  }
+}
+
+///|
+fn action_is_bridge_only(action : String) -> Bool {
+  match action {
+    "cognitive-compile" => true
+    "cognitive-distributed" => true
+    "cognitive-measure" => true
+    "adapter-validate" => true
+    _ => false
+  }
+}
+
+///|
+fn has_flag(args : Array[String], flag : String) -> Bool {
+  for arg in args {
+    if arg == flag {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn bool_flag(args : Array[String], flag : String, default : Bool) -> Bool {
+  let raw = value_after(args, flag, "")
+  if raw != "" {
+    return parse_bool(raw, default)
+  }
+  if has_flag(args, flag) {
+    return true
+  }
+  default
+}
+
+///|
+fn run_bridge_action(args : Array[String], action : String) -> Unit {
+  match action {
+    "cognitive-compile" => {
+      let mode = value_after(args, "--mode", "markup")
+      let out_dir = value_after(args, "--out-dir", "_build/cognitive/v0.3/latest")
+      let pipeline_out = value_after(args, "--pipeline-out-dir", "")
+      let skip_pipeline = bool_flag(args, "--skip-pipeline", false)
+      let emit_distributed = bool_flag(args, "--emit-distributed", false)
+      let distributed_shards = value_after(args, "--distributed-shards", "16")
+      let distributed_replicas = value_after(args, "--distributed-replicas", "2")
+      let distributed_max_inflight = value_after(args, "--distributed-max-inflight-per-shard", "64")
+      let distributed_regions = value_after(args, "--distributed-regions", "us-west1,us-east1")
+      let mut cmd = "tools/cognitive-semantic-compile-v0_3.sh --mode " + mode + " --out-dir " + out_dir
+      if pipeline_out != "" {
+        cmd = cmd + " --pipeline-out-dir " + pipeline_out
+      }
+      if skip_pipeline {
+        cmd = cmd + " --skip-pipeline"
+      }
+      if emit_distributed {
+        cmd = cmd +
+          " --emit-distributed --distributed-shards " + distributed_shards +
+          " --distributed-replicas " + distributed_replicas +
+          " --distributed-max-inflight-per-shard " + distributed_max_inflight +
+          " --distributed-regions " + distributed_regions
+      }
+      println("status=bridge_only")
+      println("category=cognitive")
+      println("command=compile")
+      println("tool=tools/cognitive-semantic-compile-v0_3.sh")
+      println("bridge_command=\{cmd}")
+      println("note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.")
+    }
+    "cognitive-distributed" => {
+      let compiler_out_dir = value_after(args, "--compiler-out-dir", "_build/cognitive/v0.3/latest")
+      let summary_file = value_after(args, "--summary-file", "")
+      let shards = value_after(args, "--distributed-shards", value_after(args, "--shards", "16"))
+      let replicas = value_after(args, "--distributed-replicas", value_after(args, "--replicas", "2"))
+      let max_inflight = value_after(
+        args,
+        "--distributed-max-inflight-per-shard",
+        value_after(args, "--max-inflight-per-shard", "64"),
+      )
+      let regions = value_after(args, "--distributed-regions", value_after(args, "--regions", "us-west1,us-east1"))
+      let out_dir = value_after(args, "--distributed-out-dir", "")
+      let cluster = value_after(args, "--distributed-cluster-name", value_after(args, "--cluster-name", "merkin-cognitive-v0_3"))
+      let mut cmd = "tools/cognitive-distributed-plan-v0_3.sh --compiler-out-dir " + compiler_out_dir +
+        " --shards " + shards +
+        " --replicas " + replicas +
+        " --max-inflight-per-shard " + max_inflight +
+        " --regions " + regions +
+        " --cluster-name " + cluster
+      if summary_file != "" {
+        cmd = cmd + " --summary-file " + summary_file
+      }
+      if out_dir != "" {
+        cmd = cmd + " --out-dir " + out_dir
+      }
+      println("status=bridge_only")
+      println("category=cognitive")
+      println("command=distributed")
+      println("tool=tools/cognitive-distributed-plan-v0_3.sh")
+      println("bridge_command=\{cmd}")
+      println("note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.")
+    }
+    "cognitive-measure" => {
+      let summary_file = value_after(args, "--summary-file", "_build/cognitive/v0.3/latest/summary.txt")
+      let out_file = value_after(args, "--out-file", "")
+      let coord = value_after(args, "--coord-minutes-per-hole", "7")
+      let overhead = value_after(args, "--automation-overhead-minutes", "10")
+      let fix_low = value_after(args, "--fix-minutes-low", "12")
+      let fix_high = value_after(args, "--fix-minutes-high", "30")
+      let coverage = value_after(args, "--active-delegation-coverage", "")
+      let mut cmd = "tools/cognitive-offload-measure-v0_3.sh --summary-file " + summary_file +
+        " --coord-minutes-per-hole " + coord +
+        " --automation-overhead-minutes " + overhead +
+        " --fix-minutes-low " + fix_low +
+        " --fix-minutes-high " + fix_high
+      if out_file != "" {
+        cmd = cmd + " --out-file " + out_file
+      }
+      if coverage != "" {
+        cmd = cmd + " --active-delegation-coverage " + coverage
+      }
+      println("status=bridge_only")
+      println("category=cognitive")
+      println("command=measure")
+      println("tool=tools/cognitive-offload-measure-v0_3.sh")
+      println("bridge_command=\{cmd}")
+      println("note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.")
+    }
+    "adapter-validate" => {
+      let action_value = value_after(args, "--action", "status")
+      let file = value_after(args, "--file", "")
+      let use_full = bool_flag(args, "--full", false)
+      let mut cmd = "tools/ai-adapter-validate-v0_3.sh --action " + action_value
+      if file != "" {
+        cmd = cmd + " --file " + file
+      }
+      if use_full {
+        cmd = cmd + " --full"
+      } else {
+        cmd = cmd + " --last-line"
+      }
+      println("status=bridge_only")
+      println("category=adapter")
+      println("command=validate")
+      println("tool=tools/ai-adapter-validate-v0_3.sh")
+      println("bridge_command=\{cmd}")
+      println("note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.")
+    }
+    _ => {
+      println("status=bridge_only")
+      println("error=unsupported_bridge_action")
+      println("action=\{action}")
+    }
+  }
 }
 
 ///|
@@ -628,6 +1056,74 @@ fn parse_oci_flags(
     }
   }
   { receiver, proxy, passthrough }
+}
+
+///|
+fn run_yata_topology(
+  branch_factor : UInt,
+  detached_depth : UInt,
+  max_children : UInt,
+  max_depth : UInt,
+) -> Unit {
+  let contract = @model.YataContract::new("CliTopology", [], [], 0U)
+  let root = @model.YataHole::new("cli/root.md", contract, [], [], [])
+  let mut graph = @model.YataGraph::new().add(root)
+
+  let mut i : UInt = 0U
+  while i < branch_factor {
+    let child = @model.YataHole::new(
+      "cli/child-" + i.to_string() + ".md",
+      contract,
+      [],
+      [root.hole_id],
+      [],
+    )
+    graph = graph.add(child)
+    i = i + 1U
+  }
+
+  // Detached chain rooted on a missing dependency id.
+  let phantom = @model.YataHole::new("cli/phantom.md", contract, [], [], [])
+  let first_detached = @model.YataHole::new(
+    "cli/detached-0.md",
+    contract,
+    [],
+    [phantom.hole_id],
+    [],
+  )
+  graph = graph.add(first_detached)
+  let mut prev = first_detached
+  let mut d : UInt = 1U
+  while d < detached_depth {
+    let next = @model.YataHole::new(
+      "cli/detached-" + d.to_string() + ".md",
+      contract,
+      [],
+      [prev.hole_id],
+      [],
+    )
+    graph = graph.add(next)
+    prev = next
+    d = d + 1U
+  }
+
+  let fanout = graph.max_branch_fanout()
+  let hotspots = graph.overbranched(max_children)
+  let missing = graph.holes_with_missing_dependencies()
+  let detached = graph.detached_holes(max_depth)
+
+  println("yata_nodes=\{graph.holes.length()}")
+  println("max_fanout=\{fanout}")
+  println("max_children_threshold=\{max_children}")
+  println("overbranched=\{hotspots.length()}")
+  println("missing_dependencies=\{missing.length()}")
+  println("detached=\{detached.length()}")
+
+  if hotspots.length() == 0 && missing.length() == 0 && detached.length() == 0 {
+    println("topology_status=healthy")
+  } else {
+    println("topology_status=attention")
+  }
 }
 
 ///|
