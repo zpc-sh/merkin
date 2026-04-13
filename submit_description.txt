@@ -1,0 +1,10 @@
+🧪 Add tests for untested append_turn error paths in ConversationHost
+
+🎯 **What:** The testing gap in `ConversationHost::append_turn` error paths was addressed.
+📊 **Coverage:** The following scenarios are now tested:
+    - Invalid thread ID `BAD_REQUEST`
+    - Invalid length envelope `BAD_LENGTH_ENVELOPE`
+    - Missing actor overlay `BAD_REQUEST`
+    - Conflicting idempotency key `CONFLICTING_IDEMPOTENCY_KEY`
+    - Length envelope violation `LENGTH_ENVELOPE_VIOLATION`
+✨ **Result:** Test coverage improved by properly verifying that specific `ConversationIssue` instances and error paths are hit in edge cases for invalid user inputs in `TurnRequest` validation logic.
