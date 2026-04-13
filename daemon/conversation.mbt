@@ -240,10 +240,7 @@ pub fn ConversationHost::append_turn(
   let mut issues : Array[ConversationIssue] = []
 
   if !self.has_thread(thread_id) {
-    issues.push({
-      code: "BAD_REQUEST",
-      message: "thread_id not found",
-    })
+    issues.push({ code: "BAD_REQUEST", message: "thread_id not found" })
     return rejected_turn_outcome(issues)
   }
   if !length_envelope_valid(request.length_envelope) {
@@ -254,13 +251,11 @@ pub fn ConversationHost::append_turn(
     return rejected_turn_outcome(issues)
   }
   if request.actor_overlay == "" {
-    issues.push({
-      code: "BAD_REQUEST",
-      message: "actor_overlay is required",
-    })
+    issues.push({ code: "BAD_REQUEST", message: "actor_overlay is required" })
     return rejected_turn_outcome(issues)
   }
-  if request.idempotency_key != "" && self.has_idempotency(thread_id, request.idempotency_key) {
+  if request.idempotency_key != "" &&
+    self.has_idempotency(thread_id, request.idempotency_key) {
     issues.push({
       code: "CONFLICTING_IDEMPOTENCY_KEY",
       message: "idempotency key already exists in this thread",
@@ -269,7 +264,8 @@ pub fn ConversationHost::append_turn(
   }
 
   let ingress_len = request.content.length().to_uint()
-  if ingress_len < request.length_envelope.input_len_min || ingress_len > request.length_envelope.input_len_max {
+  if ingress_len < request.length_envelope.input_len_min ||
+    ingress_len > request.length_envelope.input_len_max {
     issues.push({
       code: "LENGTH_ENVELOPE_VIOLATION",
       message: "ingress content length is outside declared bounds",
@@ -284,7 +280,8 @@ pub fn ConversationHost::append_turn(
 
   let egress_preview = "turn.accepted:" + turn_id + ":" + thread_id
   let egress_len = egress_preview.length().to_uint()
-  if egress_len < request.length_envelope.output_len_min || egress_len > request.length_envelope.output_len_max {
+  if egress_len < request.length_envelope.output_len_min ||
+    egress_len > request.length_envelope.output_len_max {
     non_replayable = true
     issues.push({
       code: "LENGTH_ENVELOPE_VIOLATION",
@@ -325,8 +322,16 @@ pub fn ConversationHost::append_turn(
     checkpoint_id: Some(checkpoint_id),
     issues,
     canonical_addresses: [
-      "cog://pactis/" + thread_id + "?overlay=" + request.actor_overlay + "&mode=debate&gap=1#overlay",
-      "cas://pactis/blake3/" + turn_id + "?overlay=" + request.actor_overlay + "&mode=debate#overlay",
+      "cog://pactis/" +
+      thread_id +
+      "?overlay=" +
+      request.actor_overlay +
+      "&mode=debate&gap=1#overlay",
+      "cas://pactis/blake3/" +
+      turn_id +
+      "?overlay=" +
+      request.actor_overlay +
+      "&mode=debate#overlay",
     ],
   }
 }
@@ -344,7 +349,11 @@ pub fn ConversationHost::create_checkpoint(
     checkpoint_id: "checkpoint-" + self.next_checkpoint_seq.to_string(),
     thread_id,
     turn_seq: self.latest_turn_seq(thread_id),
-    label: if label == "" { "manual" } else { label },
+    label: if label == "" {
+      "manual"
+    } else {
+      label
+    },
   }
   self.next_checkpoint_seq = self.next_checkpoint_seq + 1U
   self.checkpoints.push(checkpoint)
@@ -360,10 +369,7 @@ pub fn ConversationHost::replay(
 ) -> ReplayOutcome {
   let mut issues : Array[ConversationIssue] = []
   if !self.has_thread(thread_id) {
-    issues.push({
-      code: "BAD_REQUEST",
-      message: "thread_id not found",
-    })
+    issues.push({ code: "BAD_REQUEST", message: "thread_id not found" })
     return { ok: false, replayed_count: 0U, non_replayable_count: 0U, issues }
   }
 
@@ -513,6 +519,7 @@ pub fn ConversationHost::embedding_timeline(
   out
 }
 
+///|
 fn rejected_turn_outcome(issues : Array[ConversationIssue]) -> TurnOutcome {
   {
     accepted: false,
@@ -524,6 +531,7 @@ fn rejected_turn_outcome(issues : Array[ConversationIssue]) -> TurnOutcome {
   }
 }
 
+///|
 fn length_envelope_valid(envelope : LengthEnvelope) -> Bool {
   envelope.input_len_min > 0U &&
   envelope.output_len_min > 0U &&
@@ -531,7 +539,11 @@ fn length_envelope_valid(envelope : LengthEnvelope) -> Bool {
   envelope.output_len_min <= envelope.output_len_max
 }
 
-fn ConversationHost::has_hall(self : ConversationHost, hall_id : String) -> Bool {
+///|
+fn ConversationHost::has_hall(
+  self : ConversationHost,
+  hall_id : String,
+) -> Bool {
   for hall in self.halls {
     if hall.hall_id == hall_id {
       return true
@@ -540,7 +552,11 @@ fn ConversationHost::has_hall(self : ConversationHost, hall_id : String) -> Bool
   false
 }
 
-fn ConversationHost::has_thread(self : ConversationHost, thread_id : String) -> Bool {
+///|
+fn ConversationHost::has_thread(
+  self : ConversationHost,
+  thread_id : String,
+) -> Bool {
   for thread in self.threads {
     if thread.thread_id == thread_id {
       return true
@@ -549,7 +565,12 @@ fn ConversationHost::has_thread(self : ConversationHost, thread_id : String) -> 
   false
 }
 
-fn ConversationHost::has_idempotency(self : ConversationHost, thread_id : String, key : String) -> Bool {
+///|
+fn ConversationHost::has_idempotency(
+  self : ConversationHost,
+  thread_id : String,
+  key : String,
+) -> Bool {
   for turn in self.turns {
     if turn.thread_id == thread_id && turn.idempotency_key == key {
       return true
@@ -558,7 +579,11 @@ fn ConversationHost::has_idempotency(self : ConversationHost, thread_id : String
   false
 }
 
-fn ConversationHost::next_turn_seq_for_thread(self : ConversationHost, thread_id : String) -> UInt {
+///|
+fn ConversationHost::next_turn_seq_for_thread(
+  self : ConversationHost,
+  thread_id : String,
+) -> UInt {
   let mut out : UInt = 1U
   for turn in self.turns {
     if turn.thread_id == thread_id && turn.turn_seq >= out {
@@ -568,7 +593,11 @@ fn ConversationHost::next_turn_seq_for_thread(self : ConversationHost, thread_id
   out
 }
 
-fn ConversationHost::latest_turn_seq(self : ConversationHost, thread_id : String) -> UInt {
+///|
+fn ConversationHost::latest_turn_seq(
+  self : ConversationHost,
+  thread_id : String,
+) -> UInt {
   let mut out : UInt = 0U
   for turn in self.turns {
     if turn.thread_id == thread_id && turn.turn_seq > out {
@@ -578,6 +607,7 @@ fn ConversationHost::latest_turn_seq(self : ConversationHost, thread_id : String
   out
 }
 
+///|
 fn ConversationHost::set_thread_head_checkpoint(
   self : ConversationHost,
   thread_id : String,

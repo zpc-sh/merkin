@@ -19,6 +19,11 @@ pub fn diff_trees(lhs : MerkinTree, rhs : MerkinTree) -> TreeDiff {
 }
 
 ///|
+pub fn diff_trees_legacy(lhs : MerkinTree, rhs : MerkinTree) -> TreeDiff {
+  diff_node_maps_legacy(lhs.nodes, rhs.nodes)
+}
+
+///|
 pub fn diff_sparse_trees(
   lhs : SparseMerkinTree,
   rhs : SparseMerkinTree,
@@ -27,11 +32,19 @@ pub fn diff_sparse_trees(
 }
 
 ///|
-fn diff_node_maps(
+pub fn diff_sparse_trees_legacy(
+  lhs : SparseMerkinTree,
+  rhs : SparseMerkinTree,
+) -> TreeDiff {
+  diff_node_maps_legacy(lhs.nodes, rhs.nodes)
+}
+
+///|
+fn diff_node_maps_legacy(
   lhs : Map[String, MerkinNode],
   rhs : Map[String, MerkinNode],
 ) -> TreeDiff {
-  let keys = union_sorted_keys(lhs, rhs)
+  let keys = union_sorted_keys_legacy(lhs, rhs)
   let added : Array[String] = []
   let removed : Array[String] = []
   let changed : Array[String] = []
@@ -61,7 +74,7 @@ fn diff_node_maps(
 }
 
 ///|
-fn union_sorted_keys(
+fn union_sorted_keys_legacy(
   lhs : Map[String, MerkinNode],
   rhs : Map[String, MerkinNode],
 ) -> Array[String] {
@@ -135,4 +148,40 @@ fn diff_join(items : Array[String], sep : String) -> String {
     builder.write_string(items[i])
   }
   builder.to_string()
+}
+
+///|
+fn diff_node_maps(
+  lhs : Map[String, MerkinNode],
+  rhs : Map[String, MerkinNode],
+) -> TreeDiff {
+  let added : Array[String] = []
+  let removed : Array[String] = []
+  let changed : Array[String] = []
+  let mut unchanged = 0U
+
+  for key, left in lhs {
+    match rhs.get(key) {
+      Some(right) =>
+        if node_signature(left) == node_signature(right) {
+          unchanged = unchanged + 1U
+        } else {
+          changed.push(key)
+        }
+      None => removed.push(key)
+    }
+  }
+
+  for key, _ in rhs {
+    match lhs.get(key) {
+      None => added.push(key)
+      Some(_) => () // Already handled in lhs iteration
+    }
+  }
+
+  added.sort()
+  removed.sort()
+  changed.sort()
+
+  { added, removed, changed, unchanged }
 }
