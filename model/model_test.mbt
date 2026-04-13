@@ -127,3 +127,11 @@ test "WorkPromise id includes policy id" {
   let b = @model.WorkPromise::new(input, transform, policy_b)
   assert_true(a.promise_id != b.promise_id)
 }
+
+///|
+test "Anchor mark_failed transition" {
+  let hash = @hash.Hash::of_bytes(b"\x02")
+  let a = @model.Anchor::new(hash)
+  let failed_anchor = a.mark_failed()
+  assert_eq(failed_anchor.anchor_state, @model.FAILED)
+}
