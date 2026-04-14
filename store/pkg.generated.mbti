@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "nocsi/merkin/store"
+package "zpc/merkin/store"
 
 import {
-  "nocsi/merkin/hash",
-  "nocsi/merkin/model",
+  "zpc/merkin/hash",
+  "zpc/merkin/model",
 }
 
 // Values

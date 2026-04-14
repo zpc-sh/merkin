@@ -433,3 +433,67 @@ test "Yata address strict parser emits unknown-query issue for unsupported keys"
   }
   assert_true(has_unknown)
 }
+
+///|
+test "Yata topology fanout analysis highlights overbranched parents" {
+  let contract = @model.YataContract::new("Topology", [], [], 0U)
+  let root = @model.YataHole::new("notes/root.md", contract, [], [], [])
+  let c1 = @model.YataHole::new("notes/c1.md", contract, [], [root.hole_id], [])
+  let c2 = @model.YataHole::new("notes/c2.md", contract, [], [root.hole_id], [])
+  let c3 = @model.YataHole::new("notes/c3.md", contract, [], [root.hole_id], [])
+  let graph = @model.YataGraph::new().add(root).add(c1).add(c2).add(c3)
+  assert_eq(graph.child_fanout(root.hole_id), 3U)
+  assert_eq(graph.max_branch_fanout(), 3U)
+  let hotspots = graph.overbranched(2U)
+  assert_eq(hotspots.length(), 1)
+  assert_eq(hotspots[0].hole_id, root.hole_id)
+}
+
+///|
+test "Yata detachment analysis finds missing and rootless chains" {
+  let contract = @model.YataContract::new("Topology", [], [], 0U)
+  let root = @model.YataHole::new("notes/root.md", contract, [], [], [])
+  let attached = @model.YataHole::new("notes/attached.md", contract, [], [root.hole_id], [])
+
+  let orphan_dep = @hash.Hash::of_bytes(b"missing-dependency")
+  let orphan = @model.YataHole::new("notes/orphan.md", contract, [], [orphan_dep], [])
+
+  let cycle_a_seed = @model.YataHole::new("notes/cycle-a.md", contract, [], [], [])
+  let cycle_b_seed = @model.YataHole::new("notes/cycle-b.md", contract, [], [cycle_a_seed.hole_id], [])
+  let cycle_a = cycle_a_seed.add_dependency(cycle_b_seed.hole_id)
+
+  let graph = @model.YataGraph::new()
+    .add(root)
+    .add(attached)
+    .add(orphan)
+    .add(cycle_a)
+    .add(cycle_b_seed)
+
+  let missing = graph.holes_with_missing_dependencies()
+  assert_eq(missing.length(), 1)
+  assert_eq(missing[0].hole_id, orphan.hole_id)
+
+  let detached = graph.detached_holes(8U)
+  let mut seen_orphan = false
+  let mut seen_cycle_a = false
+  let mut seen_cycle_b = false
+  let mut seen_attached = false
+  for hole in detached {
+    if hole.hole_id == orphan.hole_id {
+      seen_orphan = true
+    }
+    if hole.hole_id == cycle_a.hole_id {
+      seen_cycle_a = true
+    }
+    if hole.hole_id == cycle_b_seed.hole_id {
+      seen_cycle_b = true
+    }
+    if hole.hole_id == attached.hole_id {
+      seen_attached = true
+    }
+  }
+  assert_true(seen_orphan)
+  assert_true(seen_cycle_a)
+  assert_true(seen_cycle_b)
+  assert_true(!seen_attached)
+}

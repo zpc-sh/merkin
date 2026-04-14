@@ -1,5 +1,6 @@
 import {
-  "nocsi/merkin/hash" @hash,
-  "nocsi/merkin/storage" @storage,
-  "nocsi/merkin/tree" @tree,
+  "zpc/merkin/hash" @hash,
+  "zpc/merkin/model" @model,
+  "zpc/merkin/storage" @storage,
+  "zpc/merkin/tree" @tree,
 }
