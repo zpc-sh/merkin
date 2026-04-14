@@ -4,7 +4,7 @@ test "GaussianField should_execute" {
   // mu=5, sigma=1, k=1 => 5-1=4 >= 3 => true
   assert_true(g.should_execute(1.0, 3.0))
   // mu=5, sigma=1, k=1 => 5-1=4 >= 5 => false
-  assert_true(not(g.should_execute(1.0, 5.0)))
+  assert_true(!g.should_execute(1.0, 5.0))
 }
 
 ///|

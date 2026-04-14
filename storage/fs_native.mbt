@@ -30,13 +30,41 @@ extern "c" fn c_access(path : Bytes, mode : Int) -> Int = "access"
 extern "c" fn c_rename(old_path : Bytes, new_path : Bytes) -> Int = "rename"
 
 // POSIX constants
-fn o_rdonly() -> Int { 0 }
-fn o_wronly() -> Int { 1 }
-fn o_creat() -> Int { 0x40 }
-fn o_trunc() -> Int { 0x200 }
-fn f_ok() -> Int { 0 }
-fn default_file_mode() -> Int { 0o644 }
-fn default_dir_mode() -> Int { 0o755 }
+
+///|
+fn o_rdonly() -> Int {
+  0
+}
+
+///|
+fn o_wronly() -> Int {
+  1
+}
+
+///|
+fn o_creat() -> Int {
+  0x40
+}
+
+///|
+fn o_trunc() -> Int {
+  0x200
+}
+
+///|
+fn f_ok() -> Int {
+  0
+}
+
+///|
+fn default_file_mode() -> Int {
+  0o644
+}
+
+///|
+fn default_dir_mode() -> Int {
+  0o755
+}
 
 ///|
 fn str_to_cstr(s : String) -> Bytes {
@@ -116,7 +144,11 @@ fn fs_read_file(path : String) -> Bytes? {
 /// Write bytes to a file. Creates or overwrites.
 fn fs_write_file(path : String, data : Bytes) -> Unit {
   let cpath = str_to_cstr(path)
-  let fd = c_open(cpath, o_wronly() | o_creat() | o_trunc(), default_file_mode())
+  let fd = c_open(
+    cpath,
+    o_wronly() | o_creat() | o_trunc(),
+    default_file_mode(),
+  )
   if fd < 0 {
     return
   }

@@ -72,7 +72,10 @@ pub fn EmbeddingMetadata::with_action(
 }
 
 ///|
-pub fn EmbeddingMetadata::should_purge(self : EmbeddingMetadata, turn_age : UInt) -> Bool {
+pub fn EmbeddingMetadata::should_purge(
+  self : EmbeddingMetadata,
+  turn_age : UInt,
+) -> Bool {
   if !self.ephemeral {
     return false
   }

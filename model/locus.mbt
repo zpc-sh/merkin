@@ -42,13 +42,17 @@ pub fn Locus::with_tags(
   spirit : String,
   tags : Array[String],
 ) -> Locus {
-  { ..Locus::new(name, spirit), tags }
+  { ..Locus::new(name, spirit), tags, }
 }
 
 ///|
 /// Record a push event: increment trail depth and set the push hash.
 pub fn Locus::record_push(self : Locus, push_hash : @hash.Hash) -> Locus {
-  { ..self, trail_depth: self.trail_depth + 1U, last_push_hash: Some(push_hash) }
+  {
+    ..self,
+    trail_depth: self.trail_depth + 1U,
+    last_push_hash: Some(push_hash),
+  }
 }
 
 ///|

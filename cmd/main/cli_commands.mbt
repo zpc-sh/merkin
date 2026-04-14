@@ -20,7 +20,8 @@ fn make_runtime(
   let session_id = value_after(args, "--session", "00000")
   let config : @locus.LocusConfig = { loci_root, store_path }
   let session = match build_genius_attestation(args, locus_context) {
-    Some(attestation) => @model.SessionIdentity::from_genius_attestation(attestation)
+    Some(attestation) =>
+      @model.SessionIdentity::from_genius_attestation(attestation)
     None => @model.SessionIdentity::new(tier, session_id)
   }
   @locus.LocusRuntime::new(config, session)
@@ -34,7 +35,9 @@ fn run_loci_command(args : Array[String]) -> Unit {
   match subcmd {
     "new" => {
       if args.length() <= 3 {
-        println("Usage: merkin ratio loci new <name> [--tags t1,t2] [--spirit \"...\"]")
+        println(
+          "Usage: merkin ratio loci new <name> [--tags t1,t2] [--spirit \"...\"]",
+        )
         return
       }
       let name = args[3]
@@ -61,15 +64,18 @@ fn run_loci_command(args : Array[String]) -> Unit {
       let rt = make_runtime(args, None)
       println("NAME                 SPIRIT                    TAGS")
       // In filesystem mode, just list directories under loci_root
-      println("(filesystem scan of " + rt.config.loci_root + "/ pending — requires @fs)")
+      println(
+        "(filesystem scan of " +
+        rt.config.loci_root +
+        "/ pending — requires @fs)",
+      )
       println("Use: merkin ratio loci new <name> to create a locus")
     }
-    "graph" => {
-      println("(loci graph rendering pending — requires cross-reference scan)")
-    }
-    _ => {
-      println("Usage: merkin ratio loci [new|ls|graph]")
-    }
+    "graph" =>
+      println(
+        "(loci graph rendering pending — requires cross-reference scan)",
+      )
+    _ => println("Usage: merkin ratio loci [new|ls|graph]")
   }
 }
 
@@ -109,13 +115,11 @@ fn run_sign_command(args : Array[String]) -> Unit {
     rt.session.short_id,
     "2026-01-01T00:00:00Z", // placeholder — real impl reads system clock
   )
-  let residue = if message != "" {
-    residue.add_did(message)
-  } else {
-    residue
-  }
+  let residue = if message != "" { residue.add_did(message) } else { residue }
   println("Signing session: " + rt.session.display())
-  println("Residue file: " + rt.residue_path(locus_name) + "/" + residue.filename())
+  println(
+    "Residue file: " + rt.residue_path(locus_name) + "/" + residue.filename(),
+  )
   println("")
   println("--- residue content ---")
   println(residue.to_markdown())
@@ -257,7 +261,9 @@ fn run_pack_command(args : Array[String]) -> Unit {
       println("Steps:")
       println("  1. Serialize sparse tree for " + locus_name)
       println("  2. Embed tree state into merkin WASM runtime")
-      println("  3. Build: moon build --target wasm-gc --package zpc/merkin/wasm_entry")
+      println(
+        "  3. Build: moon build --target wasm-gc --package zpc/merkin/wasm_entry",
+      )
       println("  4. Output: .merkin/packs/" + locus_name + ".wasm")
       println("")
       println("The WASM pack includes:")
@@ -269,7 +275,9 @@ fn run_pack_command(args : Array[String]) -> Unit {
       println("Recipients load the .wasm and query directly.")
       println("No merkin installation required.")
       println("")
-      println("(WASM pack pending — requires tree serializer + WASM state injection)")
+      println(
+        "(WASM pack pending — requires tree serializer + WASM state injection)",
+      )
     }
     _ => {
       println("Packing: " + locus_name + " → OCI blob")
@@ -278,7 +286,11 @@ fn run_pack_command(args : Array[String]) -> Unit {
       println("  1. Serialize sparse tree for " + locus_name)
       println("  2. Content-address: digest = H(serialized_tree)")
       println("  3. Store: .merkin/store/blobs/<digest>")
-      println("  4. Tag: .merkin/store/tags/" + locus_name + "/pack-latest → <digest>")
+      println(
+        "  4. Tag: .merkin/store/tags/" +
+        locus_name +
+        "/pack-latest → <digest>",
+      )
       println("")
       println("Share via: merkin ratio pack --digest <digest>")
       println("Receive via: merkin ratio pull --pack <digest>")
@@ -390,38 +402,80 @@ fn run_genius_alias_command(args : Array[String]) -> Unit {
 ///|
 fn print_ratio_usage() -> Unit {
   println("Ratio Loci Commands:")
-  println("  ratio init [--store <path>]                        Initialize repository root")
   println(
-    "  ratio loci new <name> [--tags t1,t2] [--spirit \"...\"]",
+    "  ratio init [--store <path>]                        Initialize repository root",
   )
-  println("                                                    Scaffold a new locus")
-  println("  ratio loci ls                                      List known loci")
-  println("  ratio loci graph                                   Render locus graph")
-  println("  ratio app put <ref> --payload <text>               Store APP envelope payload")
-  println("  ratio app inspect <ref>                            Inspect APP envelope metadata")
-  println("  ratio app emit-pr1 <ref>                           Emit attested .pr1 custom section")
-  println("  ratio app parse-pr1 --hex <hex>                    Parse attested .pr1 custom section")
-  println("  ratio status <locus>                               Repository status for a locus")
-  println("  ratio pack <locus> [--format wasm|blob]            Pack sparse merkin tree")
+  println("  ratio loci new <name> [--tags t1,t2] [--spirit \"...\"]")
+  println(
+    "                                                    Scaffold a new locus",
+  )
+  println(
+    "  ratio loci ls                                      List known loci",
+  )
+  println(
+    "  ratio loci graph                                   Render locus graph",
+  )
+  println(
+    "  ratio app put <ref> --payload <text>               Store APP envelope payload",
+  )
+  println(
+    "  ratio app inspect <ref>                            Inspect APP envelope metadata",
+  )
+  println(
+    "  ratio app emit-pr1 <ref>                           Emit attested .pr1 custom section",
+  )
+  println(
+    "  ratio app parse-pr1 --hex <hex>                    Parse attested .pr1 custom section",
+  )
+  println(
+    "  ratio status <locus>                               Repository status for a locus",
+  )
+  println(
+    "  ratio pack <locus> [--format wasm|blob]            Pack sparse merkin tree",
+  )
 }
 
 ///|
 fn print_genius_usage() -> Unit {
   println("Genius Loci Commands:")
-  println("  genius enter <locus>                               Enter a locus with AI context")
-  println("  genius sign [<message>] --locus <name>             Sign exit residue")
-  println("  genius trail <locus> [--depth <n>]                 Show activity trail")
-  println("  genius where                                       Show recent AI activity")
-  println("  genius residue <locus> [--session <id>]            Read residue files")
+  println(
+    "  genius enter <locus>                               Enter a locus with AI context",
+  )
+  println(
+    "  genius sign [<message>] --locus <name>             Sign exit residue",
+  )
+  println(
+    "  genius trail <locus> [--depth <n>]                 Show activity trail",
+  )
+  println(
+    "  genius where                                       Show recent AI activity",
+  )
+  println(
+    "  genius residue <locus> [--session <id>]            Read residue files",
+  )
   println("")
   println("Procsi attestation (required unless bootstrapping):")
-  println("  --procsi-surface <surface>                         codex, chatgpt, claude, etc.")
-  println("  --procsi-fingerprint <commitment>                  AI substrate fingerprint commitment")
-  println("  --app-ref <opaque-ref>                             APP-masked envelope reference")
-  println("  --app-hash <hash-token>                            APP payload commitment")
-  println("  [--project <id>] [--ratio-loci <id>]               defaults: zpc/merkin, repo-root")
-  println("  [--app-protocol <name>] [--app-audience <name>]    defaults: app/v1, genius-loci")
-  println("  --bootstrap-genius                                 local bring-up escape hatch")
+  println(
+    "  --procsi-surface <surface>                         codex, chatgpt, claude, etc.",
+  )
+  println(
+    "  --procsi-fingerprint <commitment>                  AI substrate fingerprint commitment",
+  )
+  println(
+    "  --app-ref <opaque-ref>                             APP-masked envelope reference",
+  )
+  println(
+    "  --app-hash <hash-token>                            APP payload commitment",
+  )
+  println(
+    "  [--project <id>] [--ratio-loci <id>]               defaults: zpc/merkin, repo-root",
+  )
+  println(
+    "  [--app-protocol <name>] [--app-audience <name>]    defaults: app/v1, genius-loci",
+  )
+  println(
+    "  --bootstrap-genius                                 local bring-up escape hatch",
+  )
 }
 
 ///|
@@ -436,11 +490,19 @@ fn infer_genius_locus(args : Array[String]) -> String? {
     "residue" => first_positional_locus(args)
     "sign" => {
       let locus = value_after(args, "--locus", "")
-      if locus == "" { None } else { Some(locus) }
+      if locus == "" {
+        None
+      } else {
+        Some(locus)
+      }
     }
     _ => {
       let locus = value_after(args, "--locus", "")
-      if locus == "" { None } else { Some(locus) }
+      if locus == "" {
+        None
+      } else {
+        Some(locus)
+      }
     }
   }
 }
@@ -451,7 +513,11 @@ fn first_positional_locus(args : Array[String]) -> String? {
     Some(args[2])
   } else {
     let locus = value_after(args, "--locus", "")
-    if locus == "" { None } else { Some(locus) }
+    if locus == "" {
+      None
+    } else {
+      Some(locus)
+    }
   }
 }
 
@@ -471,7 +537,7 @@ fn build_genius_attestation(
   let ratio_loci = value_after(args, "--ratio-loci", "repo-root")
   let fingerprint_hash = hash_token_to_hash(fingerprint)
   match resolve_app_envelope_record(args, app_ref) {
-    Some(record) => {
+    Some(record) =>
       if app_hash_token != "" &&
         !record.ciphertext_hash.matches(hash_token_to_hash(app_hash_token)) {
         None
@@ -487,8 +553,7 @@ fn build_genius_attestation(
           ),
         )
       }
-    }
-    None => {
+    None =>
       if app_hash_token == "" {
         None
       } else {
@@ -508,7 +573,6 @@ fn build_genius_attestation(
           ),
         )
       }
-    }
   }
 }
 
@@ -539,7 +603,9 @@ fn run_ratio_app_command(args : Array[String]) -> Unit {
   match subcmd {
     "put" => {
       if args.length() <= 3 {
-        println("Usage: merkin ratio app put <ref> --payload <text> [--protocol app/v1] [--audience genius-loci]")
+        println(
+          "Usage: merkin ratio app put <ref> --payload <text> [--protocol app/v1] [--audience genius-loci]",
+        )
         return
       }
       let ref_id = args[3]
@@ -577,7 +643,9 @@ fn run_ratio_app_command(args : Array[String]) -> Unit {
           println("  protocol=" + record.protocol)
           println("  audience=" + record.audience)
           println("  ciphertext_hash=" + record.ciphertext_hash.key())
-          println("  ciphertext_bytes=" + record.ciphertext.length().to_string())
+          println(
+            "  ciphertext_bytes=" + record.ciphertext.length().to_string(),
+          )
           println("  store_root=" + resolve_app_store_root(args))
         }
         None => println("APP envelope not found: " + ref_id)
@@ -585,7 +653,9 @@ fn run_ratio_app_command(args : Array[String]) -> Unit {
     }
     "emit-pr1" => {
       if args.length() <= 3 {
-        println("Usage: merkin ratio app emit-pr1 <ref> --procsi-surface <surface> --procsi-fingerprint <commitment> [--context-hash <hash>] [--policy-hash <hash>]")
+        println(
+          "Usage: merkin ratio app emit-pr1 <ref> --procsi-surface <surface> --procsi-fingerprint <commitment> [--context-hash <hash>] [--policy-hash <hash>]",
+        )
         return
       }
       let ref_id = args[3]
@@ -594,7 +664,9 @@ fn run_ratio_app_command(args : Array[String]) -> Unit {
           let surface = value_after(args, "--procsi-surface", "")
           let fingerprint = value_after(args, "--procsi-fingerprint", "")
           if surface == "" || fingerprint == "" {
-            println("Error: --procsi-surface and --procsi-fingerprint are required.")
+            println(
+              "Error: --procsi-surface and --procsi-fingerprint are required.",
+            )
             return
           }
           let fingerprint_hash = hash_token_to_hash(fingerprint)
@@ -626,18 +698,31 @@ fn run_ratio_app_command(args : Array[String]) -> Unit {
       }
       match cli_hex_to_bytes(hex) {
         Some(bytes) =>
-          match @model.ProcsiAttestedSectionV1::parse_pr1_custom_section(bytes) {
+          match
+            @model.ProcsiAttestedSectionV1::parse_pr1_custom_section(bytes) {
             Some(section) => {
               println("section=.pr1")
               println("locus=" + optional_to_text(section.attestation.locus))
               println("project=" + section.attestation.project)
               println("ratio_loci=" + section.attestation.ratio_loci)
               println("session_surface=" + section.attestation.session_surface)
-              println("fingerprint_commitment=" + section.attestation.fingerprint_commitment.key())
-              println("app_protocol=" + section.attestation.app_envelope.protocol)
-              println("app_audience=" + section.attestation.app_envelope.audience)
-              println("app_ref=" + section.attestation.app_envelope.ciphertext_ref)
-              println("app_payload_hash=" + section.attestation.app_envelope.ciphertext_hash.key())
+              println(
+                "fingerprint_commitment=" +
+                section.attestation.fingerprint_commitment.key(),
+              )
+              println(
+                "app_protocol=" + section.attestation.app_envelope.protocol,
+              )
+              println(
+                "app_audience=" + section.attestation.app_envelope.audience,
+              )
+              println(
+                "app_ref=" + section.attestation.app_envelope.ciphertext_ref,
+              )
+              println(
+                "app_payload_hash=" +
+                section.attestation.app_envelope.ciphertext_hash.key(),
+              )
               println("context_hash=" + section.context_hash.key())
               println("policy_hash=" + section.policy_hash.key())
             }
@@ -646,9 +731,7 @@ fn run_ratio_app_command(args : Array[String]) -> Unit {
         None => println("Error: invalid hex input.")
       }
     }
-    _ => {
-      println("Usage: merkin ratio app [put|inspect|emit-pr1|parse-pr1]")
-    }
+    _ => println("Usage: merkin ratio app [put|inspect|emit-pr1|parse-pr1]")
   }
 }
 
@@ -669,7 +752,11 @@ fn resolve_app_envelope_record(
 ///|
 fn optional_value_after(args : Array[String], flag : String) -> String? {
   let value = value_after(args, flag, "")
-  if value == "" { None } else { Some(value) }
+  if value == "" {
+    None
+  } else {
+    Some(value)
+  }
 }
 
 ///|

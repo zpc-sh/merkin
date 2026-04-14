@@ -21,10 +21,13 @@ pub fn ProcsiAttestedSectionV1::emit_pr1_payload(
 ) -> Bytes {
   let out : Array[Byte] = []
   procsi_sec_write_bytes(out, b"PRC1")
-  procsi_sec_write_string(out, match self.attestation.locus {
-    Some(locus) => locus
-    None => ""
-  })
+  procsi_sec_write_string(
+    out,
+    match self.attestation.locus {
+      Some(locus) => locus
+      None => ""
+    },
+  )
   procsi_sec_write_string(out, self.attestation.project)
   procsi_sec_write_string(out, self.attestation.ratio_loci)
   procsi_sec_write_string(out, self.attestation.session_surface)
@@ -59,7 +62,7 @@ pub fn ProcsiAttestedSectionV1::parse_pr1_payload(
 ) -> ProcsiAttestedSectionV1? {
   let cursor : ProcsiSectionCursor = { bytes: payload, pos: 0 }
   match procsi_sec_read_exact_bytes(cursor, 4) {
-    Some(magic) => {
+    Some(magic) =>
       if procsi_sec_bytes_equal(magic, b"PRC1") {
         let locus = procsi_sec_read_string(cursor)
         let project = procsi_sec_read_string(cursor)
@@ -72,19 +75,12 @@ pub fn ProcsiAttestedSectionV1::parse_pr1_payload(
         let app_payload_hash = procsi_sec_read_hash(cursor)
         let context_hash = procsi_sec_read_hash(cursor)
         let policy_hash = procsi_sec_read_hash(cursor)
-        match (
-          locus,
-          project,
-          ratio_loci,
-          session_surface,
-          fingerprint_commitment,
-          app_protocol,
-          app_audience,
-          app_ref,
-          app_payload_hash,
-          context_hash,
-          policy_hash,
-        ) {
+        match
+          (
+            locus, project, ratio_loci, session_surface, fingerprint_commitment,
+            app_protocol, app_audience, app_ref, app_payload_hash, context_hash,
+            policy_hash,
+          ) {
           (
             Some(locus_value),
             Some(project_value),
@@ -97,7 +93,7 @@ pub fn ProcsiAttestedSectionV1::parse_pr1_payload(
             Some(app_hash_value),
             Some(context_value),
             Some(policy_value),
-          ) => {
+          ) =>
             if cursor.pos != payload.length() ||
               project_value == "" ||
               ratio_loci_value == "" ||
@@ -109,7 +105,11 @@ pub fn ProcsiAttestedSectionV1::parse_pr1_payload(
             } else {
               Some({
                 attestation: {
-                  locus: if locus_value == "" { None } else { Some(locus_value) },
+                  locus: if locus_value == "" {
+                    None
+                  } else {
+                    Some(locus_value)
+                  },
                   project: project_value,
                   ratio_loci: ratio_loci_value,
                   session_surface: surface_value,
@@ -120,10 +120,7 @@ pub fn ProcsiAttestedSectionV1::parse_pr1_payload(
                     ciphertext_ref: app_ref_value,
                     ciphertext_hash: app_hash_value,
                     masked_commitment: AppMaskEnvelope::new(
-                      fingerprint_value,
-                      protocol_value,
-                      audience_value,
-                      app_ref_value,
+                      fingerprint_value, protocol_value, audience_value, app_ref_value,
                       app_hash_value,
                     ).masked_commitment,
                   },
@@ -132,13 +129,11 @@ pub fn ProcsiAttestedSectionV1::parse_pr1_payload(
                 policy_hash: policy_value,
               })
             }
-          }
           _ => None
         }
       } else {
         None
       }
-    }
     None => None
   }
 }
@@ -161,10 +156,11 @@ pub fn ProcsiAttestedSectionV1::parse_pr1_custom_section(
           }
           match procsi_sec_read_leb_u32(cursor) {
             Some(name_len) =>
-              match procsi_sec_read_exact_bytes(
-                cursor,
-                name_len.reinterpret_as_int(),
-              ) {
+              match
+                procsi_sec_read_exact_bytes(
+                  cursor,
+                  name_len.reinterpret_as_int(),
+                ) {
                 Some(name_bytes) => {
                   if !procsi_sec_bytes_equal(
                       name_bytes,
@@ -175,7 +171,8 @@ pub fn ProcsiAttestedSectionV1::parse_pr1_custom_section(
                   let payload_len = section_end - cursor.pos
                   match procsi_sec_read_exact_bytes(cursor, payload_len) {
                     Some(payload) =>
-                      if cursor.pos == section_end && cursor.pos == section_bytes.length() {
+                      if cursor.pos == section_end &&
+                        cursor.pos == section_bytes.length() {
                         ProcsiAttestedSectionV1::parse_pr1_payload(payload)
                       } else {
                         None
@@ -195,11 +192,13 @@ pub fn ProcsiAttestedSectionV1::parse_pr1_custom_section(
   }
 }
 
+///|
 pub(all) struct ProcsiSectionCursor {
   bytes : Bytes
   mut pos : Int
 }
 
+///|
 fn procsi_sec_read_byte(cursor : ProcsiSectionCursor) -> Byte? {
   if cursor.pos >= cursor.bytes.length() {
     None
@@ -210,6 +209,7 @@ fn procsi_sec_read_byte(cursor : ProcsiSectionCursor) -> Byte? {
   }
 }
 
+///|
 fn procsi_sec_read_exact_bytes(
   cursor : ProcsiSectionCursor,
   count : Int,
@@ -227,18 +227,21 @@ fn procsi_sec_read_exact_bytes(
   Some(Bytes::from_array(out))
 }
 
+///|
 fn procsi_sec_read_u32_le(cursor : ProcsiSectionCursor) -> UInt? {
   match procsi_sec_read_exact_bytes(cursor, 4) {
-    Some(bytes) => Some(
-      bytes[0].to_uint() |
-      (bytes[1].to_uint() << 8) |
-      (bytes[2].to_uint() << 16) |
-      (bytes[3].to_uint() << 24),
-    )
+    Some(bytes) =>
+      Some(
+        bytes[0].to_uint() |
+        (bytes[1].to_uint() << 8) |
+        (bytes[2].to_uint() << 16) |
+        (bytes[3].to_uint() << 24),
+      )
     None => None
   }
 }
 
+///|
 fn procsi_sec_read_string(cursor : ProcsiSectionCursor) -> String? {
   match procsi_sec_read_u32_le(cursor) {
     Some(length) =>
@@ -250,6 +253,7 @@ fn procsi_sec_read_string(cursor : ProcsiSectionCursor) -> String? {
   }
 }
 
+///|
 fn procsi_sec_read_hash(cursor : ProcsiSectionCursor) -> @hash.Hash? {
   match procsi_sec_read_exact_bytes(cursor, 32) {
     Some(bytes) => Some({ alg: @hash.Blake3, digest: bytes })
@@ -257,6 +261,7 @@ fn procsi_sec_read_hash(cursor : ProcsiSectionCursor) -> @hash.Hash? {
   }
 }
 
+///|
 fn procsi_sec_read_leb_u32(cursor : ProcsiSectionCursor) -> UInt? {
   let mut shift = 0
   let mut out : UInt = 0U
@@ -278,12 +283,14 @@ fn procsi_sec_read_leb_u32(cursor : ProcsiSectionCursor) -> UInt? {
   None
 }
 
+///|
 fn procsi_sec_write_bytes(out : Array[Byte], bytes : Bytes) -> Unit {
   for i = 0; i < bytes.length(); i = i + 1 {
     out.push(bytes[i])
   }
 }
 
+///|
 fn procsi_sec_write_u32_le(out : Array[Byte], value : UInt) -> Unit {
   out.push((value & 0xFFU).to_byte())
   out.push(((value >> 8) & 0xFFU).to_byte())
@@ -291,16 +298,19 @@ fn procsi_sec_write_u32_le(out : Array[Byte], value : UInt) -> Unit {
   out.push(((value >> 24) & 0xFFU).to_byte())
 }
 
+///|
 fn procsi_sec_write_string(out : Array[Byte], text : String) -> Unit {
   let bytes = procsi_sec_utf8_string_to_bytes(text)
   procsi_sec_write_u32_le(out, bytes.length().reinterpret_as_uint())
   procsi_sec_write_bytes(out, bytes)
 }
 
+///|
 fn procsi_sec_write_hash(out : Array[Byte], hash : @hash.Hash) -> Unit {
   procsi_sec_write_bytes(out, hash.digest)
 }
 
+///|
 fn procsi_sec_write_leb_u32(out : Array[Byte], value : UInt) -> Unit {
   let mut v = value
   while true {
@@ -316,6 +326,7 @@ fn procsi_sec_write_leb_u32(out : Array[Byte], value : UInt) -> Unit {
   }
 }
 
+///|
 fn procsi_sec_bytes_equal(left : Bytes, right : Bytes) -> Bool {
   if left.length() != right.length() {
     return false
@@ -330,6 +341,7 @@ fn procsi_sec_bytes_equal(left : Bytes, right : Bytes) -> Bool {
   true
 }
 
+///|
 fn procsi_sec_utf8_string_to_bytes(text : String) -> Bytes {
   let out : Array[Byte] = []
   for ch in text {
@@ -353,6 +365,7 @@ fn procsi_sec_utf8_string_to_bytes(text : String) -> Bytes {
   Bytes::from_array(out)
 }
 
+///|
 fn procsi_sec_utf8_bytes_to_string(bytes : Bytes) -> String? {
   let b = StringBuilder::new(size_hint=bytes.length())
   let mut i = 0
@@ -375,9 +388,7 @@ fn procsi_sec_utf8_bytes_to_string(bytes : Bytes) -> String? {
       }
       let b1 = bytes[i + 1].to_uint()
       let b2 = bytes[i + 2].to_uint()
-      let cp = ((b0 & 0x0FU) << 12) |
-        ((b1 & 0x3FU) << 6) |
-        (b2 & 0x3FU)
+      let cp = ((b0 & 0x0FU) << 12) | ((b1 & 0x3FU) << 6) | (b2 & 0x3FU)
       b.write_char(cp.reinterpret_as_int().unsafe_to_char())
       i = i + 3
     } else if (b0 & 0xF8U) == 0xF0U {

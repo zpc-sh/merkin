@@ -9,28 +9,29 @@ test "Yata lifecycle is abstract and contract-first" {
   let hole = @model.YataHole::new("notes/overview.md", contract, [], [], [])
   assert_eq(hole.state, @model.Open)
   assert_eq(hole.candidates.length(), 0)
-  let candidate = @model.YataCandidate::new("c1", "candidate summary", 50U, "rough draft")
+  let candidate = @model.YataCandidate::new(
+    "c1", "candidate summary", 50U, "rough draft",
+  )
   let active = hole.propose(candidate)
   assert_eq(active.state, @model.Converging)
   assert_eq(active.candidates.length(), 1)
-  let sealed = active.seal("c1", None)
-  assert_eq(sealed.state, @model.Sealed("c1"))
-  let resolved = sealed.resolve()
+  let sealed_hole = active.seal("c1", None)
+  assert_eq(sealed_hole.state, @model.Sealed("c1"))
+  let resolved = sealed_hole.resolve()
   assert_eq(resolved.state, @model.Resolved("c1"))
 }
 
 ///|
 test "Yata admissibility uses confidence floor against candidates" {
-  let contract = @model.YataContract::new(
-    "TreeShape",
-    [],
-    [],
-    80U,
-  )
+  let contract = @model.YataContract::new("TreeShape", [], [], 80U)
   let hole = @model.YataHole::new("notes/plan.md", contract, [], [], [])
-  let first = hole.propose(@model.YataCandidate::new("low", "low confidence", 12U, "temp"))
+  let first = hole.propose(
+    @model.YataCandidate::new("low", "low confidence", 12U, "temp"),
+  )
   assert_eq(first.admissible(), false)
-  let admitted = first.propose(@model.YataCandidate::new("high", "high confidence", 95U, "good"))
+  let admitted = first.propose(
+    @model.YataCandidate::new("high", "high confidence", 95U, "good"),
+  )
   assert_eq(admitted.admissible(), true)
   match admitted.best_candidate() {
     Some(top) => assert_eq(top.candidate_id, "high")
@@ -40,12 +41,7 @@ test "Yata admissibility uses confidence floor against candidates" {
 
 ///|
 test "Yata dependency readiness is explicit and local" {
-  let contract = @model.YataContract::new(
-    "BinaryBlob",
-    [],
-    [],
-    0U,
-  )
+  let contract = @model.YataContract::new("BinaryBlob", [], [], 0U)
   let base = @model.YataHole::new("notes/base.md", contract, [], [], [])
     .propose(@model.YataCandidate::new("base", "base value", 99U, "r0"))
     .seal("base", None)
@@ -57,7 +53,9 @@ test "Yata dependency readiness is explicit and local" {
     [base.hole_id],
     [],
   )
-  dependent = dependent.propose(@model.YataCandidate::new("child", "child value", 99U, "c1"))
+  dependent = dependent.propose(
+    @model.YataCandidate::new("child", "child value", 99U, "c1"),
+  )
   let unresolved_graph = @model.YataGraph::new().add(dependent).add(base)
   let ready_0 = unresolved_graph.ready_set()
   assert_eq(ready_0.length(), 2)
@@ -76,7 +74,9 @@ test "Yata plan emission is deterministic and track-aware" {
     .propose(@model.YataCandidate::new("c1", "summary", 70U, "proof"))
     .seal("c1", None)
     .resolve()
-  let plan = @model.YataGraph::new().add(hole).to_plan(@model.Program, @model.Full, "chatgpt", "unit")
+  let plan = @model.YataGraph::new()
+    .add(hole)
+    .to_plan(@model.Program, @model.Full, "chatgpt", "unit")
   assert_eq(plan.track, @model.Program)
   assert_eq(plan.mode, @model.Full)
   assert_eq(plan.entries.length(), 1)
@@ -88,12 +88,21 @@ test "Yata plan emission is deterministic and track-aware" {
 test "Yata project and reparent are deterministic transforms" {
   let contract = @model.YataContract::new("Tree", [], [], 0U)
   let root = @model.YataHole::new("notes/root.md", contract, [], [], [])
-  let child = @model.YataHole::new("notes/child.md", contract, [], [root.hole_id], [])
-  let grandchild = @model.YataHole::new("notes/grand.md", contract, [], [child.hole_id], [])
-  let graph = @model.YataGraph::new()
-    .add(root)
-    .add(child)
-    .add(grandchild)
+  let child = @model.YataHole::new(
+    "notes/child.md",
+    contract,
+    [],
+    [root.hole_id],
+    [],
+  )
+  let grandchild = @model.YataHole::new(
+    "notes/grand.md",
+    contract,
+    [],
+    [child.hole_id],
+    [],
+  )
+  let graph = @model.YataGraph::new().add(root).add(child).add(grandchild)
   let subset = graph.project([grandchild.hole_id, child.hole_id])
   assert_eq(subset.holes.length(), 2)
 
@@ -116,8 +125,20 @@ test "Yata project and reparent are deterministic transforms" {
 test "Yata lineage replay follows ancestry before target" {
   let contract = @model.YataContract::new("Timeline", [], [], 0U)
   let root = @model.YataHole::new("notes/root.md", contract, [], [], [])
-  let parent = @model.YataHole::new("notes/parent.md", contract, [], [root.hole_id], [])
-  let target = @model.YataHole::new("notes/target.md", contract, [], [parent.hole_id], [])
+  let parent = @model.YataHole::new(
+    "notes/parent.md",
+    contract,
+    [],
+    [root.hole_id],
+    [],
+  )
+  let target = @model.YataHole::new(
+    "notes/target.md",
+    contract,
+    [],
+    [parent.hole_id],
+    [],
+  )
   let graph = @model.YataGraph::new().add(root).add(parent).add(target)
   let steps = graph.lineage_replay(target.hole_id, 8U)
   assert_eq(steps.length(), 3)
@@ -132,7 +153,9 @@ test "Yata `.plan` wire can be produced, parsed, and cursor-validated" {
     .propose(@model.YataCandidate::new("c1", "candidate", 99U, "ok"))
     .seal("c1", None)
     .resolve()
-  let plan = @model.YataGraph::new().add(hole).to_plan(@model.Program, @model.Full, "chatgpt", "parser")
+  let plan = @model.YataGraph::new()
+    .add(hole)
+    .to_plan(@model.Program, @model.Full, "chatgpt", "parser")
   let wire = plan.to_wire()
   match @model.YataPlan::parse_wire(wire) {
     Some(parsed) => {
@@ -146,6 +169,7 @@ test "Yata `.plan` wire can be produced, parsed, and cursor-validated" {
   }
 }
 
+///|
 test "Yata `.plan` emits and reparses self-report metadata" {
   let contract = @model.YataContract::new("ParserReport", [], [], 10U)
   let hole = @model.YataHole::new("notes/report.md", contract, [], [], [])
@@ -167,21 +191,23 @@ test "Yata `.plan` emits and reparses self-report metadata" {
   let outcome = @model.YataPlan::parse_wire_strict(wire)
   assert_eq(outcome.ok, true)
   match outcome.plan {
-    Some(parsed) => match parsed.self_report {
-      Some(report) => {
-        assert_eq(report.overlay, "chatgpt")
-        assert_eq(report.peer, "chatgpt")
-        assert_eq(report.authority, "loc.machine")
-        assert_eq(report.anchor_hint, "notes/report.md")
-        assert_eq(report.gap, 2U)
-        assert_eq(report.view_hint, "overlay")
+    Some(parsed) =>
+      match parsed.self_report {
+        Some(report) => {
+          assert_eq(report.overlay, "chatgpt")
+          assert_eq(report.peer, "chatgpt")
+          assert_eq(report.authority, "loc.machine")
+          assert_eq(report.anchor_hint, "notes/report.md")
+          assert_eq(report.gap, 2U)
+          assert_eq(report.view_hint, "overlay")
+        }
+        None => assert_true(false)
       }
-      None => assert_true(false)
-    }
     None => assert_true(false)
   }
 }
 
+///|
 test "Yata `.plan` emits and reparses git report metadata" {
   let contract = @model.YataContract::new("ParserReportGit", [], [], 10U)
   let hole = @model.YataHole::new("notes/report-git.md", contract, [], [], [])
@@ -203,21 +229,23 @@ test "Yata `.plan` emits and reparses git report metadata" {
   let outcome = @model.YataPlan::parse_wire_strict(wire)
   assert_eq(outcome.ok, true)
   match outcome.plan {
-    Some(parsed) => match parsed.git_report {
-      Some(report) => {
-        assert_eq(report.branch, "feat/yata-track")
-        assert_eq(report.remote, "origin")
-        assert_eq(report.merge_base, "8ab1")
-        assert_eq(report.head, "9bc2")
-        assert_eq(report.commit_count, 3U)
-        assert_eq(report.refs, "8ab1,9bc2,5dd4")
-      }
-      None => assert_true(false)
+    Some(parsed) =>
+      match parsed.git_report {
+        Some(report) => {
+          assert_eq(report.branch, "feat/yata-track")
+          assert_eq(report.remote, "origin")
+          assert_eq(report.merge_base, "8ab1")
+          assert_eq(report.head, "9bc2")
+          assert_eq(report.commit_count, 3U)
+          assert_eq(report.refs, "8ab1,9bc2,5dd4")
+        }
+        None => assert_true(false)
       }
     None => assert_true(false)
   }
 }
 
+///|
 test "Yata `.plan` emits and reparses solve report metadata" {
   let contract = @model.YataContract::new("ParserSolve", [], [], 10U)
   let hole = @model.YataHole::new("notes/report-solve.md", contract, [], [], [])
@@ -238,43 +266,121 @@ test "Yata `.plan` emits and reparses solve report metadata" {
   let outcome = @model.YataPlan::parse_wire_strict(wire)
   assert_eq(outcome.ok, true)
   match outcome.plan {
-    Some(parsed) => match parsed.solve_report {
-      Some(report) => {
-        assert_eq(report.solve_kind, "repair")
-        assert_eq(report.status, "running")
-        assert_eq(report.handler, "provider.codex")
-        assert_eq(report.offloaded_to, "delegate-control")
-        assert_eq(report.count, 2U)
+    Some(parsed) =>
+      match parsed.solve_report {
+        Some(report) => {
+          assert_eq(report.solve_kind, "repair")
+          assert_eq(report.status, "running")
+          assert_eq(report.handler, "provider.codex")
+          assert_eq(report.offloaded_to, "delegate-control")
+          assert_eq(report.count, 2U)
+        }
+        None => assert_true(false)
       }
-      None => assert_true(false)
+    None => assert_true(false)
+  }
+}
+
+///|
+test "Yata `.plan` emits finger-style procsi and capability disclosure" {
+  let contract = @model.YataContract::new("ParserProcsi", [], [], 10U)
+  let hole = @model.YataHole::new("notes/report-procsi.md", contract, [], [], [])
+    .propose(@model.YataCandidate::new("c1", "candidate", 99U, "ok"))
+    .seal("c1", None)
+    .resolve()
+  let plan = @model.YataGraph::new()
+    .add(hole)
+    .to_plan(@model.Program, @model.Compact, "codex", "finger")
+    .with_procsi_report({
+      project: "zpc-sh/merkin",
+      ratio_loci: "ratio://merkin/root",
+      session_surface: "codex",
+      fingerprint_commitment: "blake3:fp-commitment",
+      app_ref: "app://repo/ai/codex",
+      app_audience: "ratio.loci.merkin",
+      masked: true,
+    })
+    .with_capability_report(
+      @model.YataPlanCapabilityReport::new(
+        "ratio://merkin/root", "service", "genius.write", "issued", 2U, "store://app/tickets/root",
+      ),
+    )
+  let wire = plan.to_wire()
+  let outcome = @model.YataPlan::parse_wire_strict(wire)
+  assert_eq(outcome.ok, true)
+  match outcome.plan {
+    Some(parsed) => {
+      match parsed.procsi_report {
+        Some(report) => {
+          assert_eq(report.project, "zpc-sh/merkin")
+          assert_eq(report.ratio_loci, "ratio://merkin/root")
+          assert_eq(report.session_surface, "codex")
+          assert_eq(report.fingerprint_commitment, "blake3:fp-commitment")
+          assert_eq(report.app_ref, "app://repo/ai/codex")
+          assert_eq(report.app_audience, "ratio.loci.merkin")
+          assert_eq(report.masked, true)
+        }
+        None => assert_true(false)
+      }
+      match parsed.capability_report {
+        Some(report) => {
+          assert_eq(report.authority, "ratio://merkin/root")
+          assert_eq(report.ticket_kind, "service")
+          assert_eq(report.scope, "genius.write")
+          assert_eq(report.status, "issued")
+          assert_eq(report.count, 2U)
+          assert_eq(report.store_ref, "store://app/tickets/root")
+        }
+        None => assert_true(false)
+      }
     }
     None => assert_true(false)
   }
 }
 
+///|
 test "Yata `.plan` strict parser flags missing solve report handler" {
-  let raw = "kind: merkin.yata.plan\ntrack=program\nmode=full\ngenerator=chatgpt\nnote=parser\nmaterial_hash=blake3:abc\nsolve_report=1\nsolve_report_kind=repair\nsolve_report_status=queued\nsolve_report_offloaded_to=delegate-control\nsolve_report_count=1\n- a1b2 state=resolved ready=true candidates=3 conf_floor=70 selected=impl_a provenance=2"
+  let raw = "kind: merkin.yata.plan\ntrack=program\nmode=full\ngenerator=chatgpt\nnote=parser\nmaterial_hash=blake3:abc\nsolve_report=1\nsolve_report_kind=repair\nsolve_report_status=queued\nsolve_report_offloaded_to=delegate-control\nsolve_report_count=1\n- a1b2 notes/repair.md resolved ready=true candidates=3 conf_floor=70 selected=impl_a provenance=2"
   let outcome = @model.YataPlan::parse_wire_strict(raw)
   assert_eq(outcome.ok, false)
   assert_eq(outcome.issues[0].code, "MISSING_SOLVE_REPORT_HANDLER")
 }
 
+///|
+test "Yata `.plan` strict parser flags missing procsi fingerprint commitment" {
+  let raw = "kind: merkin.yata.plan\ntrack=program\nmode=compact\ngenerator=codex\nnote=finger\nmaterial_hash=blake3:def\nprocsi_report=1\nprocsi_report_project=zpc-sh/merkin\nprocsi_report_ratio_loci=ratio://merkin/root\nprocsi_report_surface=codex\nprocsi_report_app_ref=app://repo/ai/codex\nprocsi_report_app_audience=ratio.loci.merkin\nprocsi_report_masked=true\n- a1b2 notes/finger.plan converging ready=true candidates=1 conf_floor=75 selected=none provenance=1"
+  let outcome = @model.YataPlan::parse_wire_strict(raw)
+  assert_eq(outcome.ok, false)
+  assert_eq(outcome.issues[0].code, "MISSING_PROCSI_REPORT_FINGERPRINT")
+}
+
+///|
+test "Yata `.plan` strict parser flags missing capability store ref" {
+  let raw = "kind: merkin.yata.plan\ntrack=program\nmode=compact\ngenerator=codex\nnote=finger\nmaterial_hash=blake3:ghi\ncapability_report=1\ncapability_report_authority=ratio://merkin/root\ncapability_report_ticket_kind=service\ncapability_report_scope=genius.write\ncapability_report_status=issued\ncapability_report_count=2\n- a1b2 notes/finger.plan converging ready=true candidates=1 conf_floor=75 selected=none provenance=1"
+  let outcome = @model.YataPlan::parse_wire_strict(raw)
+  assert_eq(outcome.ok, false)
+  assert_eq(outcome.issues[0].code, "MISSING_CAPABILITY_REPORT_STORE_REF")
+}
+
+///|
 test "Yata `.plan` strict parser flags malformed git report fields" {
-  let raw = "kind: merkin.yata.plan\ntrack=git\nmode=full\ngenerator=chatgpt\nnote=parser\nmaterial_hash=blake3:abc\ngit_report=1\ngit_report_remote=origin\n- a1b2 state=resolved ready=true candidates=3 conf_floor=70 selected=impl_a provenance=2"
+  let raw = "kind: merkin.yata.plan\ntrack=git\nmode=full\ngenerator=chatgpt\nnote=parser\nmaterial_hash=blake3:abc\ngit_report=1\ngit_report_remote=origin\n- a1b2 notes/git.plan resolved ready=true candidates=3 conf_floor=70 selected=impl_a provenance=2"
   let outcome = @model.YataPlan::parse_wire_strict(raw)
   assert_eq(outcome.ok, false)
   assert_eq(outcome.issues[0].code, "MISSING_GIT_REPORT_BRANCH")
 }
 
+///|
 test "Yata `.plan` strict parser rejects bad git commit count" {
-  let raw = "kind: merkin.yata.plan\ntrack=git\nmode=full\ngenerator=chatgpt\nnote=parser\nmaterial_hash=blake3:abc\ngit_report=1\ngit_report_branch=main\ngit_report_remote=origin\ngit_report_merge_base=abc\ngit_report_head=def\ngit_report_commit_count=not-a-number\ngit_report_refs=a,b,c\n- a1b2 state=resolved ready=true candidates=3 conf_floor=70 selected=impl_a provenance=2"
+  let raw = "kind: merkin.yata.plan\ntrack=git\nmode=full\ngenerator=chatgpt\nnote=parser\nmaterial_hash=blake3:abc\ngit_report=1\ngit_report_branch=main\ngit_report_remote=origin\ngit_report_merge_base=abc\ngit_report_head=def\ngit_report_commit_count=not-a-number\ngit_report_refs=a,b,c\n- a1b2 notes/git.plan resolved ready=true candidates=3 conf_floor=70 selected=impl_a provenance=2"
   let outcome = @model.YataPlan::parse_wire_strict(raw)
   assert_eq(outcome.ok, false)
   assert_eq(outcome.issues[0].code, "BAD_HEADER_NUMBER")
 }
 
+///|
 test "Yata git snapshot helper derives refs and commit count" {
-  let snapshot = @model.YataGitSnapshot{
+  let snapshot : @model.YataGitSnapshot = {
     branch: "main",
     remote: "origin",
     merge_base: "abc123",
@@ -290,6 +396,7 @@ test "Yata git snapshot helper derives refs and commit count" {
   assert_eq(report.refs, "abc123,def456,789fff")
 }
 
+///|
 test "Yata one-shot snapshot can attach both self and git envelopes" {
   let contract = @model.YataContract::new("SnapshotBundle", [], [], 10U)
   let hole = @model.YataHole::new("notes/snapshot.md", contract, [], [], [])
@@ -337,7 +444,7 @@ test "Yata one-shot snapshot can attach both self and git envelopes" {
 test "Yata addresses expose cognitic overlays and are parseable across schemes" {
   let contract = @model.YataContract::new("Address", [], [], 10U)
   let hole = @model.YataHole::new("notes/address.md", contract, [], [], [])
-  let hint = @model.YataAddressHint{
+  let hint : @model.YataAddressHint = {
     overlay: "chatgpt",
     peer: "chatgpt",
     mode: "surface",
@@ -368,7 +475,7 @@ test "Yata addresses expose cognitic overlays and are parseable across schemes" 
 test "Yata CAS uri roundtrips for hole-centric addressing" {
   let contract = @model.YataContract::new("CasAddress", [], [], 10U)
   let hole = @model.YataHole::new("notes/cas/address.md", contract, [], [], [])
-  let hint = @model.YataAddressHint{
+  let hint : @model.YataAddressHint = {
     overlay: "chatgpt",
     peer: "claude",
     mode: "surface",
@@ -397,7 +504,10 @@ test "Yata address strict parser normalizes slash-heavy routes" {
     Some(addr) => {
       assert_eq(addr.anchor, "notes/agenda.md")
       assert_eq(addr.gap, 1U)
-      assert_eq(addr.uri, "cog://loc.machine/notes/agenda.md?overlay=chatgpt&peer=chatgpt&mode=surface&gap=1&track=program&id=abc#overlay")
+      assert_eq(
+        addr.uri,
+        "cog://loc.machine/notes/agenda.md?overlay=chatgpt&peer=chatgpt&mode=surface&gap=1&track=program&id=abc#overlay",
+      )
     }
     None => assert_true(false)
   }
@@ -423,10 +533,10 @@ test "Yata CAS parser allows digest-only target without anchor" {
 test "Yata address canonicalize helper rewrites slash-heavy uri" {
   let raw = "substrate://loc.machine////notes///state.md/?overlay=chatgpt&peer=chatgpt&mode=surface&gap=3&track=git&id=abc#overlay"
   match @model.YataAddress::canonicalize(raw) {
-    Some(canonical) => assert_eq(
-      canonical,
-      "substrate://loc.machine/notes/state.md?overlay=chatgpt&peer=chatgpt&mode=surface&gap=3&track=git&id=abc#overlay",
-    )
+    Some(canonical) =>
+      assert_eq(
+        canonical, "substrate://loc.machine/notes/state.md?overlay=chatgpt&peer=chatgpt&mode=surface&gap=3&track=git&id=abc#overlay",
+      )
     None => assert_true(false)
   }
 }
@@ -436,14 +546,14 @@ test "Yata `.plan` strict parser rejects unknown fields and reports issues" {
   let raw = "kind: merkin.yata.plan\ntrack=program\nmode=compact\ngenerator=chatgpt\nnote=manual\nentries=1\nmaterial_hash=blake3:abc\na=1\n- zzz anchor state ready=true candidates=1 conf_floor=10 selected=none provenance=0"
   let outcome = @model.YataPlan::parse_wire_strict(raw)
   assert_eq(outcome.ok, false)
-  assert_eq(outcome.issues.length(), 2U)
+  assert_eq(outcome.issues.length(), 2)
   assert_eq(outcome.issues[1].code, "ENTRY_COUNT_MISMATCH")
   assert_eq(outcome.issues[0].code, "UNRECOGNIZED_LINE")
 }
 
 ///|
 test "Yata address supports perspective-relative parse and projection" {
-  let context = @model.YataAddressContext{
+  let context : @model.YataAddressContext = {
     authority: "loc.machine",
     anchor: "notes/roadmap/session-01.md",
   }
@@ -494,13 +604,37 @@ test "Yata topology fanout analysis highlights overbranched parents" {
 test "Yata detachment analysis finds missing and rootless chains" {
   let contract = @model.YataContract::new("Topology", [], [], 0U)
   let root = @model.YataHole::new("notes/root.md", contract, [], [], [])
-  let attached = @model.YataHole::new("notes/attached.md", contract, [], [root.hole_id], [])
+  let attached = @model.YataHole::new(
+    "notes/attached.md",
+    contract,
+    [],
+    [root.hole_id],
+    [],
+  )
 
   let orphan_dep = @hash.Hash::of_bytes(b"missing-dependency")
-  let orphan = @model.YataHole::new("notes/orphan.md", contract, [], [orphan_dep], [])
+  let orphan = @model.YataHole::new(
+    "notes/orphan.md",
+    contract,
+    [],
+    [orphan_dep],
+    [],
+  )
 
-  let cycle_a_seed = @model.YataHole::new("notes/cycle-a.md", contract, [], [], [])
-  let cycle_b_seed = @model.YataHole::new("notes/cycle-b.md", contract, [], [cycle_a_seed.hole_id], [])
+  let cycle_a_seed = @model.YataHole::new(
+    "notes/cycle-a.md",
+    contract,
+    [],
+    [],
+    [],
+  )
+  let cycle_b_seed = @model.YataHole::new(
+    "notes/cycle-b.md",
+    contract,
+    [],
+    [cycle_a_seed.hole_id],
+    [],
+  )
   let cycle_a = cycle_a_seed.add_dependency(cycle_b_seed.hole_id)
 
   let graph = @model.YataGraph::new()

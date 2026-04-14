@@ -23,6 +23,8 @@
 
 // Module-level tree and bloom — one instance per loaded module.
 let g_tree : @tree.MerkinTree = @tree.MerkinTree::new()
+
+///|
 let g_bloom : @bloom.BloomSketch = @bloom.BloomSketch::new()
 
 // --- Bloom API ---
@@ -54,9 +56,9 @@ pub fn bloom_serialize() -> String {
   let mut i = 0
   while i + 3 < size {
     let nibble = (if g_bloom.bits[i] { 8 } else { 0 }) |
-                 (if g_bloom.bits[i + 1] { 4 } else { 0 }) |
-                 (if g_bloom.bits[i + 2] { 2 } else { 0 }) |
-                 (if g_bloom.bits[i + 3] { 1 } else { 0 })
+      (if g_bloom.bits[i + 1] { 4 } else { 0 }) |
+      (if g_bloom.bits[i + 2] { 2 } else { 0 }) |
+      (if g_bloom.bits[i + 3] { 1 } else { 0 })
     sb.write_char(int_to_hex(nibble))
     i = i + 4
   }

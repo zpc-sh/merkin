@@ -10,20 +10,59 @@ fn main {
 
   // Merkin CLI commands
   match cmd {
-    "ratio" => { run_ratio_command(args); return }
-    "genius" => { run_genius_command(args); return }
-    "init" => { run_ratio_alias_command(args); return }
-    "loci" => { run_ratio_alias_command(args); return }
-    "app" => { run_ratio_alias_command(args); return }
-    "enter" => { run_genius_alias_command(args); return }
-    "sign" => { run_genius_alias_command(args); return }
-    "trail" => { run_genius_alias_command(args); return }
-    "where" => { run_genius_alias_command(args); return }
-    "residue" => { run_genius_alias_command(args); return }
-    "status" => { run_ratio_alias_command(args); return }
-    "pack" => { run_ratio_alias_command(args); return }
+    "ratio" => {
+      run_ratio_command(args)
+      return
+    }
+    "genius" => {
+      run_genius_command(args)
+      return
+    }
+    "init" => {
+      run_ratio_alias_command(args)
+      return
+    }
+    "loci" => {
+      run_ratio_alias_command(args)
+      return
+    }
+    "app" => {
+      run_ratio_alias_command(args)
+      return
+    }
+    "enter" => {
+      run_genius_alias_command(args)
+      return
+    }
+    "sign" => {
+      run_genius_alias_command(args)
+      return
+    }
+    "trail" => {
+      run_genius_alias_command(args)
+      return
+    }
+    "where" => {
+      run_genius_alias_command(args)
+      return
+    }
+    "residue" => {
+      run_genius_alias_command(args)
+      return
+    }
+    "status" => {
+      run_ratio_alias_command(args)
+      return
+    }
+    "pack" => {
+      run_ratio_alias_command(args)
+      return
+    }
     "daemon" => () // fall through to existing daemon handling
-    _ => { print_usage(); return }
+    _ => {
+      print_usage()
+      return
+    }
   }
 
   // Daemon subcommand handling (existing)
@@ -127,28 +166,37 @@ fn main {
         value_after(args, "--policy-profile", "debate-default"),
       )
       let track = parse_conv_track(value_after(args, "--track", "program"))
-      match host.create_thread(
-        hall.hall_id,
-        value_after(args, "--topic", "ai-debate"),
-        track,
-      ) {
+      match
+        host.create_thread(
+          hall.hall_id,
+          value_after(args, "--topic", "ai-debate"),
+          track,
+        ) {
         Some(thread) => {
           let envelope : @daemon.LengthEnvelope = {
             input_len_min: parse_uint(value_after(args, "--input-min", "1"), 1U),
-            input_len_max: parse_uint(value_after(args, "--input-max", "12000"), 12000U),
-            output_len_min: parse_uint(value_after(args, "--output-min", "1"), 1U),
-            output_len_max: parse_uint(value_after(args, "--output-max", "24000"), 24000U),
+            input_len_max: parse_uint(
+              value_after(args, "--input-max", "12000"),
+              12000U,
+            ),
+            output_len_min: parse_uint(
+              value_after(args, "--output-min", "1"),
+              1U,
+            ),
+            output_len_max: parse_uint(
+              value_after(args, "--output-max", "24000"),
+              24000U,
+            ),
           }
-          let outcome = host.append_turn(
-            thread.thread_id,
-            {
-              actor_overlay: value_after(args, "--overlay", "chatgpt"),
-              actor_role: parse_actor_role(value_after(args, "--actor-role", "ai")),
-              content: value_after(args, "--content", "debate turn"),
-              length_envelope: envelope,
-              idempotency_key: value_after(args, "--idempotency-key", ""),
-            },
-          )
+          let outcome = host.append_turn(thread.thread_id, {
+            actor_overlay: value_after(args, "--overlay", "chatgpt"),
+            actor_role: parse_actor_role(
+              value_after(args, "--actor-role", "ai"),
+            ),
+            content: value_after(args, "--content", "debate turn"),
+            length_envelope: envelope,
+            idempotency_key: value_after(args, "--idempotency-key", ""),
+          })
           println("accepted=\{outcome.accepted}")
           println("issues=\{outcome.issues.length()}")
           match outcome.turn_id {
@@ -180,47 +228,58 @@ fn main {
         value_after(args, "--policy-profile", "debate-default"),
       )
       let track = parse_conv_track(value_after(args, "--track", "program"))
-      match host.create_thread(
-        hall.hall_id,
-        value_after(args, "--topic", "ai-debate"),
-        track,
-      ) {
+      match
+        host.create_thread(
+          hall.hall_id,
+          value_after(args, "--topic", "ai-debate"),
+          track,
+        ) {
         Some(thread) => {
           let envelope : @daemon.LengthEnvelope = {
             input_len_min: parse_uint(value_after(args, "--input-min", "1"), 1U),
-            input_len_max: parse_uint(value_after(args, "--input-max", "12000"), 12000U),
-            output_len_min: parse_uint(value_after(args, "--output-min", "1"), 1U),
-            output_len_max: parse_uint(value_after(args, "--output-max", "24000"), 24000U),
+            input_len_max: parse_uint(
+              value_after(args, "--input-max", "12000"),
+              12000U,
+            ),
+            output_len_min: parse_uint(
+              value_after(args, "--output-min", "1"),
+              1U,
+            ),
+            output_len_max: parse_uint(
+              value_after(args, "--output-max", "24000"),
+              24000U,
+            ),
           }
-          let first = host.append_turn(
-            thread.thread_id,
-            {
-              actor_overlay: value_after(args, "--overlay", "chatgpt"),
-              actor_role: parse_actor_role(value_after(args, "--actor-role", "ai")),
-              content: value_after(args, "--content", "debate turn"),
-              length_envelope: envelope,
-              idempotency_key: "seed-1",
-            },
-          )
+          let first = host.append_turn(thread.thread_id, {
+            actor_overlay: value_after(args, "--overlay", "chatgpt"),
+            actor_role: parse_actor_role(
+              value_after(args, "--actor-role", "ai"),
+            ),
+            content: value_after(args, "--content", "debate turn"),
+            length_envelope: envelope,
+            idempotency_key: "seed-1",
+          })
           println("seed_accepted=\{first.accepted}")
 
-          if parse_bool(value_after(args, "--seed-non-replayable", "false"), false) {
+          if parse_bool(
+              value_after(args, "--seed-non-replayable", "false"),
+              false,
+            ) {
             ignore(
-              host.append_turn(
-                thread.thread_id,
-                {
-                  actor_overlay: value_after(args, "--overlay", "chatgpt"),
-                  actor_role: parse_actor_role(value_after(args, "--actor-role", "ai")),
-                  content: "non-replayable-seed",
-                  length_envelope: {
-                    input_len_min: 1U,
-                    input_len_max: 200U,
-                    output_len_min: 1U,
-                    output_len_max: 2U,
-                  },
-                  idempotency_key: "seed-2",
+              host.append_turn(thread.thread_id, {
+                actor_overlay: value_after(args, "--overlay", "chatgpt"),
+                actor_role: parse_actor_role(
+                  value_after(args, "--actor-role", "ai"),
+                ),
+                content: "non-replayable-seed",
+                length_envelope: {
+                  input_len_min: 1U,
+                  input_len_max: 200U,
+                  output_len_min: 1U,
+                  output_len_max: 2U,
                 },
-              ),
+                idempotency_key: "seed-2",
+              }),
             )
           }
 
@@ -230,14 +289,14 @@ fn main {
           } else {
             Some(parse_uint(to_seq_value, 1U))
           }
-          let replay = host.replay(
-            thread.thread_id,
-            {
-              from_seq: parse_uint(value_after(args, "--from-seq", "1"), 1U),
-              to_seq,
-              length_guard_enforced: parse_bool(value_after(args, "--enforce-length", "true"), true),
-            },
-          )
+          let replay = host.replay(thread.thread_id, {
+            from_seq: parse_uint(value_after(args, "--from-seq", "1"), 1U),
+            to_seq,
+            length_guard_enforced: parse_bool(
+              value_after(args, "--enforce-length", "true"),
+              true,
+            ),
+          })
           println("replay_ok=\{replay.ok}")
           println("replayed=\{replay.replayed_count}")
           println("non_replayable=\{replay.non_replayable_count}")
@@ -256,31 +315,40 @@ fn main {
         value_after(args, "--policy-profile", "debate-default"),
       )
       let track = parse_conv_track(value_after(args, "--track", "program"))
-      match host.create_thread(
-        hall.hall_id,
-        value_after(args, "--topic", "ai-debate"),
-        track,
-      ) {
+      match
+        host.create_thread(
+          hall.hall_id,
+          value_after(args, "--topic", "ai-debate"),
+          track,
+        ) {
         Some(thread) => {
           ignore(
             host.append_turn(
               thread.thread_id,
-              @daemon.TurnRequest::default(value_after(args, "--content", "seed turn")),
+              @daemon.TurnRequest::default(
+                value_after(args, "--content", "seed turn"),
+              ),
             ),
           )
-          let action = parse_embedding_action(value_after(args, "--embedding-action", "observe"))
-          match host.record_embedding(
-            thread.thread_id,
-            value_after(args, "--file-ref", "docs/sample.bin"),
-            value_after(args, "--file-type", "bin"),
-            value_after(args, "--mime-type", "application/octet-stream"),
-            parse_bool(value_after(args, "--embedding-found", "true"), true),
-            parse_uint(value_after(args, "--embedding-count", "1"), 1U),
-            action,
-            parse_bool(value_after(args, "--embedding-ephemeral", "true"), true),
-            parse_uint(value_after(args, "--purge-after-turns", "1"), 1U),
-            value_after(args, "--embedding-note", "runtime scan"),
-          ) {
+          let action = parse_embedding_action(
+            value_after(args, "--embedding-action", "observe"),
+          )
+          match
+            host.record_embedding(
+              thread.thread_id,
+              value_after(args, "--file-ref", "docs/sample.bin"),
+              value_after(args, "--file-type", "bin"),
+              value_after(args, "--mime-type", "application/octet-stream"),
+              parse_bool(value_after(args, "--embedding-found", "true"), true),
+              parse_uint(value_after(args, "--embedding-count", "1"), 1U),
+              action,
+              parse_bool(
+                value_after(args, "--embedding-ephemeral", "true"),
+                true,
+              ),
+              parse_uint(value_after(args, "--purge-after-turns", "1"), 1U),
+              value_after(args, "--embedding-note", "runtime scan"),
+            ) {
             Some(record) => {
               println("embedding_recorded=true")
               println("record_id=\{record.record_id}")
@@ -305,13 +373,19 @@ fn main {
         value_after(args, "--policy-profile", "debate-default"),
       )
       let track = parse_conv_track(value_after(args, "--track", "program"))
-      match host.create_thread(
-        hall.hall_id,
-        value_after(args, "--topic", "ai-debate"),
-        track,
-      ) {
+      match
+        host.create_thread(
+          hall.hall_id,
+          value_after(args, "--topic", "ai-debate"),
+          track,
+        ) {
         Some(thread) => {
-          ignore(host.append_turn(thread.thread_id, @daemon.TurnRequest::default("turn-1")))
+          ignore(
+            host.append_turn(
+              thread.thread_id,
+              @daemon.TurnRequest::default("turn-1"),
+            ),
+          )
           ignore(
             host.record_embedding(
               thread.thread_id,
@@ -320,13 +394,20 @@ fn main {
               value_after(args, "--mime-type", "application/octet-stream"),
               true,
               1U,
-              parse_embedding_action(value_after(args, "--embedding-action", "flip-aot")),
+              parse_embedding_action(
+                value_after(args, "--embedding-action", "flip-aot"),
+              ),
               true,
               parse_uint(value_after(args, "--purge-after-turns", "1"), 1U),
               "ephemeral embedding marker",
             ),
           )
-          ignore(host.append_turn(thread.thread_id, @daemon.TurnRequest::default("turn-2")))
+          ignore(
+            host.append_turn(
+              thread.thread_id,
+              @daemon.TurnRequest::default("turn-2"),
+            ),
+          )
           let before = host.embedding_timeline(thread.thread_id)
           let purged = host.purge_embedding_records(
             thread.thread_id,
@@ -347,16 +428,19 @@ fn main {
         value_after(args, "--policy-profile", "debate-default"),
       )
       let track = parse_conv_track(value_after(args, "--track", "program"))
-      match host.create_thread(
-        hall.hall_id,
-        value_after(args, "--topic", "ai-debate"),
-        track,
-      ) {
+      match
+        host.create_thread(
+          hall.hall_id,
+          value_after(args, "--topic", "ai-debate"),
+          track,
+        ) {
         Some(thread) => {
           ignore(
             host.append_turn(
               thread.thread_id,
-              @daemon.TurnRequest::default(value_after(args, "--content", "seed turn")),
+              @daemon.TurnRequest::default(
+                value_after(args, "--content", "seed turn"),
+              ),
             ),
           )
           ignore(
@@ -367,36 +451,65 @@ fn main {
               value_after(args, "--mime-type", "application/octet-stream"),
               parse_bool(value_after(args, "--embedding-found", "true"), true),
               parse_uint(value_after(args, "--embedding-count", "1"), 1U),
-              parse_embedding_action(value_after(args, "--embedding-action", "observe")),
-              parse_bool(value_after(args, "--embedding-ephemeral", "true"), true),
+              parse_embedding_action(
+                value_after(args, "--embedding-action", "observe"),
+              ),
+              parse_bool(
+                value_after(args, "--embedding-ephemeral", "true"),
+                true,
+              ),
               parse_uint(value_after(args, "--purge-after-turns", "1"), 1U),
               value_after(args, "--embedding-note", "runtime scan"),
             ),
           )
-          if parse_bool(value_after(args, "--seed-second-embedding", "false"), false) {
+          if parse_bool(
+              value_after(args, "--seed-second-embedding", "false"),
+              false,
+            ) {
             ignore(
               host.record_embedding(
                 thread.thread_id,
                 value_after(args, "--second-file-ref", "docs/second.bin"),
                 value_after(args, "--second-file-type", "bin"),
-                value_after(args, "--second-mime-type", "application/octet-stream"),
-                parse_bool(value_after(args, "--second-embedding-found", "false"), false),
-                parse_uint(value_after(args, "--second-embedding-count", "0"), 0U),
-                parse_embedding_action(value_after(args, "--second-embedding-action", "observe")),
-                parse_bool(value_after(args, "--second-embedding-ephemeral", "true"), true),
-                parse_uint(value_after(args, "--second-purge-after-turns", "1"), 1U),
-                value_after(args, "--second-embedding-note", "second runtime scan"),
+                value_after(
+                  args, "--second-mime-type", "application/octet-stream",
+                ),
+                parse_bool(
+                  value_after(args, "--second-embedding-found", "false"),
+                  false,
+                ),
+                parse_uint(
+                  value_after(args, "--second-embedding-count", "0"),
+                  0U,
+                ),
+                parse_embedding_action(
+                  value_after(args, "--second-embedding-action", "observe"),
+                ),
+                parse_bool(
+                  value_after(args, "--second-embedding-ephemeral", "true"),
+                  true,
+                ),
+                parse_uint(
+                  value_after(args, "--second-purge-after-turns", "1"),
+                  1U,
+                ),
+                value_after(
+                  args, "--second-embedding-note", "second runtime scan",
+                ),
               ),
             )
           }
-          match host.emit_embedding_plan(
-            thread.thread_id,
-            value_after(args, "--plan-overlay", "chatgpt"),
-            value_after(args, "--plan-peer", "claude"),
-            value_after(args, "--plan-authority", "substrate://loc/chatgpt"),
-            value_after(args, "--plan-generator", "daemon.conversation"),
-            value_after(args, "--plan-note", "conversation embedding timeline"),
-          ) {
+          match
+            host.emit_embedding_plan(
+              thread.thread_id,
+              value_after(args, "--plan-overlay", "chatgpt"),
+              value_after(args, "--plan-peer", "claude"),
+              value_after(args, "--plan-authority", "substrate://loc/chatgpt"),
+              value_after(args, "--plan-generator", "daemon.conversation"),
+              value_after(
+                args, "--plan-note", "conversation embedding timeline",
+              ),
+            ) {
             Some(wire) => {
               println("plan_emitted=true")
               println(wire)
@@ -407,14 +520,13 @@ fn main {
         None => println("thread=create_failed")
       }
     }
-    "yata-topology" => {
+    "yata-topology" =>
       run_yata_topology(
         parse_uint(value_after(args, "--yata-branch-factor", "3"), 3U),
         parse_uint(value_after(args, "--yata-detached-depth", "2"), 2U),
         parse_uint(value_after(args, "--yata-max-children", "2"), 2U),
         parse_uint(value_after(args, "--yata-max-depth", "8"), 8U),
       )
-    }
     _ => {
       // demo: put then read
       let payload = b"demo-payload"
@@ -435,8 +547,12 @@ fn print_usage() -> Unit {
   println("  merkin <group|command> [args] [flags]")
   println("")
   println("Canonical command groups:")
-  println("  merkin ratio <command> ...                         Repository/root surface")
-  println("  merkin genius <command> ...                        AI-only inhabitation surface")
+  println(
+    "  merkin ratio <command> ...                         Repository/root surface",
+  )
+  println(
+    "  merkin genius <command> ...                        AI-only inhabitation surface",
+  )
   println("")
   print_ratio_usage()
   println("")
@@ -444,9 +560,7 @@ fn print_usage() -> Unit {
   println("")
   println("Compatibility aliases:")
   println("  init     → ratio init")
-  println(
-    "  loci     → ratio loci",
-  )
+  println("  loci     → ratio loci")
   println("  app      → ratio app")
   println("  status   → ratio status")
   println("  pack     → ratio pack")

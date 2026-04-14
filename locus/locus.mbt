@@ -16,7 +16,7 @@ pub(all) struct LocusConfig {
   loci_root : String
   /// Store path (default: "~/.merkin/store")
   store_path : String
-} derive(Debug)
+} derive(Show)
 
 ///|
 pub fn LocusConfig::default() -> LocusConfig {
@@ -28,7 +28,7 @@ pub fn LocusConfig::default() -> LocusConfig {
 pub(all) struct LocusRuntime {
   config : LocusConfig
   session : @model.SessionIdentity
-} derive(Debug)
+} derive(Show)
 
 ///|
 /// Create a new LocusRuntime.
@@ -41,9 +41,7 @@ pub fn LocusRuntime::new(
 
 ///|
 /// Create with defaults.
-pub fn LocusRuntime::default(
-  session : @model.SessionIdentity,
-) -> LocusRuntime {
+pub fn LocusRuntime::default(session : @model.SessionIdentity) -> LocusRuntime {
   { config: LocusConfig::default(), session }
 }
 
@@ -192,9 +190,7 @@ pub fn format_trail(
 ///|
 /// Format the `merkin where` output.
 /// Takes a list of (locus_name, most_recent_residue) pairs.
-pub fn format_where(
-  entries : Array[(String, @model.Residue?)],
-) -> String {
+pub fn format_where(entries : Array[(String, @model.Residue?)]) -> String {
   let b = StringBuilder::new(size_hint=512)
   b.write_string("LOCUS           LAST VISIT        TIER    OPEN THREADS\n")
   for entry in entries {
@@ -228,7 +224,9 @@ pub fn format_enter_preamble(
   last_residue : @model.Residue?,
 ) -> String {
   let b = StringBuilder::new(size_hint=512)
-  b.write_string("─────────────────────────────────────────────────────\n")
+  b.write_string(
+    "─────────────────────────────────────────────────────\n",
+  )
   b.write_string("You are entering: ")
   b.write_string(locus_name)
   b.write_char('\n')
@@ -250,11 +248,11 @@ pub fn format_enter_preamble(
         }
       }
     }
-    None => {
-      b.write_string("First entry — no prior residue.\n")
-    }
+    None => b.write_string("First entry — no prior residue.\n")
   }
-  b.write_string("─────────────────────────────────────────────────────\n")
+  b.write_string(
+    "─────────────────────────────────────────────────────\n",
+  )
   b.to_string()
 }
 
@@ -284,9 +282,7 @@ pub fn format_residue(r : @model.Residue) -> String {
       b.write_string(from)
       b.write_string("\n\n")
     }
-    None => {
-      b.write_string("Picked up from: (cold entry)\n\n")
-    }
+    None => b.write_string("Picked up from: (cold entry)\n\n")
   }
   b.write_string("What I did:\n")
   for item in r.what_i_did {

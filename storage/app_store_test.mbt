@@ -3,10 +3,7 @@ test "FileAppEnvelopeStore put and resolve" {
   let root = "/tmp/merkin-app-store-test"
   let store = @storage.FileAppEnvelopeStore::new(root)
   let record = @model.AppEnvelopeRecord::new(
-    "app://mask/test-entry",
-    "app/v1",
-    "genius-loci",
-    b"\xAA\xBB\xCC",
+    "app://mask/test-entry", "app/v1", "genius-loci", b"\xAA\xBB\xCC",
   )
   ignore(store.put(record))
   match store.resolve("app://mask/test-entry") {

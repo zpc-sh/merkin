@@ -133,12 +133,11 @@ test "WorkPromise can be projected into generalized solve ticket" {
   let input = @hash.Hash::of_bytes(b"\x01")
   let transform = @hash.Hash::of_bytes(b"\x02")
   let policy = @hash.Hash::of_bytes(b"\x03")
-  let promise = @model.WorkPromise::new(input, transform, policy).promise().start()
+  let promise = @model.WorkPromise::new(input, transform, policy)
+    .promise()
+    .start()
   let ticket = promise.to_solve_ticket(
-    "repair",
-    "delegate-control",
-    "provider.codex",
-    "compiler bug fix",
+    "repair", "delegate-control", "provider.codex", "compiler bug fix",
   )
   assert_eq(ticket.solve_id, promise.promise_id)
   assert_eq(ticket.solve_kind, "repair")
@@ -153,13 +152,13 @@ test "SolveTicket can materialize and verify result linkage" {
   let result_hash = @hash.Hash::of_bytes(b"\x08")
   let result_envelope_id = @hash.Hash::of_bytes(b"\x09")
   let ticket = @model.SolveTicket::new(
-    solve_id,
-    "smt",
-    "mu.local",
-    @model.Queued,
-    "mu.local.z3",
-    "queued solve",
-  )
+      solve_id,
+      "smt",
+      "mu.local",
+      @model.Queued,
+      "mu.local.z3",
+      "queued solve",
+    )
     .attach_result(result_hash, result_envelope_id)
     .with_witness("proof://z3/run-1")
     .mark_verified()
@@ -176,20 +175,11 @@ test "AI substrate fingerprint v2 can be APP-masked" {
   let substrate_hash = @hash.Hash::of_bytes(b"\x12")
   let ciphertext_hash = @hash.Hash::of_bytes(b"\x13")
   let fingerprint = @model.AiSubstrateFingerprintV2::new(
-    "openai",
-    "codex",
-    "chatgpt",
-    "tool",
-    context_hash,
-    capability_hash,
-    substrate_hash,
+    "openai", "codex", "chatgpt", "tool", context_hash, capability_hash, substrate_hash,
     "issuer://codex",
   )
   let masked = fingerprint.mask_with_app(
-    "app/v1",
-    "genius-loci",
-    "app://mask/opaque-1",
-    ciphertext_hash,
+    "app/v1", "genius-loci", "app://mask/opaque-1", ciphertext_hash,
   )
   assert_eq(masked.protocol, "app/v1")
   assert_eq(masked.audience, "genius-loci")
@@ -223,10 +213,7 @@ test "Genius procsi attestation derives session identity" {
 test "APP envelope record can derive a masked envelope" {
   let fingerprint_commitment = @hash.Hash::of_bytes(b"\x31")
   let record = @model.AppEnvelopeRecord::new(
-    "app://mask/opaque-3",
-    "app/v1",
-    "genius-loci",
-    b"\x01\x02opaque",
+    "app://mask/opaque-3", "app/v1", "genius-loci", b"\x01\x02opaque",
   )
   let masked = record.to_mask_envelope(fingerprint_commitment)
   assert_eq(masked.protocol, "app/v1")
@@ -241,10 +228,7 @@ test "PR1 custom section roundtrips" {
   let context_hash = @hash.Hash::of_bytes(b"\x42")
   let policy_hash = @hash.Hash::of_bytes(b"\x43")
   let record = @model.AppEnvelopeRecord::new(
-    "app://mask/opaque-4",
-    "app/v1",
-    "genius-loci",
-    b"\xCA\xFE\xBA\xBE",
+    "app://mask/opaque-4", "app/v1", "genius-loci", b"\xCA\xFE\xBA\xBE",
   )
   let attestation = @model.GeniusProcsiAttestation::new(
     Some("adversary"),
@@ -255,9 +239,7 @@ test "PR1 custom section roundtrips" {
     record.to_mask_envelope(fingerprint_commitment),
   )
   let section = @model.ProcsiAttestedSectionV1::new(
-    attestation,
-    context_hash,
-    policy_hash,
+    attestation, context_hash, policy_hash,
   )
   let bytes = section.emit_pr1_custom_section()
   match @model.ProcsiAttestedSectionV1::parse_pr1_custom_section(bytes) {
@@ -266,7 +248,10 @@ test "PR1 custom section roundtrips" {
       assert_eq(parsed.attestation.ratio_loci, "repo-root")
       assert_eq(parsed.attestation.session_surface, "codex")
       assert_eq(parsed.attestation.locus, Some("adversary"))
-      assert_eq(parsed.attestation.app_envelope.ciphertext_ref, "app://mask/opaque-4")
+      assert_eq(
+        parsed.attestation.app_envelope.ciphertext_ref,
+        "app://mask/opaque-4",
+      )
       assert_eq(parsed.context_hash, context_hash)
       assert_eq(parsed.policy_hash, policy_hash)
     }

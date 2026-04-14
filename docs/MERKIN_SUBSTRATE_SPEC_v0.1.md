@@ -195,8 +195,13 @@ Minimum:
 - Anchor resolution can be lazy: `anchored_at` may fill later.
 
 ### 5.5 Finger + AI disclosure + Gopher
-- `GET /.well-known/finger.plan` (plan file; not pollable)
+- `GET /finger.plan` (canonical plan file; not pollable)
+- `GET /.well-known/finger.plan` (transitional mirror/alias)
 - `finger.plan` is a track-backed, timestamp-agnostic `.plan` artifact generated from Yata graph state (program track).
+- `finger.plan` SHOULD be the preferred layered disclosure surface for repository/runtime posture.
+- `finger.plan` SHOULD carry compact `solve_report_*`, `procsi_report_*`, and `capability_report_*` fields when those layers are present.
+- `finger.plan` MUST NOT inline raw APP payloads, raw AI substrate fingerprints, or full ticket bodies; those stay in procsi sections, APP stores, and runtime-specific artifacts.
+- `.well-known` manifests may mirror or summarize this information for interface drift detection, but they are transitional exports rather than the native source of truth.
 - `GET /aicheck` (machine-readable, ethical AI inventory endpoint)
 - `GET /ai` (canonical version of `/aicheck`, may content-negotiate HTML/JSON)
 - `gopher://…` (AI-first text presentation; stable symbol-native rendering)

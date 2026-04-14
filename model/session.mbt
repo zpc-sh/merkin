@@ -13,11 +13,14 @@ pub(all) struct SessionIdentity {
   short_id : String
   /// Current locus name, if entered.
   locus : String?
-} derive(Debug)
+} derive(Show)
 
 ///|
 /// Create a session identity.
-pub fn SessionIdentity::new(tier : String, short_id : String) -> SessionIdentity {
+pub fn SessionIdentity::new(
+  tier : String,
+  short_id : String,
+) -> SessionIdentity {
   { tier, short_id, locus: None }
 }
 

@@ -69,6 +69,48 @@ pub fn InMemoryOciRegistry::resolve_tag(
 }
 
 ///|
+fn manifest_key(repository : String, digest : String) -> String {
+  repository + "|manifest|" + digest
+}
+
+///|
+/// Store an OCI manifest blob (JSON or binary).
+pub fn InMemoryOciRegistry::put_manifest(
+  self : InMemoryOciRegistry,
+  repository : String,
+  tag : String,
+  manifest : Bytes,
+) -> String {
+  let digest = @hash.Hash::of_bytes(manifest).key()
+  self.blobs[manifest_key(repository, digest)] = manifest
+  self.tags[tag_key(repository, tag)] = digest
+  digest
+}
+
+///|
+/// Retrieve an OCI manifest by tag.
+pub fn InMemoryOciRegistry::get_manifest(
+  self : InMemoryOciRegistry,
+  repository : String,
+  tag : String,
+) -> Bytes? {
+  match self.resolve_tag(repository, tag) {
+    Some(digest) => self.blobs.get(manifest_key(repository, digest))
+    None => None
+  }
+}
+
+///|
+/// Retrieve an OCI manifest by digest.
+pub fn InMemoryOciRegistry::get_manifest_by_digest(
+  self : InMemoryOciRegistry,
+  repository : String,
+  digest : String,
+) -> Bytes? {
+  self.blobs.get(manifest_key(repository, digest))
+}
+
+///|
 /// Store node backed by OCI-compatible registry behavior.
 pub(all) struct OciCasNode {
   id : String

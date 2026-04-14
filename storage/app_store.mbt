@@ -41,7 +41,10 @@ pub fn FileAppEnvelopeStore::resolve(
   match self.ref_cache.get(ref_id) {
     Some(record) => Some(record)
     None => {
-      let manifest_path = self.root + "/refs/" + app_store_ref_key(ref_id) + ".manifest"
+      let manifest_path = self.root +
+        "/refs/" +
+        app_store_ref_key(ref_id) +
+        ".manifest"
       match fs_read_file(manifest_path) {
         Some(manifest_bytes) =>
           match app_store_parse_manifest(manifest_bytes) {
@@ -49,10 +52,12 @@ pub fn FileAppEnvelopeStore::resolve(
               if manifest.ref_id != ref_id {
                 None
               } else {
-                let blob_path = self.root + "/blobs/" + manifest.ciphertext_hash.key()
+                let blob_path = self.root +
+                  "/blobs/" +
+                  manifest.ciphertext_hash.key()
                 match fs_read_file(blob_path) {
                   Some(ciphertext) => {
-                    let record = {
+                    let record : @model.AppEnvelopeRecord = {
                       ref_id: manifest.ref_id,
                       protocol: manifest.protocol,
                       audience: manifest.audience,
@@ -81,6 +86,7 @@ pub fn FileAppEnvelopeStore::has_ref(
   self.resolve(ref_id) is Some(_)
 }
 
+///|
 pub(all) struct AppEnvelopeManifest {
   ref_id : String
   protocol : String
@@ -88,10 +94,12 @@ pub(all) struct AppEnvelopeManifest {
   ciphertext_hash : @hash.Hash
 }
 
+///|
 fn app_store_ref_key(ref_id : String) -> String {
   @hash.Hash::of_bytes(app_store_utf8_string_to_bytes(ref_id)).key()
 }
 
+///|
 fn app_store_manifest_bytes(record : @model.AppEnvelopeRecord) -> Bytes {
   let b = StringBuilder::new(size_hint=256)
   b.write_string("ref=")
@@ -109,6 +117,7 @@ fn app_store_manifest_bytes(record : @model.AppEnvelopeRecord) -> Bytes {
   app_store_utf8_string_to_bytes(b.to_string())
 }
 
+///|
 fn app_store_parse_manifest(bytes : Bytes) -> AppEnvelopeManifest? {
   let content = app_store_utf8_bytes_to_string(bytes)
   let ref_id = app_store_extract_line(content, "ref=")
@@ -124,6 +133,7 @@ fn app_store_parse_manifest(bytes : Bytes) -> AppEnvelopeManifest? {
   }
 }
 
+///|
 fn app_store_extract_line(content : String, prefix : String) -> String {
   let lines = app_store_split_lines(content)
   for line in lines {
@@ -138,22 +148,33 @@ fn app_store_extract_line(content : String, prefix : String) -> String {
   ""
 }
 
+///|
 fn app_store_parse_hash_key(token : String) -> @hash.Hash? {
   let colon = app_store_find_char(token, ':')
   if colon < 0 {
     return None
   }
   let alg = app_store_substring(token, 0, colon)
-  let hex = app_store_substring(token, colon + 1, app_store_string_length(token))
+  let hex = app_store_substring(
+    token,
+    colon + 1,
+    app_store_string_length(token),
+  )
   match app_store_hex_to_bytes(hex) {
-    Some(digest) => Some({
-      alg: if alg == "fnv1a" { @hash.Fnv1a } else { @hash.Blake3 },
-      digest,
-    })
+    Some(digest) =>
+      Some({
+        alg: if alg == "fnv1a" {
+          @hash.Fnv1a
+        } else {
+          @hash.Blake3
+        },
+        digest,
+      })
     None => None
   }
 }
 
+///|
 fn app_store_utf8_string_to_bytes(text : String) -> Bytes {
   let out : Array[Byte] = []
   for ch in text {
@@ -177,6 +198,7 @@ fn app_store_utf8_string_to_bytes(text : String) -> Bytes {
   Bytes::from_array(out)
 }
 
+///|
 fn app_store_utf8_bytes_to_string(bytes : Bytes) -> String {
   let b = StringBuilder::new(size_hint=bytes.length())
   let mut i = 0
@@ -213,12 +235,13 @@ fn app_store_utf8_bytes_to_string(bytes : Bytes) -> String {
   b.to_string()
 }
 
+///|
 fn app_store_hex_to_bytes(hex : String) -> Bytes? {
   if app_store_string_length(hex) % 2 != 0 {
     return None
   }
   let out : Array[Byte] = []
-  let mut chars : Array[Char] = []
+  let chars : Array[Char] = []
   for ch in hex {
     chars.push(ch)
   }
@@ -239,6 +262,7 @@ fn app_store_hex_to_bytes(hex : String) -> Bytes? {
   Some(Bytes::from_array(out))
 }
 
+///|
 fn app_store_hex_nibble(ch : Char) -> UInt? {
   let value = ch.to_uint()
   if value >= '0'.to_uint() && value <= '9'.to_uint() {
@@ -252,6 +276,7 @@ fn app_store_hex_nibble(ch : Char) -> UInt? {
   }
 }
 
+///|
 fn app_store_split_lines(text : String) -> Array[String] {
   let lines : Array[String] = []
   let cur = StringBuilder::new(size_hint=64)
@@ -270,13 +295,14 @@ fn app_store_split_lines(text : String) -> Array[String] {
   lines
 }
 
+///|
 fn app_store_line_starts_with(line : String, prefix : String) -> Bool {
   if app_store_string_length(prefix) > app_store_string_length(line) {
     return false
   }
   let mut idx = 0
-  let mut pchars : Array[Char] = []
-  let mut lchars : Array[Char] = []
+  let pchars : Array[Char] = []
+  let lchars : Array[Char] = []
   for ch in prefix {
     pchars.push(ch)
   }
@@ -292,6 +318,7 @@ fn app_store_line_starts_with(line : String, prefix : String) -> Bool {
   true
 }
 
+///|
 fn app_store_substring(text : String, start : Int, end_ : Int) -> String {
   let b = StringBuilder::new(size_hint=end_ - start)
   let mut idx = 0
@@ -304,6 +331,7 @@ fn app_store_substring(text : String, start : Int, end_ : Int) -> String {
   b.to_string()
 }
 
+///|
 fn app_store_string_length(text : String) -> Int {
   let mut len = 0
   for _ch in text {
@@ -312,6 +340,7 @@ fn app_store_string_length(text : String) -> Int {
   len
 }
 
+///|
 fn app_store_find_char(text : String, needle : Char) -> Int {
   let mut idx = 0
   for ch in text {

@@ -14,6 +14,8 @@ Companion code/doc references:
 
 - `docs/MERKIN_SUBSTRATE_SPEC_v0.1.md`
 - `docs/AI_SUBSTRATE_FINGERPRINTS_v0.2.md`
+- `docs/MULSP_SPEC.md`
+- `docs/MUYATA_SPEC.md`
 - `docs/YATA_PLAN_SPEC.md`
 - `docs/YATA_COGNITIVE_ENVELOPE_DESIGN.md`
 - `docs/AI_PROVIDER_ADAPTER_CONTRACT_v0.3.md`
@@ -733,6 +735,14 @@ That is expected.
 ## 9. `.well-known` interface drift surface
 
 This repo SHOULD maintain a `.well-known` directory at the repository root for interface drift detection.
+
+This is a transitional export surface, not the primary disclosure surface.
+
+Preferred layering:
+
+- `finger.plan` exposes compact AI-facing posture
+- `.well-known` mirrors interface/version drift facts for external tooling
+- `.pr1`, APP stores, and capability stores retain the deeper runtime/auth material
 
 Recommended files:
 

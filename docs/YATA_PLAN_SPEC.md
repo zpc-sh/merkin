@@ -1,4 +1,4 @@
-# Yata `.plan` Specification (v0.3-draft)
+# Yata `.plan` Specification (v0.4-draft)
 
 This document defines the `.plan` wire contract used by Merkin Yata for replay, audit, and AI collaboration handoff.
 
@@ -27,6 +27,8 @@ This document defines the `.plan` wire contract used by Merkin Yata for replay, 
 - `temporal_delta`: optional signed movement vector for replay/time-travel
 - `embedding_report`: optional arbitrary-file embedding scan metadata
 - `solve_report`: optional compact generalized solve/offload summary
+- `procsi_report`: optional compact procsi/APP attestation disclosure
+- `capability_report`: optional compact capability/ticket posture disclosure
 - `entries`: array of plan entries
 
 `YataPlanEntry` includes:
@@ -83,6 +85,21 @@ material_hash=<text>
 [solve_report_handler=<text>]
 [solve_report_offloaded_to=<text>]
 [solve_report_count=<uint>]
+[procsi_report=1]
+[procsi_report_project=<text>]
+[procsi_report_ratio_loci=<text>]
+[procsi_report_surface=<text>]
+[procsi_report_fingerprint_commitment=<text>]
+[procsi_report_app_ref=<text>]
+[procsi_report_app_audience=<text>]
+[procsi_report_masked=<true|false>]
+[capability_report=1]
+[capability_report_authority=<text>]
+[capability_report_ticket_kind=<text>]
+[capability_report_scope=<text>]
+[capability_report_status=<text>]
+[capability_report_count=<uint>]
+[capability_report_store_ref=<text>]
 - <hole_id> <anchor> <state> ready=<bool> candidates=<uint> conf_floor=<uint> selected=<id|none> provenance=<uint>
 ...
 ```
@@ -117,6 +134,13 @@ Unknown non-empty lines are rejected.
 - if `git_report=1`, then `git_report_branch` is required
 - if `embedding_report=1`, then `embedding_report_file_type` is required
 - if `solve_report=1`, then `solve_report_handler` is required
+- if `procsi_report=1`, then `procsi_report_surface` is required
+- if `procsi_report=1`, then `procsi_report_fingerprint_commitment` is required
+- if `procsi_report=1` and `procsi_report_masked=true`, then `procsi_report_app_ref` is required
+- if `procsi_report=1` and `procsi_report_masked=true`, then `procsi_report_app_audience` is required
+- if `capability_report=1`, then `capability_report_authority` is required
+- if `capability_report=1`, then `capability_report_ticket_kind` is required
+- if `capability_report=1`, then `capability_report_store_ref` is required
 
 ### 4.3 Numeric fields
 
@@ -128,6 +152,7 @@ Unsigned integer required for:
 - `embedding_report_count`
 - `embedding_report_purge_after_turns`
 - `solve_report_count`
+- `capability_report_count`
 - entry `candidates`
 - entry `conf_floor`
 - entry `provenance`
@@ -154,6 +179,8 @@ Signed integer required for:
 - `BAD_TEMPORAL_DELTA_FLAG`
 - `BAD_EMBEDDING_REPORT_FLAG`
 - `BAD_SOLVE_REPORT_FLAG`
+- `BAD_PROCSI_REPORT_FLAG`
+- `BAD_CAPABILITY_REPORT_FLAG`
 - `BAD_ENTRY`
 - `UNRECOGNIZED_LINE`
 - `MISSING_KIND`
@@ -163,6 +190,13 @@ Signed integer required for:
 - `MISSING_GIT_REPORT_BRANCH`
 - `MISSING_EMBEDDING_FILE_TYPE`
 - `MISSING_SOLVE_REPORT_HANDLER`
+- `MISSING_PROCSI_REPORT_SURFACE`
+- `MISSING_PROCSI_REPORT_FINGERPRINT`
+- `MISSING_PROCSI_REPORT_APP_REF`
+- `MISSING_PROCSI_REPORT_APP_AUDIENCE`
+- `MISSING_CAPABILITY_REPORT_AUTHORITY`
+- `MISSING_CAPABILITY_REPORT_TICKET_KIND`
+- `MISSING_CAPABILITY_REPORT_STORE_REF`
 
 ### 5.2 Validation warnings (`YataPlan::validate`)
 
@@ -175,6 +209,10 @@ Signed integer required for:
 - `git` track should usually include `git_report_*` for branch/head/merge provenance.
 - Dual envelopes are valid and supported in one plan.
 - `solve_report_*` is appropriate when a plan is summarizing generalized solve/offload posture rather than only graph state.
+- `finger.plan` should prefer `track=program` with `procsi_report_*` and `capability_report_*` when exposing repository/runtime posture to other AIs.
+- `finger.plan` should expose commitments, refs, and compact status only; raw APP payloads, raw fingerprints, and ticket bodies remain in deeper procsi/store layers.
+- `surface.plan` should remain sparse and entry-driven, exposing protocol/API/capability surfaces rather than full runtime state.
+- `.well-known` may mirror this information for drift detection, but `.plan` is the preferred layered disclosure surface.
 
 ## 7. Canonical examples
 
@@ -255,6 +293,33 @@ solve_report_handler=provider.codex
 solve_report_offloaded_to=delegate-control
 solve_report_count=4
 - blake3:... model/parser.mbt converging ready=true candidates=2 conf_floor=70 selected=none provenance=1
+```
+
+### 7.5 Finger plan with procsi and capability disclosure
+
+```text
+kind: merkin.yata.plan
+track=program
+mode=compact
+generator=codex
+note=finger
+material_hash=blake3:...
+procsi_report=1
+procsi_report_project=zpc-sh/merkin
+procsi_report_ratio_loci=ratio://merkin/root
+procsi_report_surface=codex
+procsi_report_fingerprint_commitment=blake3:...
+procsi_report_app_ref=app://repo/ai/codex
+procsi_report_app_audience=ratio.loci.merkin
+procsi_report_masked=true
+capability_report=1
+capability_report_authority=ratio://merkin/root
+capability_report_ticket_kind=service
+capability_report_scope=genius.write
+capability_report_status=issued
+capability_report_count=2
+capability_report_store_ref=store://app/tickets/root
+- blake3:... notes/finger.plan converging ready=true candidates=1 conf_floor=75 selected=none provenance=1
 ```
 
 ## 8. Compatibility and evolution

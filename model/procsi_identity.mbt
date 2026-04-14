@@ -109,7 +109,9 @@ pub fn AiSubstrateFingerprintV2::with_policy_hash(
 pub fn AiSubstrateFingerprintV2::commitment(
   self : AiSubstrateFingerprintV2,
 ) -> @hash.Hash {
-  @hash.Hash::of_bytes(procsi_string_to_bytes("fingerprint-v2|" + self.fingerprint_id.key()))
+  @hash.Hash::of_bytes(
+    procsi_string_to_bytes("fingerprint-v2|" + self.fingerprint_id.key()),
+  )
 }
 
 ///|
@@ -218,11 +220,7 @@ pub fn GeniusProcsiAttestation::from_masked_refs(
   ciphertext_hash : @hash.Hash,
 ) -> GeniusProcsiAttestation {
   let app_envelope = AppMaskEnvelope::new(
-    fingerprint_commitment,
-    protocol,
-    audience,
-    ciphertext_ref,
-    ciphertext_hash,
+    fingerprint_commitment, protocol, audience, ciphertext_ref, ciphertext_hash,
   )
   {
     locus,
@@ -234,6 +232,7 @@ pub fn GeniusProcsiAttestation::from_masked_refs(
   }
 }
 
+///|
 fn compute_fingerprint_id(
   family : String,
   surface : String,
@@ -270,6 +269,7 @@ fn compute_fingerprint_id(
   @hash.Hash::of_bytes(procsi_string_to_bytes(material))
 }
 
+///|
 fn procsi_string_to_bytes(s : String) -> Bytes {
   let mut total = 0
   for _ch in s {

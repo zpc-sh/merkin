@@ -114,66 +114,86 @@ pub fn reset() -> Unit {
 // ---------------------------------------------------------------------------
 
 // Slot 1 — primary string argument
+
+///|
 let lm_s1 : Array[Byte] = Array::make(4096, b'\x00')
-let mut lm_s1_len : Int = 0
+
+///|
+let lm_s1_len : Ref[Int] = Ref::new(0)
 
 // Slot 2 — secondary string argument (for two-arg calls like tree_ingest)
+
+///|
 let lm_s2 : Array[Byte] = Array::make(4096, b'\x00')
-let mut lm_s2_len : Int = 0
+
+///|
+let lm_s2_len : Ref[Int] = Ref::new(0)
 
 // Output buffer — holds the UTF-8 result of string-returning calls
-let lm_out : Array[Byte] = Array::make(8192, b'\x00')
-let mut lm_out_len : Int = 0
 
-///| Write one byte at position i into slot 1.
+///|
+let lm_out : Array[Byte] = Array::make(8192, b'\x00')
+
+///|
+let g_lm_out_len : Ref[Int] = Ref::new(0)
+
+///|
+/// Write one byte at position i into slot 1.
 pub fn lm_slot1_put(i : Int, b : Int) -> Unit {
   lm_s1[i] = b.land(0xFF).to_byte()
 }
 
-///| Set the valid byte count in slot 1.
+///|
+/// Set the valid byte count in slot 1.
 pub fn lm_slot1_len(n : Int) -> Unit {
-  lm_s1_len = n
+  lm_s1_len.val = n
 }
 
-///| Write one byte at position i into slot 2.
+///|
+/// Write one byte at position i into slot 2.
 pub fn lm_slot2_put(i : Int, b : Int) -> Unit {
   lm_s2[i] = b.land(0xFF).to_byte()
 }
 
-///| Set the valid byte count in slot 2.
+///|
+/// Set the valid byte count in slot 2.
 pub fn lm_slot2_len(n : Int) -> Unit {
-  lm_s2_len = n
+  lm_s2_len.val = n
 }
 
-///| Return the number of valid bytes in the output buffer.
+///|
+/// Return the number of valid bytes in the output buffer.
 pub fn lm_out_len() -> Int {
-  lm_out_len
+  g_lm_out_len.val
 }
 
-///| Return the byte at position i in the output buffer.
+///|
+/// Return the byte at position i in the output buffer.
 pub fn lm_out_get(i : Int) -> Int {
   lm_out[i].to_int()
 }
 
 // Internal: decode a UTF-8 byte slice from a slot buffer into a String.
+
+///|
 fn lm_decode(buf : Array[Byte], len : Int) -> String {
   let sb = StringBuilder::new()
   let mut i = 0
   while i < len {
     let b0 = buf[i].to_int()
-    if b0.land(0x80) == 0 {
-      sb.write_char(b0.to_char())
+    if (b0 & 0x80) == 0 {
+      sb.write_char(b0.unsafe_to_char())
       i = i + 1
-    } else if b0.land(0xE0) == 0xC0 && i + 1 < len {
+    } else if (b0 & 0xE0) == 0xC0 && i + 1 < len {
       let b1 = buf[i + 1].to_int()
-      let cp = b0.land(0x1F).lsl(6).lor(b1.land(0x3F))
-      sb.write_char(cp.to_char())
+      let cp = ((b0 & 0x1F) << 6) | (b1 & 0x3F)
+      sb.write_char(cp.unsafe_to_char())
       i = i + 2
-    } else if b0.land(0xF0) == 0xE0 && i + 2 < len {
+    } else if (b0 & 0xF0) == 0xE0 && i + 2 < len {
       let b1 = buf[i + 1].to_int()
       let b2 = buf[i + 2].to_int()
-      let cp = b0.land(0x0F).lsl(12).lor(b1.land(0x3F).lsl(6)).lor(b2.land(0x3F))
-      sb.write_char(cp.to_char())
+      let cp = ((b0 & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F)
+      sb.write_char(cp.unsafe_to_char())
       i = i + 3
     } else {
       sb.write_char('\u{FFFD}')
@@ -184,6 +204,8 @@ fn lm_decode(buf : Array[Byte], len : Int) -> String {
 }
 
 // Internal: encode a String as UTF-8 into lm_out, set lm_out_len.
+
+///|
 fn lm_encode(s : String) -> Unit {
   let mut i = 0
   for ch in s {
@@ -192,56 +214,67 @@ fn lm_encode(s : String) -> Unit {
       lm_out[i] = cp.to_byte()
       i = i + 1
     } else if cp < 0x800 {
-      lm_out[i]     = (0xC0.lor(cp.lsr(6))).to_byte()
-      lm_out[i + 1] = (0x80.lor(cp.land(0x3F))).to_byte()
+      lm_out[i] = (0xC0 | (cp >> 6)).to_byte()
+      lm_out[i + 1] = (0x80 | (cp & 0x3F)).to_byte()
       i = i + 2
     } else {
-      lm_out[i]     = (0xE0.lor(cp.lsr(12))).to_byte()
-      lm_out[i + 1] = (0x80.lor(cp.lsr(6).land(0x3F))).to_byte()
-      lm_out[i + 2] = (0x80.lor(cp.land(0x3F))).to_byte()
+      lm_out[i] = (0xE0 | (cp >> 12)).to_byte()
+      lm_out[i + 1] = (0x80 | ((cp >> 6) & 0x3F)).to_byte()
+      lm_out[i + 2] = (0x80 | (cp & 0x3F)).to_byte()
       i = i + 3
     }
   }
-  lm_out_len = i
+  g_lm_out_len.val = i
 }
 
 // --- lm_* API ---
 
-///| Slot-based bloom_add. Reads token from slot 1.
+///|
+/// Slot-based bloom_add. Reads token from slot 1.
 pub fn lm_bloom_add() -> Unit {
-  @api.bloom_add(lm_decode(lm_s1, lm_s1_len))
+  @api.bloom_add(lm_decode(lm_s1, lm_s1_len.val))
 }
 
-///| Slot-based bloom_check. Reads token from slot 1. Returns 1=true 0=false.
+///|
+/// Slot-based bloom_check. Reads token from slot 1. Returns 1=true 0=false.
 pub fn lm_bloom_check() -> Int {
-  if @api.bloom_check(lm_decode(lm_s1, lm_s1_len)) { 1 } else { 0 }
+  if @api.bloom_check(lm_decode(lm_s1, lm_s1_len.val)) {
+    1
+  } else {
+    0
+  }
 }
 
-///| Slot-based bloom_serialize. Writes result to output buffer.
+///|
+/// Slot-based bloom_serialize. Writes result to output buffer.
 pub fn lm_bloom_serialize() -> Unit {
   lm_encode(@api.bloom_serialize())
 }
 
-///| Slot-based tree_ingest. envelope_id in slot 1, tokens_csv in slot 2.
+///|
+/// Slot-based tree_ingest. envelope_id in slot 1, tokens_csv in slot 2.
 ///  Writes returned root key to output buffer.
 pub fn lm_tree_ingest() -> Unit {
-  let id  = lm_decode(lm_s1, lm_s1_len)
-  let csv = lm_decode(lm_s2, lm_s2_len)
+  let id = lm_decode(lm_s1, lm_s1_len.val)
+  let csv = lm_decode(lm_s2, lm_s2_len.val)
   lm_encode(@api.tree_ingest(id, csv))
 }
 
-///| Slot-based tree_sparse. tokens_csv in slot 1.
+///|
+/// Slot-based tree_sparse. tokens_csv in slot 1.
 ///  Writes "node_count=N\nroot=<key>" to output buffer.
 pub fn lm_tree_sparse() -> Unit {
-  lm_encode(@api.tree_sparse(lm_decode(lm_s1, lm_s1_len)))
+  lm_encode(@api.tree_sparse(lm_decode(lm_s1, lm_s1_len.val)))
 }
 
-///| tree_seal — no string input needed. Writes root key to output buffer.
+///|
+/// tree_seal — no string input needed. Writes root key to output buffer.
 pub fn lm_tree_seal() -> Unit {
   lm_encode(@api.tree_seal())
 }
 
-///| lm_reset — stateless, same as reset().
+///|
+/// lm_reset — stateless, same as reset().
 pub fn lm_reset() -> Unit {
   @api.reset()
 }

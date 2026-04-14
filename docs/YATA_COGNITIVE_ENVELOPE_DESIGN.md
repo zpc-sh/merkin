@@ -9,6 +9,8 @@ It is intentionally a design note, not a wire-format promise. The current implem
 - strict `.plan` parsing in `model/yata_protocol.mbt`
 - ChatGPT-oriented conversation defaults in `daemon/conversation.mbt`
 
+For the stronger AI-shaped semantic layer that grew out of this design note, see `docs/MUYATA_SPEC.md`.
+
 The goal here is to tighten the conceptual boundary before more envelope variants land.
 
 ## 1. Recommendation

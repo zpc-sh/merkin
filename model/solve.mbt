@@ -139,7 +139,10 @@ pub fn SolveTicket::attach_result(
 }
 
 ///|
-pub fn SolveTicket::with_witness(self : SolveTicket, witness_ref : String) -> SolveTicket {
+pub fn SolveTicket::with_witness(
+  self : SolveTicket,
+  witness_ref : String,
+) -> SolveTicket {
   { ..self, witness_ref: Some(witness_ref) }
 }
 
@@ -149,7 +152,10 @@ pub fn SolveTicket::mark_verified(self : SolveTicket) -> SolveTicket {
 }
 
 ///|
-pub fn SolveTicket::mark_failed(self : SolveTicket, detail : String) -> SolveTicket {
+pub fn SolveTicket::mark_failed(
+  self : SolveTicket,
+  detail : String,
+) -> SolveTicket {
   { ..self, status: Failed, detail }
 }
 
@@ -174,6 +180,7 @@ pub fn WorkPromise::to_solve_ticket(
   }
 }
 
+///|
 fn promise_state_to_solve_status(state : WorkPromiseState) -> SolveStatus {
   match state {
     ABSENT => Absent

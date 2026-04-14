@@ -23,7 +23,7 @@ pub(all) struct Residue {
   what_i_left_open : Array[String]
   /// Optional recommendation for the next agent.
   recommendation : String?
-} derive(Debug)
+} derive(Show)
 
 ///|
 /// Create a new residue record.

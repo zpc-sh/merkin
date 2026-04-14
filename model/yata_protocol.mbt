@@ -88,6 +88,21 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
   let mut solve_report_handler = ""
   let mut solve_report_offloaded_to = ""
   let mut solve_report_count : UInt = 0U
+  let mut procsi_report_enabled = false
+  let mut procsi_report_project = ""
+  let mut procsi_report_ratio_loci = ""
+  let mut procsi_report_surface = ""
+  let mut procsi_report_fingerprint_commitment = ""
+  let mut procsi_report_app_ref = ""
+  let mut procsi_report_app_audience = ""
+  let mut procsi_report_masked = false
+  let mut capability_report_enabled = false
+  let mut capability_report_authority = ""
+  let mut capability_report_ticket_kind = ""
+  let mut capability_report_scope = ""
+  let mut capability_report_status = ""
+  let mut capability_report_count : UInt = 0U
+  let mut capability_report_store_ref = ""
 
   let mut line_no : Int = 0
   let mut i : Int = 0
@@ -110,7 +125,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     }
     if line.has_prefix("track=") {
       match parse_value(line, "track=") {
-        Some(value) => {
+        Some(value) =>
           if value == "program" {
             track = Program
           } else if value == "git" {
@@ -122,21 +137,19 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
               message: "track must be `program` or `git`",
             })
           }
-        }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `track=` field",
           })
-        }
       }
       i = i + 1
       continue
     }
     if line.has_prefix("mode=") {
       match parse_value(line, "mode=") {
-        Some(value) => {
+        Some(value) =>
           if value == "compact" {
             mode = Compact
           } else if value == "full" {
@@ -148,14 +161,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
               message: "mode must be `full` or `compact`",
             })
           }
-        }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `mode=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -163,13 +174,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("generator=") {
       match parse_value(line, "generator=") {
         Some(value) => generator = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `generator=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -177,13 +187,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("note=") {
       match parse_value(line, "note=") {
         Some(value) => note = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `note=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -191,13 +200,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("entries=") {
       match parse_u32_opt_plan(parse_value(line, "entries=")) {
         Some(value) => expected_entries = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "entries must be an unsigned integer",
           })
-        }
       }
       i = i + 1
       continue
@@ -216,7 +224,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     }
     if line.has_prefix("self_report=") {
       match parse_value(line, "self_report=") {
-        Some(value) => {
+        Some(value) =>
           if value == "1" {
             self_report_enabled = true
           } else {
@@ -226,14 +234,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
               message: "self_report must be `1` to enable report metadata",
             })
           }
-        }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -241,13 +247,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("self_report_overlay=") {
       match parse_value(line, "self_report_overlay=") {
         Some(value) => self_report_overlay = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report_overlay=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -255,13 +260,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("self_report_peer=") {
       match parse_value(line, "self_report_peer=") {
         Some(value) => self_report_peer = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report_peer=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -269,13 +273,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("self_report_authority=") {
       match parse_value(line, "self_report_authority=") {
         Some(value) => self_report_authority = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report_authority=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -283,13 +286,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("self_report_anchor=") {
       match parse_value(line, "self_report_anchor=") {
         Some(value) => self_report_anchor_hint = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report_anchor=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -297,13 +299,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("self_report_gap=") {
       match parse_u32_opt_plan(parse_value(line, "self_report_gap=")) {
         Some(value) => self_report_gap = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "self_report_gap must be an unsigned integer",
           })
-        }
       }
       i = i + 1
       continue
@@ -311,20 +312,19 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("self_report_view=") {
       match parse_value(line, "self_report_view=") {
         Some(value) => self_report_view_hint = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `self_report_view=`",
           })
-        }
       }
       i = i + 1
       continue
     }
     if line.has_prefix("git_report=") {
       match parse_value(line, "git_report=") {
-        Some(value) => {
+        Some(value) =>
           if value == "1" {
             git_report_enabled = true
           } else {
@@ -334,14 +334,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
               message: "git_report must be `1` to enable report metadata",
             })
           }
-        }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -349,13 +347,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("git_report_branch=") {
       match parse_value(line, "git_report_branch=") {
         Some(value) => git_report_branch = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report_branch=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -363,13 +360,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("git_report_remote=") {
       match parse_value(line, "git_report_remote=") {
         Some(value) => git_report_remote = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report_remote=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -377,13 +373,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("git_report_merge_base=") {
       match parse_value(line, "git_report_merge_base=") {
         Some(value) => git_report_merge_base = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report_merge_base=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -391,13 +386,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("git_report_head=") {
       match parse_value(line, "git_report_head=") {
         Some(value) => git_report_head = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report_head=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -405,13 +399,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("git_report_commit_count=") {
       match parse_u32_opt_plan(parse_value(line, "git_report_commit_count=")) {
         Some(value) => git_report_commit_count = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "git_report_commit_count must be an unsigned integer",
           })
-        }
       }
       i = i + 1
       continue
@@ -419,20 +412,19 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("git_report_refs=") {
       match parse_value(line, "git_report_refs=") {
         Some(value) => git_report_refs = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `git_report_refs=`",
           })
-        }
       }
       i = i + 1
       continue
     }
     if line.has_prefix("temporal_delta=") {
       match parse_value(line, "temporal_delta=") {
-        Some(value) => {
+        Some(value) =>
           if value == "1" {
             temporal_delta_enabled = true
           } else {
@@ -442,14 +434,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
               message: "temporal_delta must be `1` to enable signed movement metadata",
             })
           }
-        }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `temporal_delta=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -457,13 +447,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("temporal_delta_turns=") {
       match parse_i32_opt(parse_value(line, "temporal_delta_turns=")) {
         Some(value) => temporal_delta_turns = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "temporal_delta_turns must be a signed integer",
           })
-        }
       }
       i = i + 1
       continue
@@ -471,13 +460,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("temporal_delta_bytes=") {
       match parse_i32_opt(parse_value(line, "temporal_delta_bytes=")) {
         Some(value) => temporal_delta_bytes = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "temporal_delta_bytes must be a signed integer",
           })
-        }
       }
       i = i + 1
       continue
@@ -485,20 +473,19 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("temporal_delta_causal_offset=") {
       match parse_i32_opt(parse_value(line, "temporal_delta_causal_offset=")) {
         Some(value) => temporal_delta_causal_offset = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "temporal_delta_causal_offset must be a signed integer",
           })
-        }
       }
       i = i + 1
       continue
     }
     if line.has_prefix("embedding_report=") {
       match parse_value(line, "embedding_report=") {
-        Some(value) => {
+        Some(value) =>
           if value == "1" {
             embedding_report_enabled = true
           } else {
@@ -508,14 +495,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
               message: "embedding_report must be `1` to enable embedding metadata",
             })
           }
-        }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `embedding_report=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -523,13 +508,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("embedding_report_file_type=") {
       match parse_value(line, "embedding_report_file_type=") {
         Some(value) => embedding_report_file_type = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `embedding_report_file_type=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -537,13 +521,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("embedding_report_found=") {
       match parse_bool_opt(parse_value(line, "embedding_report_found=")) {
         Some(value) => embedding_report_found = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_BOOL",
             message: "embedding_report_found must be `true` or `false`",
           })
-        }
       }
       i = i + 1
       continue
@@ -551,13 +534,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("embedding_report_count=") {
       match parse_u32_opt_plan(parse_value(line, "embedding_report_count=")) {
         Some(value) => embedding_report_count = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "embedding_report_count must be an unsigned integer",
           })
-        }
       }
       i = i + 1
       continue
@@ -565,27 +547,28 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("embedding_report_ephemeral=") {
       match parse_bool_opt(parse_value(line, "embedding_report_ephemeral=")) {
         Some(value) => embedding_report_ephemeral = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_BOOL",
             message: "embedding_report_ephemeral must be `true` or `false`",
           })
-        }
       }
       i = i + 1
       continue
     }
     if line.has_prefix("embedding_report_purge_after_turns=") {
-      match parse_u32_opt_plan(parse_value(line, "embedding_report_purge_after_turns=")) {
+      match
+        parse_u32_opt_plan(
+          parse_value(line, "embedding_report_purge_after_turns="),
+        ) {
         Some(value) => embedding_report_purge_after_turns = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "embedding_report_purge_after_turns must be an unsigned integer",
           })
-        }
       }
       i = i + 1
       continue
@@ -593,20 +576,19 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("embedding_report_strategy=") {
       match parse_value(line, "embedding_report_strategy=") {
         Some(value) => embedding_report_strategy = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `embedding_report_strategy=`",
           })
-        }
       }
       i = i + 1
       continue
     }
     if line.has_prefix("solve_report=") {
       match parse_value(line, "solve_report=") {
-        Some(value) => {
+        Some(value) =>
           if value == "1" {
             solve_report_enabled = true
           } else {
@@ -616,14 +598,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
               message: "solve_report must be `1` to enable solve metadata",
             })
           }
-        }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `solve_report=` field",
           })
-        }
       }
       i = i + 1
       continue
@@ -631,13 +611,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("solve_report_kind=") {
       match parse_value(line, "solve_report_kind=") {
         Some(value) => solve_report_kind = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `solve_report_kind=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -645,13 +624,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("solve_report_status=") {
       match parse_value(line, "solve_report_status=") {
         Some(value) => solve_report_status = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `solve_report_status=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -659,13 +637,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("solve_report_handler=") {
       match parse_value(line, "solve_report_handler=") {
         Some(value) => solve_report_handler = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `solve_report_handler=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -673,13 +650,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("solve_report_offloaded_to=") {
       match parse_value(line, "solve_report_offloaded_to=") {
         Some(value) => solve_report_offloaded_to = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "MALFORMED_HEADER",
             message: "could not parse `solve_report_offloaded_to=`",
           })
-        }
       }
       i = i + 1
       continue
@@ -687,13 +663,225 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
     if line.has_prefix("solve_report_count=") {
       match parse_u32_opt_plan(parse_value(line, "solve_report_count=")) {
         Some(value) => solve_report_count = value
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_HEADER_NUMBER",
             message: "solve_report_count must be an unsigned integer",
           })
-        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("procsi_report=") {
+      match parse_value(line, "procsi_report=") {
+        Some(value) =>
+          if value == "1" {
+            procsi_report_enabled = true
+          } else {
+            issues.push({
+              line: line_no,
+              code: "BAD_PROCSI_REPORT_FLAG",
+              message: "procsi_report must be `1` to enable procsi metadata",
+            })
+          }
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `procsi_report=` field",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("procsi_report_project=") {
+      match parse_value(line, "procsi_report_project=") {
+        Some(value) => procsi_report_project = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `procsi_report_project=`",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("procsi_report_ratio_loci=") {
+      match parse_value(line, "procsi_report_ratio_loci=") {
+        Some(value) => procsi_report_ratio_loci = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `procsi_report_ratio_loci=`",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("procsi_report_surface=") {
+      match parse_value(line, "procsi_report_surface=") {
+        Some(value) => procsi_report_surface = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `procsi_report_surface=`",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("procsi_report_fingerprint_commitment=") {
+      match parse_value(line, "procsi_report_fingerprint_commitment=") {
+        Some(value) => procsi_report_fingerprint_commitment = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `procsi_report_fingerprint_commitment=`",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("procsi_report_app_ref=") {
+      match parse_value(line, "procsi_report_app_ref=") {
+        Some(value) => procsi_report_app_ref = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `procsi_report_app_ref=`",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("procsi_report_app_audience=") {
+      match parse_value(line, "procsi_report_app_audience=") {
+        Some(value) => procsi_report_app_audience = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `procsi_report_app_audience=`",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("procsi_report_masked=") {
+      match parse_bool_opt(parse_value(line, "procsi_report_masked=")) {
+        Some(value) => procsi_report_masked = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "BAD_HEADER_BOOL",
+            message: "procsi_report_masked must be `true` or `false`",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("capability_report=") {
+      match parse_value(line, "capability_report=") {
+        Some(value) =>
+          if value == "1" {
+            capability_report_enabled = true
+          } else {
+            issues.push({
+              line: line_no,
+              code: "BAD_CAPABILITY_REPORT_FLAG",
+              message: "capability_report must be `1` to enable capability metadata",
+            })
+          }
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `capability_report=` field",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("capability_report_authority=") {
+      match parse_value(line, "capability_report_authority=") {
+        Some(value) => capability_report_authority = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `capability_report_authority=`",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("capability_report_ticket_kind=") {
+      match parse_value(line, "capability_report_ticket_kind=") {
+        Some(value) => capability_report_ticket_kind = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `capability_report_ticket_kind=`",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("capability_report_scope=") {
+      match parse_value(line, "capability_report_scope=") {
+        Some(value) => capability_report_scope = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `capability_report_scope=`",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("capability_report_status=") {
+      match parse_value(line, "capability_report_status=") {
+        Some(value) => capability_report_status = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `capability_report_status=`",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("capability_report_count=") {
+      match parse_u32_opt_plan(parse_value(line, "capability_report_count=")) {
+        Some(value) => capability_report_count = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "BAD_HEADER_NUMBER",
+            message: "capability_report_count must be an unsigned integer",
+          })
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("capability_report_store_ref=") {
+      match parse_value(line, "capability_report_store_ref=") {
+        Some(value) => capability_report_store_ref = value
+        None =>
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `capability_report_store_ref=`",
+          })
       }
       i = i + 1
       continue
@@ -704,13 +892,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
           entries.push(entry)
           observed_entries = observed_entries + 1U
         }
-        None => {
+        None =>
           issues.push({
             line: line_no,
             code: "BAD_ENTRY",
             message: "invalid `.plan` entry format",
           })
-        }
       }
       i = i + 1
       continue
@@ -774,6 +961,59 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       message: "solve_report enabled but `solve_report_handler=` is required",
     })
   }
+  if procsi_report_enabled && procsi_report_surface == "" {
+    issues.push({
+      line: 1,
+      code: "MISSING_PROCSI_REPORT_SURFACE",
+      message: "procsi_report enabled but `procsi_report_surface=` is required",
+    })
+  }
+  if procsi_report_enabled && procsi_report_fingerprint_commitment == "" {
+    issues.push({
+      line: 1,
+      code: "MISSING_PROCSI_REPORT_FINGERPRINT",
+      message: "procsi_report enabled but `procsi_report_fingerprint_commitment=` is required",
+    })
+  }
+  if procsi_report_enabled &&
+    procsi_report_masked &&
+    procsi_report_app_ref == "" {
+    issues.push({
+      line: 1,
+      code: "MISSING_PROCSI_REPORT_APP_REF",
+      message: "masked procsi_report requires `procsi_report_app_ref=`",
+    })
+  }
+  if procsi_report_enabled &&
+    procsi_report_masked &&
+    procsi_report_app_audience == "" {
+    issues.push({
+      line: 1,
+      code: "MISSING_PROCSI_REPORT_APP_AUDIENCE",
+      message: "masked procsi_report requires `procsi_report_app_audience=`",
+    })
+  }
+  if capability_report_enabled && capability_report_authority == "" {
+    issues.push({
+      line: 1,
+      code: "MISSING_CAPABILITY_REPORT_AUTHORITY",
+      message: "capability_report enabled but `capability_report_authority=` is required",
+    })
+  }
+  if capability_report_enabled && capability_report_ticket_kind == "" {
+    issues.push({
+      line: 1,
+      code: "MISSING_CAPABILITY_REPORT_TICKET_KIND",
+      message: "capability_report enabled but `capability_report_ticket_kind=` is required",
+    })
+  }
+  if capability_report_enabled && capability_report_store_ref == "" {
+    issues.push({
+      line: 1,
+      code: "MISSING_CAPABILITY_REPORT_STORE_REF",
+      message: "capability_report enabled but `capability_report_store_ref=` is required",
+    })
+  }
 
   let self_report = if self_report_enabled {
     Some({
@@ -831,20 +1071,46 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
   } else {
     None
   }
+  let procsi_report = if procsi_report_enabled {
+    Some({
+      project: procsi_report_project,
+      ratio_loci: procsi_report_ratio_loci,
+      session_surface: procsi_report_surface,
+      fingerprint_commitment: procsi_report_fingerprint_commitment,
+      app_ref: procsi_report_app_ref,
+      app_audience: procsi_report_app_audience,
+      masked: procsi_report_masked,
+    })
+  } else {
+    None
+  }
+  let capability_report = if capability_report_enabled {
+    Some({
+      authority: capability_report_authority,
+      ticket_kind: capability_report_ticket_kind,
+      scope: capability_report_scope,
+      status: capability_report_status,
+      count: capability_report_count,
+      store_ref: capability_report_store_ref,
+    })
+  } else {
+    None
+  }
 
   if issues.length() > 0 {
-    { plan: None, issues: issues, ok: false }
+    { plan: None, issues, ok: false }
   } else {
     let material = match material_hash {
-      Some(raw_hash) => {
+      Some(raw_hash) =>
         if raw_hash.has_prefix("blake3:") {
-          @hash.Hash::of_bytes(string_to_bytes(split_after(raw_hash, "blake3:")))
+          @hash.Hash::of_bytes(
+            string_to_bytes(split_after(raw_hash, "blake3:")),
+          )
         } else if raw_hash.has_prefix("0x") {
           @hash.Hash::of_bytes(string_to_bytes(split_after(raw_hash, "0x")))
         } else {
           @hash.Hash::of_bytes(string_to_bytes(raw_hash))
         }
-      }
       None => @hash.Hash::of_bytes(string_to_bytes(""))
     }
     {
@@ -859,6 +1125,8 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
         temporal_delta,
         embedding_report,
         solve_report,
+        procsi_report,
+        capability_report,
         entries,
       }),
       issues: [],
@@ -918,12 +1186,13 @@ pub fn YataPlan::validate(self : YataPlan) -> YataPlanCursor {
   {
     expected_entries: expected,
     observed_entries: observed,
-    ready_count: ready_count,
-    unresolved_count: unresolved_count,
-    warnings: warnings,
+    ready_count,
+    unresolved_count,
+    warnings,
   }
 }
 
+///|
 fn parse_entry_line_strict(line : String) -> YataPlanEntry? {
   let tokens = split_parts(line, " ")
   if tokens.length() != 9 {
@@ -959,46 +1228,44 @@ fn parse_entry_line_strict(line : String) -> YataPlanEntry? {
   }
 
   let maybe_ready = parse_bool_opt(parse_value(ready_token, "ready="))
-  let maybe_candidate_count = parse_u32_opt_plan(parse_value(candidates_token, "candidates="))
-  let maybe_confidence = parse_u32_opt_plan(parse_value(conf_token, "conf_floor="))
+  let maybe_candidate_count = parse_u32_opt_plan(
+    parse_value(candidates_token, "candidates="),
+  )
+  let maybe_confidence = parse_u32_opt_plan(
+    parse_value(conf_token, "conf_floor="),
+  )
   match parse_value(provenance_field, "provenance=") {
-    Some(p) => {
-      if parse_u32_opt_plan(Some(p)) == None {
-        return None
-      }
-    }
+    Some(p) => if parse_u32_opt_plan(Some(p)) == None { return None }
     None => return None
   }
   match maybe_ready {
     Some(ready) => {
       let selected = parse_value(selected_field, "selected=")
       match maybe_candidate_count {
-        Some(candidate_count) => {
+        Some(candidate_count) =>
           match maybe_confidence {
             Some(confidence_floor) => {
               let mut selected_candidate : String? = None
               match selected {
-                Some(value) => {
+                Some(value) =>
                   if value != "none" {
                     selected_candidate = Some(value)
                   }
-                }
                 None => return None
               }
               Some({
                 hole_id: parse_hash_token(hole_id_token),
                 anchor: anchor_token,
                 state: state_token,
-                candidate_count: candidate_count,
-                ready: ready,
-                selected_candidate: selected_candidate,
+                candidate_count,
+                ready,
+                selected_candidate,
                 provenance: [],
-                confidence_floor: confidence_floor,
+                confidence_floor,
               })
             }
             None => None
           }
-        }
         None => None
       }
     }
@@ -1006,6 +1273,7 @@ fn parse_entry_line_strict(line : String) -> YataPlanEntry? {
   }
 }
 
+///|
 fn parse_value(raw : String, prefix : String) -> String? {
   if raw.has_prefix(prefix) {
     Some(split_after(raw, prefix))
@@ -1014,6 +1282,7 @@ fn parse_value(raw : String, prefix : String) -> String? {
   }
 }
 
+///|
 fn parse_u32_opt_plan(raw : String?) -> UInt? {
   match raw {
     Some(text) => {
@@ -1037,6 +1306,7 @@ fn parse_u32_opt_plan(raw : String?) -> UInt? {
   }
 }
 
+///|
 fn parse_i32_opt(raw : String?) -> Int? {
   match raw {
     Some(text) => {
@@ -1059,7 +1329,7 @@ fn parse_i32_opt(raw : String?) -> Int? {
         if b < 48U || b > 57U {
           return None
         }
-        out = out * 10 + (b - 48U).to_int()
+        out = out * 10 + (b - 48U).reinterpret_as_int()
         i = i + 1
       }
       Some(out * sign)
@@ -1068,9 +1338,10 @@ fn parse_i32_opt(raw : String?) -> Int? {
   }
 }
 
+///|
 fn parse_bool_opt(raw : String?) -> Bool? {
   match raw {
-    Some(value) => {
+    Some(value) =>
       if value == "true" {
         Some(true)
       } else if value == "false" {
@@ -1078,11 +1349,11 @@ fn parse_bool_opt(raw : String?) -> Bool? {
       } else {
         None
       }
-    }
     None => None
   }
 }
 
+///|
 fn split_after(raw : String, prefix : String) -> String {
   let chunks = split_parts(raw, prefix)
   if chunks.length() < 2 {
@@ -1092,6 +1363,7 @@ fn split_after(raw : String, prefix : String) -> String {
   }
 }
 
+///|
 fn split_parts(raw : String, separator : String) -> Array[String] {
   let out : Array[String] = []
   for part in raw.split(separator) {
@@ -1100,6 +1372,7 @@ fn split_parts(raw : String, separator : String) -> Array[String] {
   out
 }
 
+///|
 fn parse_hash_token(token : String) -> @hash.Hash {
   if token.has_prefix("blake3:") {
     @hash.Hash::of_bytes(string_to_bytes(split_after(token, "blake3:")))

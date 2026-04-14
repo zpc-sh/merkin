@@ -59,7 +59,7 @@ pub fn YataHole::to_cog_uri(
   hint : YataAddressHint,
   track : YataTrack,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string("cog://")
   b.write_string(authority)
   b.write_string("/")
@@ -98,7 +98,7 @@ pub fn YataHole::to_substrate_uri(
   hint : YataAddressHint,
   track : YataTrack,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string("substrate://")
   b.write_string(authority)
   b.write_string("/")
@@ -143,13 +143,13 @@ pub fn YataHole::to_cas_uri(
     alg = "blake3"
   }
   let mut digest = self.hole_id.key()
-  if digest.starts_with("blake3:") {
+  if digest.has_prefix("blake3:") {
     digest = split_after_raw(digest, "blake3:")
-  } else if digest.starts_with("0x") {
+  } else if digest.has_prefix("0x") {
     digest = split_after_raw(digest, "0x")
   }
   let normalized_anchor = normalize_anchor_path(self.anchor)
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string("cas://")
   b.write_string(authority)
   b.write_string("/")
@@ -227,7 +227,10 @@ pub fn YataAddress::canonicalize(raw : String) -> String? {
 
 ///|
 /// Parse a relative URI against a perspective context.
-pub fn YataAddress::parse_in_context(raw : String, context : YataAddressContext) -> YataAddress? {
+pub fn YataAddress::parse_in_context(
+  raw : String,
+  context : YataAddressContext,
+) -> YataAddress? {
   let outcome = YataAddress::parse_in_context_strict(raw, context)
   if outcome.ok {
     outcome.address
@@ -243,7 +246,10 @@ pub fn YataAddress::parse_in_context(raw : String, context : YataAddressContext)
 /// - `../notes/foo.md?overlay=...`
 /// - `?overlay=...`
 /// - `id=...&overlay=...`
-pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressContext) -> YataAddressParseOutcome {
+pub fn YataAddress::parse_in_context_strict(
+  raw : String,
+  context : YataAddressContext,
+) -> YataAddressParseOutcome {
   if raw == "" {
     return {
       address: None,
@@ -254,27 +260,37 @@ pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressC
   if context.authority == "" {
     return {
       address: None,
-      issues: [{ line: 1, code: "MISSING_CONTEXT", message: "context authority is required" }],
+      issues: [
+        {
+          line: 1,
+          code: "MISSING_CONTEXT",
+          message: "context authority is required",
+        },
+      ],
       ok: false,
     }
   }
 
-  if raw.starts_with("cog://") || raw.starts_with("substrate://") || raw.starts_with("cas://") {
+  if raw.has_prefix("cog://") ||
+    raw.has_prefix("substrate://") ||
+    raw.has_prefix("cas://") {
     return YataAddress::parse_strict(raw)
   }
 
-  let hash_parts = raw.split("#")
+  let hash_parts = str_split(raw, "#")
   let before_hash = hash_parts[0]
   let view = if hash_parts.length() > 1 { hash_parts[1] } else { "overlay" }
   if hash_parts.length() > 2 {
     return {
       address: None,
-      issues: [{ line: 1, code: "MULTI_HASH", message: "uri contains multiple `#`" }],
+      issues: [
+        { line: 1, code: "MULTI_HASH", message: "uri contains multiple `#`" },
+      ],
       ok: false,
     }
   }
 
-  let query_parts = before_hash.split("?")
+  let query_parts = str_split(before_hash, "?")
   let route = query_parts[0]
   let mut query = ""
   if query_parts.length() >= 2 {
@@ -283,16 +299,19 @@ pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressC
 
   let mut normalized_anchor : String = normalize_anchor_path(context.anchor)
   if route != "" {
-    if route.starts_with("./") || route.starts_with("../") {
+    if route.has_prefix("./") || route.has_prefix("../") {
       normalized_anchor = resolve_relative_anchor(normalized_anchor, route)
-    } else if route.starts_with("id=") && query == "" {
+    } else if route.has_prefix("id=") && query == "" {
       query = route
     } else if route != "" {
       normalized_anchor = normalize_anchor_path(route)
     }
   }
 
-  let mut normalized_uri = "cog://" + context.authority + "/" + normalized_anchor
+  let mut normalized_uri = "cog://" +
+    context.authority +
+    "/" +
+    normalized_anchor
   if query == "" {
     normalized_uri = normalized_uri + "?"
   } else {
@@ -305,22 +324,34 @@ pub fn YataAddress::parse_in_context_strict(raw : String, context : YataAddressC
 ///|
 /// Strict parse with unknown-key reporting.
 pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
-  let mut issues : Array[YataAddressParseIssue] = []
+  let issues : Array[YataAddressParseIssue] = []
 
-  let hashes = raw.split("#")
+  let hashes = str_split(raw, "#")
   if hashes.length() == 0 {
-    return { address: None, issues: [{ line: 1, code: "EMPTY_INPUT", message: "empty uri" }], ok: false }
+    return {
+      address: None,
+      issues: [{ line: 1, code: "EMPTY_INPUT", message: "empty uri" }],
+      ok: false,
+    }
   }
   let before_hash = hashes[0]
   let view = if hashes.length() > 1 { hashes[1] } else { "overlay" }
   if hashes.length() > 2 {
-    issues.push({ line: 1, code: "MULTI_HASH", message: "uri contains multiple `#`" })
+    issues.push({
+      line: 1,
+      code: "MULTI_HASH",
+      message: "uri contains multiple `#`",
+    })
   }
 
-  let before_and_query = before_hash.split("?")
+  let before_and_query = str_split(before_hash, "?")
   if before_and_query.length() < 2 {
-    issues.push({ line: 1, code: "MISSING_QUERY", message: "missing `?` query separator" })
-    return { address: None, issues: issues, ok: false }
+    issues.push({
+      line: 1,
+      code: "MISSING_QUERY",
+      message: "missing `?` query separator",
+    })
+    return { address: None, issues, ok: false }
   }
   let before = before_and_query[0]
   let query_raw = before_and_query[1]
@@ -330,13 +361,13 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
   let mut anchor = ""
   let mut cas_alg = ""
   let mut cas_digest = ""
-  if before.starts_with("cog://") {
+  if before.has_prefix("cog://") {
     scheme = "cog"
     let rem = split_after_raw(before, "cog://")
-    let route = rem.split("/")
+    let route = str_split(rem, "/")
     if route.length() >= 1 {
       authority = route[0]
-      let mut segments : Array[String] = []
+      let segments : Array[String] = []
       let mut index = 1
       while index < route.length() {
         if route[index] != "" {
@@ -347,15 +378,19 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
       anchor = normalize_anchor_path(join_by(segments, "/"))
     }
     if authority == "" || anchor == "" {
-      issues.push({ line: 1, code: "BAD_ROUTE", message: "cog uri requires authority and anchor" })
+      issues.push({
+        line: 1,
+        code: "BAD_ROUTE",
+        message: "cog uri requires authority and anchor",
+      })
     }
-  } else if before.starts_with("substrate://") {
+  } else if before.has_prefix("substrate://") {
     scheme = "substrate"
     let rem = split_after_raw(before, "substrate://")
-    let route = rem.split("/")
+    let route = str_split(rem, "/")
     if route.length() >= 1 {
       authority = route[0]
-      let mut segments : Array[String] = []
+      let segments : Array[String] = []
       let mut index = 1
       while index < route.length() {
         if route[index] != "" {
@@ -366,15 +401,19 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
       anchor = normalize_anchor_path(join_by(segments, "/"))
     }
     if authority == "" || anchor == "" {
-      issues.push({ line: 1, code: "BAD_ROUTE", message: "substrate uri requires authority and anchor" })
+      issues.push({
+        line: 1,
+        code: "BAD_ROUTE",
+        message: "substrate uri requires authority and anchor",
+      })
     }
-  } else if before.starts_with("cas://") {
+  } else if before.has_prefix("cas://") {
     scheme = "cas"
     let rem = split_after_raw(before, "cas://")
-    let route = rem.split("/")
+    let route = str_split(rem, "/")
     if route.length() >= 1 {
       authority = route[0]
-      let mut segments : Array[String] = []
+      let segments : Array[String] = []
       let mut index = 1
       while index < route.length() {
         if route[index] != "" {
@@ -402,8 +441,12 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
       })
     }
   } else {
-    issues.push({ line: 1, code: "BAD_SCHEME", message: "scheme must be `cog`, `substrate`, or `cas`" })
-    return { address: None, issues: issues, ok: false }
+    issues.push({
+      line: 1,
+      code: "BAD_SCHEME",
+      message: "scheme must be `cog`, `substrate`, or `cas`",
+    })
+    return { address: None, issues, ok: false }
   }
 
   let mut overlay = ""
@@ -413,14 +456,18 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
   let mut track = Program
   let mut hash_token = ""
 
-  let query_pairs = query_raw.split("&")
+  let query_pairs = str_split(query_raw, "&")
   for pair in query_pairs {
     if pair.length() == 0 {
       continue
     }
-    let pieces = pair.split("=")
+    let pieces = str_split(pair, "=")
     if pieces.length() != 2 {
-      issues.push({ line: 1, code: "BAD_QUERY_PAIR", message: "query pairs must be `key=value`" })
+      issues.push({
+        line: 1,
+        code: "BAD_QUERY_PAIR",
+        message: "query pairs must be `key=value`",
+      })
       continue
     }
     let key = pieces[0]
@@ -440,9 +487,12 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
     if key == "gap" {
       match parse_u32_opt(Some(value)) {
         Some(v) => gap = v
-        None => {
-          issues.push({ line: 1, code: "BAD_GAP", message: "gap must be unsigned integer" })
-        }
+        None =>
+          issues.push({
+            line: 1,
+            code: "BAD_GAP",
+            message: "gap must be unsigned integer",
+          })
       }
       continue
     }
@@ -452,7 +502,11 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
       } else if value == "program" {
         track = Program
       } else {
-        issues.push({ line: 1, code: "BAD_TRACK", message: "track must be `program` or `git`" })
+        issues.push({
+          line: 1,
+          code: "BAD_TRACK",
+          message: "track must be `program` or `git`",
+        })
       }
       continue
     }
@@ -472,66 +526,89 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
       cas_digest = value
       continue
     }
-    issues.push({ line: 1, code: "UNKNOWN_QUERY_KEY", message: "query key not recognized" })
+    issues.push({
+      line: 1,
+      code: "UNKNOWN_QUERY_KEY",
+      message: "query key not recognized",
+    })
   }
 
   if overlay == "" {
-    issues.push({ line: 1, code: "MISSING_OVERLAY", message: "overlay is recommended" })
+    issues.push({
+      line: 1,
+      code: "MISSING_OVERLAY",
+      message: "overlay is recommended",
+    })
   }
   if authority == "" {
-    issues.push({ line: 1, code: "MISSING_AUTHORITY", message: "authority is required" })
+    issues.push({
+      line: 1,
+      code: "MISSING_AUTHORITY",
+      message: "authority is required",
+    })
   }
   if scheme == "cas" && cas_alg == "" {
-    issues.push({ line: 1, code: "MISSING_CAS_ALG", message: "cas algorithm is required" })
+    issues.push({
+      line: 1,
+      code: "MISSING_CAS_ALG",
+      message: "cas algorithm is required",
+    })
   }
   if scheme == "cas" && cas_digest == "" {
-    issues.push({ line: 1, code: "MISSING_CAS_DIGEST", message: "cas digest is required" })
+    issues.push({
+      line: 1,
+      code: "MISSING_CAS_DIGEST",
+      message: "cas digest is required",
+    })
   }
   if hash_token == "" && cas_digest != "" {
     hash_token = cas_digest
   }
   if anchor == "" && hash_token == "" {
-    issues.push({ line: 1, code: "MISSING_TARGET", message: "anchor/path or id is required" })
+    issues.push({
+      line: 1,
+      code: "MISSING_TARGET",
+      message: "anchor/path or id is required",
+    })
   }
 
   if issues.length() > 0 {
-    { address: None, issues: issues, ok: false }
+    { address: None, issues, ok: false }
   } else {
     let canonical_uri = build_canonical_uri(
+      scheme, authority, anchor, cas_alg, cas_digest, overlay, peer, mode, gap, track,
+      hash_token, view,
+    )
+    let parsed = {
+      uri: canonical_uri,
       scheme,
       authority,
       anchor,
       cas_alg,
       cas_digest,
+      id_token: hash_token,
+      hole_id: if hash_token == "" {
+        @hash.Hash::of_bytes(string_to_bytes(""))
+      } else {
+        @hash.Hash::of_bytes(string_to_bytes(hash_token))
+      },
       overlay,
       peer,
       mode,
-      gap,
       track,
-      hash_token,
       view,
-    )
-    let parsed = {
-      uri: canonical_uri,
-      scheme: scheme,
-      authority: authority,
-      anchor: anchor,
-      cas_alg: cas_alg,
-      cas_digest: cas_digest,
-      id_token: hash_token,
-      hole_id: if hash_token == "" { @hash.Hash::of_bytes(string_to_bytes("")) } else { @hash.Hash::of_bytes(string_to_bytes(hash_token)) },
-      overlay: overlay,
-      peer: peer,
-      mode: mode,
-      track: track,
-      view: view,
-      gap: gap,
+      gap,
     }
     { address: Some(parsed), issues: [], ok: true }
   }
 }
 
-fn join_from_index(parts : Array[String], index : Int, separator : String) -> String {
+///|
+fn join_from_index(
+  parts : Array[String],
+  index : Int,
+  separator : String,
+) -> String {
   if parts.length() <= index {
     ""
   } else {
@@ -545,6 +622,7 @@ fn join_from_index(parts : Array[String], index : Int, separator : String) -> St
   }
 }
 
+///|
 fn build_canonical_uri(
   scheme : String,
   authority : String,
@@ -559,7 +637,7 @@ fn build_canonical_uri(
   hash_token : String,
   view : String,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string(scheme)
   b.write_string("://")
   b.write_string(authority)
@@ -598,11 +676,12 @@ fn build_canonical_uri(
   b.to_string()
 }
 
+///|
 fn normalize_anchor_path(raw_anchor : String) -> String {
   if raw_anchor == "" {
     return ""
   }
-  let parts = raw_anchor.split("/")
+  let parts = str_split(raw_anchor, "/")
   let mut resolved : Array[String] = []
   let mut i : Int = 0
   while i < parts.length() {
@@ -613,7 +692,7 @@ fn normalize_anchor_path(raw_anchor : String) -> String {
     }
     if segment == ".." {
       if resolved.length() > 0 {
-        let mut trimmed : Array[String] = []
+        let trimmed : Array[String] = []
         let mut j : Int = 0
         while j < resolved.length() - 1 {
           trimmed.push(resolved[j])
@@ -634,8 +713,9 @@ fn normalize_anchor_path(raw_anchor : String) -> String {
   }
 }
 
+///|
 fn resolve_relative_anchor(base_anchor : String, route : String) -> String {
-  let base_parts = base_anchor.split("/")
+  let base_parts = str_split(base_anchor, "/")
   let mut keep : Int = base_parts.length()
   if keep > 0 {
     keep = keep - 1
@@ -650,7 +730,7 @@ fn resolve_relative_anchor(base_anchor : String, route : String) -> String {
     i = i + 1
   }
 
-  let route_parts = route.split("/")
+  let route_parts = str_split(route, "/")
   let mut j : Int = 0
   while j < route_parts.length() {
     let segment = route_parts[j]
@@ -660,7 +740,7 @@ fn resolve_relative_anchor(base_anchor : String, route : String) -> String {
     }
     if segment == ".." {
       if resolved.length() > 0 {
-        let mut trimmed : Array[String] = []
+        let trimmed : Array[String] = []
         let mut k : Int = 0
         while k < resolved.length() - 1 {
           trimmed.push(resolved[k])
@@ -688,14 +768,16 @@ fn resolve_relative_anchor(base_anchor : String, route : String) -> String {
   }
 }
 
+///|
 fn split_after_raw(raw : String, prefix : String) -> String {
-  let chunks = raw.split(prefix)
+  let chunks = str_split(raw, prefix)
   if chunks.length() < 2 {
     return raw
   }
   chunks[1]
 }
 
+///|
 fn parse_u32_opt(raw : String?) -> UInt? {
   match raw {
     Some(text) => {
@@ -706,8 +788,8 @@ fn parse_u32_opt(raw : String?) -> UInt? {
       let mut i : Int = 0
       let mut out : UInt = 0U
       while i < bytes.length() {
-        let b = bytes[i].to_int()
-        if b < 48 || b > 57 {
+        let b = bytes[i].to_uint()
+        if b < 48U || b > 57U {
           return None
         }
         out = out * 10U + (b - 48U)
@@ -719,9 +801,17 @@ fn parse_u32_opt(raw : String?) -> UInt? {
   }
 }
 
+///|
 fn yata_track_token(track : YataTrack) -> String {
   match track {
     Program => "program"
     Git => "git"
   }
+}
+
+///|
+/// Split a string by a separator, returning Array[String].
+/// This adapts String::split (which returns Iter[StringView]) into Array[String].
+fn str_split(s : String, sep : String) -> Array[String] {
+  s.split(sep).map(fn(sv) { sv.to_string() }).collect()
 }

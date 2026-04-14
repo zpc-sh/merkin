@@ -237,13 +237,10 @@ pub fn ConversationHost::append_turn(
   thread_id : String,
   request : TurnRequest,
 ) -> TurnOutcome {
-  let mut issues : Array[ConversationIssue] = []
+  let issues : Array[ConversationIssue] = []
 
   if !self.has_thread(thread_id) {
-    issues.push({
-      code: "BAD_REQUEST",
-      message: "thread_id not found",
-    })
+    issues.push({ code: "BAD_REQUEST", message: "thread_id not found" })
     return rejected_turn_outcome(issues)
   }
   if !length_envelope_valid(request.length_envelope) {
@@ -254,13 +251,11 @@ pub fn ConversationHost::append_turn(
     return rejected_turn_outcome(issues)
   }
   if request.actor_overlay == "" {
-    issues.push({
-      code: "BAD_REQUEST",
-      message: "actor_overlay is required",
-    })
+    issues.push({ code: "BAD_REQUEST", message: "actor_overlay is required" })
     return rejected_turn_outcome(issues)
   }
-  if request.idempotency_key != "" && self.has_idempotency(thread_id, request.idempotency_key) {
+  if request.idempotency_key != "" &&
+    self.has_idempotency(thread_id, request.idempotency_key) {
     issues.push({
       code: "CONFLICTING_IDEMPOTENCY_KEY",
       message: "idempotency key already exists in this thread",
@@ -268,8 +263,9 @@ pub fn ConversationHost::append_turn(
     return rejected_turn_outcome(issues)
   }
 
-  let ingress_len = request.content.length().to_uint()
-  if ingress_len < request.length_envelope.input_len_min || ingress_len > request.length_envelope.input_len_max {
+  let ingress_len = request.content.length().reinterpret_as_uint()
+  if ingress_len < request.length_envelope.input_len_min ||
+    ingress_len > request.length_envelope.input_len_max {
     issues.push({
       code: "LENGTH_ENVELOPE_VIOLATION",
       message: "ingress content length is outside declared bounds",
@@ -283,8 +279,9 @@ pub fn ConversationHost::append_turn(
   let mut non_replayable = false
 
   let egress_preview = "turn.accepted:" + turn_id + ":" + thread_id
-  let egress_len = egress_preview.length().to_uint()
-  if egress_len < request.length_envelope.output_len_min || egress_len > request.length_envelope.output_len_max {
+  let egress_len = egress_preview.length().reinterpret_as_uint()
+  if egress_len < request.length_envelope.output_len_min ||
+    egress_len > request.length_envelope.output_len_max {
     non_replayable = true
     issues.push({
       code: "LENGTH_ENVELOPE_VIOLATION",
@@ -325,8 +322,16 @@ pub fn ConversationHost::append_turn(
     checkpoint_id: Some(checkpoint_id),
     issues,
     canonical_addresses: [
-      "cog://pactis/" + thread_id + "?overlay=" + request.actor_overlay + "&mode=debate&gap=1#overlay",
-      "cas://pactis/blake3/" + turn_id + "?overlay=" + request.actor_overlay + "&mode=debate#overlay",
+      "cog://pactis/" +
+      thread_id +
+      "?overlay=" +
+      request.actor_overlay +
+      "&mode=debate&gap=1#overlay",
+      "cas://pactis/blake3/" +
+      turn_id +
+      "?overlay=" +
+      request.actor_overlay +
+      "&mode=debate#overlay",
     ],
   }
 }
@@ -344,7 +349,11 @@ pub fn ConversationHost::create_checkpoint(
     checkpoint_id: "checkpoint-" + self.next_checkpoint_seq.to_string(),
     thread_id,
     turn_seq: self.latest_turn_seq(thread_id),
-    label: if label == "" { "manual" } else { label },
+    label: if label == "" {
+      "manual"
+    } else {
+      label
+    },
   }
   self.next_checkpoint_seq = self.next_checkpoint_seq + 1U
   self.checkpoints.push(checkpoint)
@@ -358,12 +367,9 @@ pub fn ConversationHost::replay(
   thread_id : String,
   request : ReplayRequest,
 ) -> ReplayOutcome {
-  let mut issues : Array[ConversationIssue] = []
+  let issues : Array[ConversationIssue] = []
   if !self.has_thread(thread_id) {
-    issues.push({
-      code: "BAD_REQUEST",
-      message: "thread_id not found",
-    })
+    issues.push({ code: "BAD_REQUEST", message: "thread_id not found" })
     return { ok: false, replayed_count: 0U, non_replayable_count: 0U, issues }
   }
 
@@ -408,7 +414,7 @@ pub fn ConversationHost::timeline(
   from_seq : UInt,
   limit : UInt,
 ) -> Array[SabaTurn] {
-  let mut out : Array[SabaTurn] = []
+  let out : Array[SabaTurn] = []
   for turn in self.turns {
     if turn.thread_id != thread_id {
       continue
@@ -416,7 +422,7 @@ pub fn ConversationHost::timeline(
     if turn.turn_seq < from_seq {
       continue
     }
-    if out.length().to_uint() >= limit {
+    if out.length().reinterpret_as_uint() >= limit {
       break
     }
     out.push(turn)
@@ -472,7 +478,7 @@ pub fn ConversationHost::purge_embedding_records(
   thread_id : String,
   current_turn_seq : UInt,
 ) -> UInt {
-  let mut kept : Array[ThreadEmbeddingRecord] = []
+  let kept : Array[ThreadEmbeddingRecord] = []
   let mut purged : UInt = 0U
   for record in self.embedding_records {
     if record.thread_id != thread_id {
@@ -559,13 +565,19 @@ pub fn ConversationHost::emit_embedding_plan(
     let ready = embedding_ready(record.action, record.found)
     let anchor = plan_safe_token(record.file_ref)
     let hole_id = @hash.Hash::of_bytes(
-      string_to_bytes(record.thread_id + ":" + record.record_id + ":" + record.file_ref),
+      string_to_bytes(
+        record.thread_id + ":" + record.record_id + ":" + record.file_ref,
+      ),
     )
     entries.push({
       hole_id,
       anchor,
       state,
-      candidate_count: if record.count == 0U { 1U } else { record.count },
+      candidate_count: if record.count == 0U {
+        1U
+      } else {
+        record.count
+      },
       ready,
       selected_candidate,
       provenance: [
@@ -573,7 +585,11 @@ pub fn ConversationHost::emit_embedding_plan(
         plan_safe_token("turn:" + record.recorded_turn_seq.to_string()),
         plan_safe_token("action:" + embedding_action_tag(record.action)),
       ],
-      confidence_floor: if record.found { 70U } else { 95U },
+      confidence_floor: if record.found {
+        70U
+      } else {
+        95U
+      },
     })
     material.push(anchor)
     material.push(state)
@@ -588,12 +604,28 @@ pub fn ConversationHost::emit_embedding_plan(
   let plan : @model.YataPlan = {
     track: @model.Program,
     mode: @model.Full,
-    generator: if generator == "" { "daemon.conversation" } else { generator },
-    note: if note == "" { "conversation embedding timeline" } else { note },
+    generator: if generator == "" {
+      "daemon.conversation"
+    } else {
+      generator
+    },
+    note: if note == "" {
+      "conversation embedding timeline"
+    } else {
+      note
+    },
     material_hash: @hash.Hash::of_bytes(string_to_bytes(material_wire)),
     self_report: Some({
-      overlay: if overlay == "" { "chatgpt" } else { plan_safe_token(overlay) },
-      peer: if peer == "" { "shared" } else { plan_safe_token(peer) },
+      overlay: if overlay == "" {
+        "chatgpt"
+      } else {
+        plan_safe_token(overlay)
+      },
+      peer: if peer == "" {
+        "shared"
+      } else {
+        plan_safe_token(peer)
+      },
       authority: if authority == "" {
         "substrate://loc/chatgpt"
       } else {
@@ -605,7 +637,7 @@ pub fn ConversationHost::emit_embedding_plan(
     }),
     git_report: None,
     temporal_delta: Some({
-      delta_turns: self.latest_turn_seq(thread_id).to_int(),
+      delta_turns: self.latest_turn_seq(thread_id).reinterpret_as_int(),
       delta_bytes: embedding_delta_bytes(records),
       causal_offset: 0,
     }),
@@ -622,13 +654,16 @@ pub fn ConversationHost::emit_embedding_plan(
       status: "materialized",
       handler: "daemon.conversation.embedding",
       offloaded_to: "thread:" + plan_safe_token(thread_id),
-      count: records.length().to_uint(),
+      count: records.length().reinterpret_as_uint(),
     }),
+    procsi_report: None,
+    capability_report: None,
     entries,
   }
   Some(plan.to_wire())
 }
 
+///|
 fn rejected_turn_outcome(issues : Array[ConversationIssue]) -> TurnOutcome {
   {
     accepted: false,
@@ -640,6 +675,7 @@ fn rejected_turn_outcome(issues : Array[ConversationIssue]) -> TurnOutcome {
   }
 }
 
+///|
 fn length_envelope_valid(envelope : LengthEnvelope) -> Bool {
   envelope.input_len_min > 0U &&
   envelope.output_len_min > 0U &&
@@ -647,7 +683,11 @@ fn length_envelope_valid(envelope : LengthEnvelope) -> Bool {
   envelope.output_len_min <= envelope.output_len_max
 }
 
-fn ConversationHost::has_hall(self : ConversationHost, hall_id : String) -> Bool {
+///|
+fn ConversationHost::has_hall(
+  self : ConversationHost,
+  hall_id : String,
+) -> Bool {
   for hall in self.halls {
     if hall.hall_id == hall_id {
       return true
@@ -656,7 +696,11 @@ fn ConversationHost::has_hall(self : ConversationHost, hall_id : String) -> Bool
   false
 }
 
-fn ConversationHost::has_thread(self : ConversationHost, thread_id : String) -> Bool {
+///|
+fn ConversationHost::has_thread(
+  self : ConversationHost,
+  thread_id : String,
+) -> Bool {
   for thread in self.threads {
     if thread.thread_id == thread_id {
       return true
@@ -665,7 +709,12 @@ fn ConversationHost::has_thread(self : ConversationHost, thread_id : String) -> 
   false
 }
 
-fn ConversationHost::has_idempotency(self : ConversationHost, thread_id : String, key : String) -> Bool {
+///|
+fn ConversationHost::has_idempotency(
+  self : ConversationHost,
+  thread_id : String,
+  key : String,
+) -> Bool {
   for turn in self.turns {
     if turn.thread_id == thread_id && turn.idempotency_key == key {
       return true
@@ -674,7 +723,11 @@ fn ConversationHost::has_idempotency(self : ConversationHost, thread_id : String
   false
 }
 
-fn ConversationHost::next_turn_seq_for_thread(self : ConversationHost, thread_id : String) -> UInt {
+///|
+fn ConversationHost::next_turn_seq_for_thread(
+  self : ConversationHost,
+  thread_id : String,
+) -> UInt {
   let mut out : UInt = 1U
   for turn in self.turns {
     if turn.thread_id == thread_id && turn.turn_seq >= out {
@@ -684,7 +737,11 @@ fn ConversationHost::next_turn_seq_for_thread(self : ConversationHost, thread_id
   out
 }
 
-fn ConversationHost::latest_turn_seq(self : ConversationHost, thread_id : String) -> UInt {
+///|
+fn ConversationHost::latest_turn_seq(
+  self : ConversationHost,
+  thread_id : String,
+) -> UInt {
   let mut out : UInt = 0U
   for turn in self.turns {
     if turn.thread_id == thread_id && turn.turn_seq > out {
@@ -694,12 +751,13 @@ fn ConversationHost::latest_turn_seq(self : ConversationHost, thread_id : String
   out
 }
 
+///|
 fn ConversationHost::set_thread_head_checkpoint(
   self : ConversationHost,
   thread_id : String,
   checkpoint_id : String,
 ) -> Unit {
-  let mut next : Array[SabaThread] = []
+  let next : Array[SabaThread] = []
   for thread in self.threads {
     if thread.thread_id == thread_id {
       next.push({ ..thread, head_checkpoint: checkpoint_id })
@@ -710,7 +768,11 @@ fn ConversationHost::set_thread_head_checkpoint(
   self.threads = next
 }
 
-fn embedding_state_tag(action : ConversationEmbeddingAction, found : Bool) -> String {
+///|
+fn embedding_state_tag(
+  action : ConversationEmbeddingAction,
+  found : Bool,
+) -> String {
   if !found {
     return "embedding-clear"
   }
@@ -721,6 +783,7 @@ fn embedding_state_tag(action : ConversationEmbeddingAction, found : Bool) -> St
   }
 }
 
+///|
 fn embedding_action_tag(action : ConversationEmbeddingAction) -> String {
   match action {
     Observe => "observe"
@@ -729,7 +792,10 @@ fn embedding_action_tag(action : ConversationEmbeddingAction) -> String {
   }
 }
 
-fn embedding_selected_candidate(action : ConversationEmbeddingAction) -> String? {
+///|
+fn embedding_selected_candidate(
+  action : ConversationEmbeddingAction,
+) -> String? {
   match action {
     Observe => None
     FlipAot => Some("flip-aot")
@@ -737,6 +803,7 @@ fn embedding_selected_candidate(action : ConversationEmbeddingAction) -> String?
   }
 }
 
+///|
 fn embedding_ready(action : ConversationEmbeddingAction, found : Bool) -> Bool {
   if !found {
     return true
@@ -748,6 +815,7 @@ fn embedding_ready(action : ConversationEmbeddingAction, found : Bool) -> Bool {
   }
 }
 
+///|
 fn embedding_delta_bytes(records : Array[ThreadEmbeddingRecord]) -> Int {
   let mut out : Int = 0
   for record in records {
@@ -756,6 +824,7 @@ fn embedding_delta_bytes(records : Array[ThreadEmbeddingRecord]) -> Int {
   out
 }
 
+///|
 fn join_parts(parts : Array[String], separator : String) -> String {
   let out = StringBuilder::new(size_hint=128)
   for i = 0; i < parts.length(); i = i + 1 {
@@ -767,6 +836,7 @@ fn join_parts(parts : Array[String], separator : String) -> String {
   out.to_string()
 }
 
+///|
 fn plan_safe_token(raw : String) -> String {
   if raw == "" {
     return "none"
@@ -785,4 +855,26 @@ fn plan_safe_token(raw : String) -> String {
   } else {
     text
   }
+}
+
+
+///|
+/// Convert a String to Bytes by encoding each code point as 4 big-endian bytes.
+/// Used for consistent hash input derivation within the daemon package.
+fn string_to_bytes(s : String) -> Bytes {
+  let mut total = 0
+  for _ch in s {
+    total = total + 4
+  }
+  let buf = FixedArray::make(total, b'\x00')
+  let mut pos = 0
+  for ch in s {
+    let code = ch.to_uint()
+    buf[pos] = ((code >> 24) & 0xFFU).to_byte()
+    buf[pos + 1] = ((code >> 16) & 0xFFU).to_byte()
+    buf[pos + 2] = ((code >> 8) & 0xFFU).to_byte()
+    buf[pos + 3] = (code & 0xFFU).to_byte()
+    pos = pos + 4
+  }
+  Bytes::from_array(buf)
 }

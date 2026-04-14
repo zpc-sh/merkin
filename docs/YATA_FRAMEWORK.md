@@ -5,6 +5,7 @@ This document defines the abstract Yata hole model used by merkin.
 Related specifications:
 
 - `docs/YATA_PLAN_SPEC.md` for the full `.plan` wire contract.
+- `docs/MUYATA_SPEC.md` for the AI-shaped Yata profile layer and plan profile guidance.
 - `docs/YATA_COGNITIVE_ENVELOPE_DESIGN.md` for guidance on cognitive envelopes, overlay profiles, and ChatGPT/OpenAI shaping.
 - `docs/YATA_PLAN_GOVERNANCE.md` for ownership, compatibility, and extension policy.
 - `docs/PACTIS_GIT_PARITY_FUNCTION_MAP.md` for Git-equivalent command/function scope in Pactis.
