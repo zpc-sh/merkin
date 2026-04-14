@@ -2,3 +2,7 @@
 _build/
 .mooncakes/
 .moonagent/
+.moon
+.moonbuild
+.mooncache/
+.moonlogs

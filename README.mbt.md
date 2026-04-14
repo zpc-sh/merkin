@@ -41,9 +41,16 @@ Primary commands (when MoonBit tooling is available):
 
 ```bash
 moon test
+<<<<<<< HEAD
 moon bench -p zpc/merkin/conformance
+=======
+moon bench -p nocsi/merkin/conformance
+>>>>>>> d5515070d7d5080c7ef44b7176e239258227d05b
 moon bench
 ```
 
 More detail: `docs/TESTING_AND_BENCHMARKING.md`.
+<<<<<<< HEAD
 
+=======
+>>>>>>> d5515070d7d5080c7ef44b7176e239258227d05b
