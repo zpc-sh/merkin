@@ -34,6 +34,19 @@ fn main {
     return
   }
 
+<<<<<<< HEAD
+=======
+  let action = resolve_action(args)
+  if action == "help" {
+    print_usage()
+    return
+  }
+  if action_is_bridge_only(action) {
+    run_bridge_action(args, action)
+    return
+  }
+
+>>>>>>> d5515070d7d5080c7ef44b7176e239258227d05b
   let node_id = value_after(args, "--node-id", "node-1")
   let mode = parse_mode(value_after(args, "--mode", "receiver"))
   let target_ids = split_csv(value_after(args, "--targets", "local-1"))
@@ -433,14 +446,28 @@ fn print_usage() -> Unit {
   println("  merkin <command> [args] [flags]")
   println("")
   println("Stigmergy Commands:")
-  println("  loci new <name> [--tags t1,t2] [--spirit \"...\"]  Scaffold a new locus")
+  println(
+    "  loci new <name> [--tags t1,t2] [--spirit \"...\"]  Scaffold a new locus",
+  )
   println("  loci ls                                          List known loci")
-  println("  enter <locus>                                    Enter a locus (read trail)")
-  println("  sign [<message>] --locus <name>                  Sign exit residue")
-  println("  trail <locus> [--depth <n>]                      Show activity trail")
-  println("  where                                            Show recent locus activity")
-  println("  residue <locus> [--session <id>]                 Read residue files")
-  println("  status <locus>                                   Working dir vs last push")
+  println(
+    "  enter <locus>                                    Enter a locus (read trail)",
+  )
+  println(
+    "  sign [<message>] --locus <name>                  Sign exit residue",
+  )
+  println(
+    "  trail <locus> [--depth <n>]                      Show activity trail",
+  )
+  println(
+    "  where                                            Show recent locus activity",
+  )
+  println(
+    "  residue <locus> [--session <id>]                 Read residue files",
+  )
+  println(
+    "  status <locus>                                   Working dir vs last push",
+  )
   println("")
   println("Daemon Commands:")
   println("  moon run cmd/main -- daemon <category> <command> [flags]")
@@ -455,18 +482,42 @@ fn print_usage() -> Unit {
   println("")
   println("Categorical examples:")
   println("  moon run cmd/main -- daemon oci capabilities --mode receiver")
-  println("  moon run cmd/main -- daemon oci put --payload hello --mode hybrid --targets local-1,oci-1")
-  println("  moon run cmd/main -- daemon tree sparse --routes alpha/doc,beta/doc --tokens alpha")
-  println("  moon run cmd/main -- daemon tree diff --left-routes alpha/doc --right-routes beta/doc")
-  println("  moon run cmd/main -- daemon conv turn --hall saba --topic debate --content \"Opening statement\"")
-  println("  moon run cmd/main -- daemon conv replay --seed-non-replayable true --enforce-length true")
-  println("  moon run cmd/main -- daemon conv embed --file-ref docs/sample.bin --embedding-action flip-aot")
-  println("  moon run cmd/main -- daemon conv embed-purge --purge-after-turns 1 --current-turn-seq 2")
-  println("  moon run cmd/main -- daemon yata topology --yata-branch-factor 5 --yata-max-children 3")
-  println("  moon run cmd/main -- daemon cognitive compile --mode markup --emit-distributed true")
-  println("  moon run cmd/main -- daemon cognitive distributed --compiler-out-dir _build/cognitive/v0.3/latest")
-  println("  moon run cmd/main -- daemon cognitive measure --summary-file _build/cognitive/v0.3/latest/summary.txt")
-  println("  moon run cmd/main -- daemon adapter validate --action status --file /tmp/adapter.json")
+  println(
+    "  moon run cmd/main -- daemon oci put --payload hello --mode hybrid --targets local-1,oci-1",
+  )
+  println(
+    "  moon run cmd/main -- daemon tree sparse --routes alpha/doc,beta/doc --tokens alpha",
+  )
+  println(
+    "  moon run cmd/main -- daemon tree diff --left-routes alpha/doc --right-routes beta/doc",
+  )
+  println(
+    "  moon run cmd/main -- daemon conv turn --hall saba --topic debate --content \"Opening statement\"",
+  )
+  println(
+    "  moon run cmd/main -- daemon conv replay --seed-non-replayable true --enforce-length true",
+  )
+  println(
+    "  moon run cmd/main -- daemon conv embed --file-ref docs/sample.bin --embedding-action flip-aot",
+  )
+  println(
+    "  moon run cmd/main -- daemon conv embed-purge --purge-after-turns 1 --current-turn-seq 2",
+  )
+  println(
+    "  moon run cmd/main -- daemon yata topology --yata-branch-factor 5 --yata-max-children 3",
+  )
+  println(
+    "  moon run cmd/main -- daemon cognitive compile --mode markup --emit-distributed true",
+  )
+  println(
+    "  moon run cmd/main -- daemon cognitive distributed --compiler-out-dir _build/cognitive/v0.3/latest",
+  )
+  println(
+    "  moon run cmd/main -- daemon cognitive measure --summary-file _build/cognitive/v0.3/latest/summary.txt",
+  )
+  println(
+    "  moon run cmd/main -- daemon adapter validate --action status --file /tmp/adapter.json",
+  )
   println("")
   println("Legacy --action examples:")
   println("  moon run cmd/main -- daemon --action capabilities --mode receiver")
@@ -498,7 +549,9 @@ fn print_usage() -> Unit {
     "  moon run cmd/main -- daemon --action yata-topology --yata-branch-factor 5 --yata-max-children 3",
   )
   println("Flags:")
-  println("  --action capabilities|put|sparse|diff|conv-turn|conv-replay|conv-embed|conv-embed-purge|conv-plan|yata-topology|demo")
+  println(
+    "  --action capabilities|put|sparse|diff|conv-turn|conv-replay|conv-embed|conv-embed-purge|conv-plan|yata-topology|demo",
+  )
   println("  --mode receiver|proxy|passthrough|hybrid")
   println("  --node-id <id>")
   println("  --targets <comma-separated ids>")
@@ -560,17 +613,29 @@ fn print_usage() -> Unit {
   println("  --emit-distributed true|false (for cognitive compile bridge)")
   println("  --distributed-out-dir <dir> (for cognitive compile bridge)")
   println("  --distributed-cluster-name <name> (for cognitive compile bridge)")
-  println("  --distributed-shards <uint> (for cognitive compile/distributed bridge)")
-  println("  --distributed-replicas <uint> (for cognitive compile/distributed bridge)")
-  println("  --distributed-max-inflight-per-shard <uint> (for cognitive compile/distributed bridge)")
-  println("  --distributed-regions <csv> (for cognitive compile/distributed bridge)")
+  println(
+    "  --distributed-shards <uint> (for cognitive compile/distributed bridge)",
+  )
+  println(
+    "  --distributed-replicas <uint> (for cognitive compile/distributed bridge)",
+  )
+  println(
+    "  --distributed-max-inflight-per-shard <uint> (for cognitive compile/distributed bridge)",
+  )
+  println(
+    "  --distributed-regions <csv> (for cognitive compile/distributed bridge)",
+  )
   println("  --summary-file <path> (for cognitive distributed/measure bridge)")
   println("  --compiler-out-dir <dir> (for cognitive distributed bridge)")
   println("  --coord-minutes-per-hole <uint> (for cognitive measure bridge)")
-  println("  --automation-overhead-minutes <uint> (for cognitive measure bridge)")
+  println(
+    "  --automation-overhead-minutes <uint> (for cognitive measure bridge)",
+  )
   println("  --fix-minutes-low <uint> (for cognitive measure bridge)")
   println("  --fix-minutes-high <uint> (for cognitive measure bridge)")
-  println("  --active-delegation-coverage <0..1> (for cognitive measure bridge)")
+  println(
+    "  --active-delegation-coverage <0..1> (for cognitive measure bridge)",
+  )
   println("  --action submit|status|cancel (for adapter validate bridge)")
   println("  --file <path> (for adapter validate bridge)")
   println("  --last-line true|false (for adapter validate bridge)")
@@ -735,15 +800,26 @@ fn run_bridge_action(args : Array[String], action : String) -> Unit {
   match action {
     "cognitive-compile" => {
       let mode = value_after(args, "--mode", "markup")
-      let out_dir = value_after(args, "--out-dir", "_build/cognitive/v0.3/latest")
+      let out_dir = value_after(
+        args, "--out-dir", "_build/cognitive/v0.3/latest",
+      )
       let pipeline_out = value_after(args, "--pipeline-out-dir", "")
       let skip_pipeline = bool_flag(args, "--skip-pipeline", false)
       let emit_distributed = bool_flag(args, "--emit-distributed", false)
       let distributed_shards = value_after(args, "--distributed-shards", "16")
-      let distributed_replicas = value_after(args, "--distributed-replicas", "2")
-      let distributed_max_inflight = value_after(args, "--distributed-max-inflight-per-shard", "64")
-      let distributed_regions = value_after(args, "--distributed-regions", "us-west1,us-east1")
-      let mut cmd = "tools/cognitive-semantic-compile-v0_3.sh --mode " + mode + " --out-dir " + out_dir
+      let distributed_replicas = value_after(
+        args, "--distributed-replicas", "2",
+      )
+      let distributed_max_inflight = value_after(
+        args, "--distributed-max-inflight-per-shard", "64",
+      )
+      let distributed_regions = value_after(
+        args, "--distributed-regions", "us-west1,us-east1",
+      )
+      let mut cmd = "tools/cognitive-semantic-compile-v0_3.sh --mode " +
+        mode +
+        " --out-dir " +
+        out_dir
       if pipeline_out != "" {
         cmd = cmd + " --pipeline-out-dir " + pipeline_out
       }
@@ -752,37 +828,67 @@ fn run_bridge_action(args : Array[String], action : String) -> Unit {
       }
       if emit_distributed {
         cmd = cmd +
-          " --emit-distributed --distributed-shards " + distributed_shards +
-          " --distributed-replicas " + distributed_replicas +
-          " --distributed-max-inflight-per-shard " + distributed_max_inflight +
-          " --distributed-regions " + distributed_regions
+          " --emit-distributed --distributed-shards " +
+          distributed_shards +
+          " --distributed-replicas " +
+          distributed_replicas +
+          " --distributed-max-inflight-per-shard " +
+          distributed_max_inflight +
+          " --distributed-regions " +
+          distributed_regions
       }
       println("status=bridge_only")
       println("category=cognitive")
       println("command=compile")
       println("tool=tools/cognitive-semantic-compile-v0_3.sh")
       println("bridge_command=\{cmd}")
-      println("note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.")
+      println(
+        "note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.",
+      )
     }
     "cognitive-distributed" => {
-      let compiler_out_dir = value_after(args, "--compiler-out-dir", "_build/cognitive/v0.3/latest")
+      let compiler_out_dir = value_after(
+        args, "--compiler-out-dir", "_build/cognitive/v0.3/latest",
+      )
       let summary_file = value_after(args, "--summary-file", "")
-      let shards = value_after(args, "--distributed-shards", value_after(args, "--shards", "16"))
-      let replicas = value_after(args, "--distributed-replicas", value_after(args, "--replicas", "2"))
+      let shards = value_after(
+        args,
+        "--distributed-shards",
+        value_after(args, "--shards", "16"),
+      )
+      let replicas = value_after(
+        args,
+        "--distributed-replicas",
+        value_after(args, "--replicas", "2"),
+      )
       let max_inflight = value_after(
         args,
         "--distributed-max-inflight-per-shard",
         value_after(args, "--max-inflight-per-shard", "64"),
       )
-      let regions = value_after(args, "--distributed-regions", value_after(args, "--regions", "us-west1,us-east1"))
+      let regions = value_after(
+        args,
+        "--distributed-regions",
+        value_after(args, "--regions", "us-west1,us-east1"),
+      )
       let out_dir = value_after(args, "--distributed-out-dir", "")
-      let cluster = value_after(args, "--distributed-cluster-name", value_after(args, "--cluster-name", "merkin-cognitive-v0_3"))
-      let mut cmd = "tools/cognitive-distributed-plan-v0_3.sh --compiler-out-dir " + compiler_out_dir +
-        " --shards " + shards +
-        " --replicas " + replicas +
-        " --max-inflight-per-shard " + max_inflight +
-        " --regions " + regions +
-        " --cluster-name " + cluster
+      let cluster = value_after(
+        args,
+        "--distributed-cluster-name",
+        value_after(args, "--cluster-name", "merkin-cognitive-v0_3"),
+      )
+      let mut cmd = "tools/cognitive-distributed-plan-v0_3.sh --compiler-out-dir " +
+        compiler_out_dir +
+        " --shards " +
+        shards +
+        " --replicas " +
+        replicas +
+        " --max-inflight-per-shard " +
+        max_inflight +
+        " --regions " +
+        regions +
+        " --cluster-name " +
+        cluster
       if summary_file != "" {
         cmd = cmd + " --summary-file " + summary_file
       }
@@ -794,21 +900,30 @@ fn run_bridge_action(args : Array[String], action : String) -> Unit {
       println("command=distributed")
       println("tool=tools/cognitive-distributed-plan-v0_3.sh")
       println("bridge_command=\{cmd}")
-      println("note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.")
+      println(
+        "note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.",
+      )
     }
     "cognitive-measure" => {
-      let summary_file = value_after(args, "--summary-file", "_build/cognitive/v0.3/latest/summary.txt")
+      let summary_file = value_after(
+        args, "--summary-file", "_build/cognitive/v0.3/latest/summary.txt",
+      )
       let out_file = value_after(args, "--out-file", "")
       let coord = value_after(args, "--coord-minutes-per-hole", "7")
       let overhead = value_after(args, "--automation-overhead-minutes", "10")
       let fix_low = value_after(args, "--fix-minutes-low", "12")
       let fix_high = value_after(args, "--fix-minutes-high", "30")
       let coverage = value_after(args, "--active-delegation-coverage", "")
-      let mut cmd = "tools/cognitive-offload-measure-v0_3.sh --summary-file " + summary_file +
-        " --coord-minutes-per-hole " + coord +
-        " --automation-overhead-minutes " + overhead +
-        " --fix-minutes-low " + fix_low +
-        " --fix-minutes-high " + fix_high
+      let mut cmd = "tools/cognitive-offload-measure-v0_3.sh --summary-file " +
+        summary_file +
+        " --coord-minutes-per-hole " +
+        coord +
+        " --automation-overhead-minutes " +
+        overhead +
+        " --fix-minutes-low " +
+        fix_low +
+        " --fix-minutes-high " +
+        fix_high
       if out_file != "" {
         cmd = cmd + " --out-file " + out_file
       }
@@ -820,7 +935,9 @@ fn run_bridge_action(args : Array[String], action : String) -> Unit {
       println("command=measure")
       println("tool=tools/cognitive-offload-measure-v0_3.sh")
       println("bridge_command=\{cmd}")
-      println("note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.")
+      println(
+        "note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.",
+      )
     }
     "adapter-validate" => {
       let action_value = value_after(args, "--action", "status")
@@ -840,7 +957,9 @@ fn run_bridge_action(args : Array[String], action : String) -> Unit {
       println("command=validate")
       println("tool=tools/ai-adapter-validate-v0_3.sh")
       println("bridge_command=\{cmd}")
-      println("note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.")
+      println(
+        "note=Run the bridge_command in shell; this CLI mode is orchestration-first for now.",
+      )
     }
     _ => {
       println("status=bridge_only")
@@ -893,7 +1012,9 @@ fn parse_actor_role(value : String) -> @daemon.ConversationActorRole {
 }
 
 ///|
-fn parse_embedding_action(value : String) -> @daemon.ConversationEmbeddingAction {
+fn parse_embedding_action(
+  value : String,
+) -> @daemon.ConversationEmbeddingAction {
   match value {
     "flip-aot" => @daemon.FlipAot
     "purge" => @daemon.Purge

@@ -71,7 +71,11 @@ Mark all items before tagging `v0.1.0-rc1`:
 
 - [ ] MoonBit toolchain is available in CI and local release environment.
 - [ ] `moon test` is green across all packages.
+<<<<<<< HEAD
 - [ ] `moon bench -p zpc/merkin/conformance` produces stable non-regressing baseline numbers.
+=======
+- [ ] `moon bench -p nocsi/merkin/conformance` produces stable non-regressing baseline numbers.
+>>>>>>> d5515070d7d5080c7ef44b7176e239258227d05b
 - [ ] `docs/PACTIS_CONVERSATIONAL_OPENAPI.yaml` is validated and synchronized with API prose.
 - [ ] Draft-labeled specs are either promoted or explicitly accepted as release-time drafts.
 - [ ] `moon.mod.json` metadata is finalized (description, repository, keywords) for public consumption.
