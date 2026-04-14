@@ -1355,12 +1355,23 @@ fn parse_bool_opt(raw : String?) -> Bool? {
 
 ///|
 fn split_after(raw : String, prefix : String) -> String {
-  let chunks = split_parts(raw, prefix)
-  if chunks.length() < 2 {
-    ""
-  } else {
-    chunks[1]
+  if !raw.has_prefix(prefix) {
+    return ""
   }
+  let chunks = split_parts(raw, prefix)
+  if chunks.length() == 0 {
+    return ""
+  }
+  if chunks.length() == 1 {
+    return chunks[0]
+  }
+  let mut out = chunks[1]
+  let mut i : Int = 2
+  while i < chunks.length() {
+    out = out + prefix + chunks[i]
+    i = i + 1
+  }
+  out
 }
 
 ///|

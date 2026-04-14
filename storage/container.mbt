@@ -44,6 +44,15 @@ let media_config : String = "application/vnd.merkin.config.muon.v1"
 ///|
 let _media_manifest : String = "application/vnd.merkin.cognitive.manifest.v1+json"
 
+///|
+let annotation_solve_kind : String = "solve_kind"
+
+///|
+let annotation_solve_report_offloaded_to : String = "solve_report_offloaded_to"
+
+///|
+let annotation_sat_smt_offloaded : String = "sat_smt_offloaded"
+
 // Container magic: "COGN"
 
 ///|
@@ -85,6 +94,7 @@ pub(all) struct PluginLayer {
   name : String
   wasm_hash : @hash.Hash // content hash of wasm bytes
   wasm_size : Int
+  wasm_bytes : Bytes
   procsi : Bytes // extracted .prc/.pr1 section bytes (may be empty)
   mks_state : Bytes? // optional .mks solve cursor bytes
 } derive(Show)
@@ -95,6 +105,7 @@ pub fn PluginLayer::new(name : String, wasm_bytes : Bytes) -> PluginLayer {
     name,
     wasm_hash: @hash.Hash::of_bytes(wasm_bytes),
     wasm_size: wasm_bytes.length(),
+    wasm_bytes,
     procsi: Bytes::default(),
     mks_state: None,
   }
@@ -158,6 +169,79 @@ pub fn ContainerManifest::set_annotation(
 ///|
 pub fn ContainerManifest::layer_count(self : ContainerManifest) -> Int {
   self.layers.length()
+}
+
+///|
+/// Mark this manifest as carrying SAT/SMT work that was offloaded.
+///
+/// This mirrors solve metadata used in Yata plans:
+/// - `solve_kind=smt`
+/// - `sat_smt_offloaded=true`
+/// - `solve_report_offloaded_to=<provider>`
+pub fn ContainerManifest::mark_sat_smt_offloaded(
+  self : ContainerManifest,
+  offloaded_to : String,
+) -> ContainerManifest {
+  let next = self
+    .set_annotation(annotation_solve_kind, "smt")
+    .set_annotation(annotation_sat_smt_offloaded, "true")
+  if offloaded_to == "" {
+    next
+  } else {
+    next.set_annotation(annotation_solve_report_offloaded_to, offloaded_to)
+  }
+}
+
+///|
+/// Merge two packfile manifests.
+///
+/// Layer identity is keyed by `<media_type>|<name>`.
+/// - Existing keys are replaced by `other`.
+/// - New keys from `other` are appended.
+/// - Annotation keys from `other` override `self`.
+pub fn ContainerManifest::merge(
+  self : ContainerManifest,
+  other : ContainerManifest,
+) -> ContainerManifest {
+  let merged_layers : Array[LayerDescriptor] = []
+  let layer_index : Map[String, Int] = {}
+
+  for layer in self.layers {
+    let key = merge_layer_key(layer)
+    layer_index[key] = merged_layers.length()
+    merged_layers.push(layer)
+  }
+
+  for layer in other.layers {
+    let key = merge_layer_key(layer)
+    match layer_index.get(key) {
+      Some(index) => merged_layers[index] = layer
+      None => {
+        layer_index[key] = merged_layers.length()
+        merged_layers.push(layer)
+      }
+    }
+  }
+
+  let annotations : Map[String, String] = {}
+  for k, v in self.annotations {
+    annotations[k] = v
+  }
+  for k, v in other.annotations {
+    annotations[k] = v
+  }
+
+  let mut total_size = 0
+  for layer in merged_layers {
+    total_size = total_size + layer.size
+  }
+
+  {
+    schema_version: container_version,
+    layers: merged_layers,
+    annotations,
+    total_size,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -230,6 +314,9 @@ pub fn CognitiveContainer::pack(
     manifest = manifest.set_annotation(k, v)
   }
 
+  // Keep proof obligations attached to pack-layer accounting.
+  ignore(expected_pack_layer_count(plugins.length(), procsi_bytes, config_bytes))
+
   {
     manifest,
     void_layer: void_bytes,
@@ -285,6 +372,11 @@ pub fn CognitiveContainer::push_to_oci(
   ignore(registry.put_blob(repository, self.void_layer))
   ignore(registry.put_blob(repository, self.tree_layer))
   ignore(registry.put_blob(repository, self.bloom_layer))
+
+  // Push plugin wasm layers
+  for plugin in self.plugin_layers {
+    ignore(registry.put_blob(repository, plugin.wasm_bytes))
+  }
 
   // Push procsi and config
   if self.procsi_layer.length() > 0 {
@@ -567,4 +659,44 @@ fn container_bytes_to_fixed(src : Array[Byte]) -> Bytes {
     i = i + 1
   }
   Bytes::from_array(buf)
+}
+
+///|
+fn merge_layer_key(layer : LayerDescriptor) -> String {
+  layer.media_type + "|" + layer.name
+}
+
+///|
+/// Proof helper for packfile layer accounting:
+/// optional procsi/config contributions are always in [0, 2].
+fn optional_pack_layer_count(
+  procsi_layer : Bytes,
+  config_layer : Bytes,
+) -> Int where {
+  proof_ensure: result => result >= 0,
+  proof_ensure: result => result <= 2,
+} {
+  let mut count = 0
+  if procsi_layer.length() > 0 {
+    count = count + 1
+  }
+  if config_layer.length() > 0 {
+    count = count + 1
+  }
+  count
+}
+
+///|
+/// Proof helper for packfile layer accounting:
+/// total pack layers are always at least the 3 core layers + plugin count.
+fn expected_pack_layer_count(
+  plugin_count : Int,
+  procsi_layer : Bytes,
+  config_layer : Bytes,
+) -> Int where {
+  proof_require: plugin_count >= 0,
+  proof_ensure: result => result >= 3 + plugin_count,
+  proof_ensure: result => result <= 5 + plugin_count,
+} {
+  3 + plugin_count + optional_pack_layer_count(procsi_layer, config_layer)
 }

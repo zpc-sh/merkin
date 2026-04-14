@@ -196,9 +196,11 @@ Minimum:
 
 ### 5.5 Finger + AI disclosure + Gopher
 - `GET /finger.plan` (canonical plan file; not pollable)
-- `GET /.well-known/finger.plan` (transitional mirror/alias)
+- `GET /finger.plan.wasm` (canonical compact drift/disclosure surface for cross-repo coordination)
+- `GET /.well-known/finger.plan` (legacy transitional mirror/alias)
 - `finger.plan` is a track-backed, timestamp-agnostic `.plan` artifact generated from Yata graph state (program track).
 - `finger.plan` SHOULD be the preferred layered disclosure surface for repository/runtime posture.
+- `finger.plan.wasm` SHOULD be the preferred machine sync payload for multi-repo drift coordination.
 - `finger.plan` SHOULD carry compact `solve_report_*`, `procsi_report_*`, and `capability_report_*` fields when those layers are present.
 - `finger.plan` MUST NOT inline raw APP payloads, raw AI substrate fingerprints, or full ticket bodies; those stay in procsi sections, APP stores, and runtime-specific artifacts.
 - `.well-known` manifests may mirror or summarize this information for interface drift detection, but they are transitional exports rather than the native source of truth.

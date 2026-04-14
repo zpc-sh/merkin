@@ -354,7 +354,7 @@ pub fn YataAddress::parse_strict(raw : String) -> YataAddressParseOutcome {
     return { address: None, issues, ok: false }
   }
   let before = before_and_query[0]
-  let query_raw = before_and_query[1]
+  let query_raw = join_from_index(before_and_query, 1, "?")
 
   let mut scheme = ""
   let mut authority = ""
@@ -770,11 +770,23 @@ fn resolve_relative_anchor(base_anchor : String, route : String) -> String {
 
 ///|
 fn split_after_raw(raw : String, prefix : String) -> String {
-  let chunks = str_split(raw, prefix)
-  if chunks.length() < 2 {
+  if !raw.has_prefix(prefix) {
     return raw
   }
-  chunks[1]
+  let chunks = str_split(raw, prefix)
+  if chunks.length() == 0 {
+    return ""
+  }
+  if chunks.length() == 1 {
+    return chunks[0]
+  }
+  let mut out = chunks[1]
+  let mut i : Int = 2
+  while i < chunks.length() {
+    out = out + prefix + chunks[i]
+    i = i + 1
+  }
+  out
 }
 
 ///|

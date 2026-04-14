@@ -732,33 +732,30 @@ That is expected.
 
 ---
 
-## 9. `.well-known` interface drift surface
+## 9. Interface Drift Surface (`finger.plan.wasm` first)
 
-This repo SHOULD maintain a `.well-known` directory at the repository root for interface drift detection.
-
-This is a transitional export surface, not the primary disclosure surface.
+This repo SHOULD use `finger.plan.wasm` (compact `.plan` wire emitted from sparse Merkin tree posture) as the canonical machine drift surface.
 
 Preferred layering:
 
-- `finger.plan` exposes compact AI-facing posture
-- `.well-known` mirrors interface/version drift facts for external tooling
-- `.pr1`, APP stores, and capability stores retain the deeper runtime/auth material
+- `finger.plan.wasm` exposes compact AI-facing posture + cross-repo drift commitment
+- `.well-known` remains a compatibility mirror for existing external tooling
+- `.pr1`, APP stores, and capability stores retain deeper runtime/auth material
 
-Recommended files:
+Canonical producer surfaces:
+
+- wasm export: `plan_finger_wasm(tokens_csv, peer_refs_csv)`
+- daemon CLI: `moon run cmd/main -- daemon yata wasm-plan ...`
+
+Compatibility mirrors:
 
 - `/.well-known/mu-interface.json`
 - `/.well-known/procsi-sections.json`
 - `/.well-known/interface-drift-policy.md`
 
-Purpose:
-
-- give external consumers one canonical place to inspect interface versions
-- force interface-affecting changes to update manifest files
-- make disjointed interfaces visible during review
-
 Required rule:
 
-- any change to canonical mu contract, solve surface, procsi section layout, or drift policy MUST update the relevant `.well-known` file in the same change
+- any change to canonical mu contract, solve surface, procsi section layout, or drift policy MUST update the emitted `finger.plan.wasm` surface and any maintained `.well-known` mirrors in the same change
 
 ---
 

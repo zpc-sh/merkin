@@ -60,6 +60,57 @@ pub fn tree_sparse(tokens_csv : String) -> String {
 }
 
 ///|
+/// plan_finger_wasm: compact `.plan` wire with drift coordination fields.
+/// slot 1: sparse tokens csv
+/// slot 2: peer refs csv (for example: `mu:abc,muyata:def`)
+pub fn plan_finger_wasm(tokens_csv : String, peer_refs_csv : String) -> String {
+  @api.plan_finger_wasm(tokens_csv, peer_refs_csv)
+}
+
+///|
+/// Deterministic drift commitment from sparse-tree projection + peers.
+pub fn plan_drift_commitment(tokens_csv : String, peer_refs_csv : String) -> String {
+  @api.plan_drift_commitment(tokens_csv, peer_refs_csv)
+}
+
+///|
+/// triad_abi_status: checks required Mu-facing WASM exports.
+/// Returns `ok` or `missing:<csv>`.
+pub fn triad_abi_status(wasm_exports_csv : String) -> String {
+  @api.triad_abi_status(wasm_exports_csv)
+}
+
+///|
+/// triad_contract_wasm: emits canonical triad drift contract JSON.
+pub fn triad_contract_wasm(
+  tokens_csv : String,
+  peer_refs_csv : String,
+  merkin_head : String,
+  mu_head : String,
+  lang_head : String,
+  merkin_branch_raw : String,
+  mu_branch_raw : String,
+  lang_branch_raw : String,
+  wasm_exports_csv : String,
+  generated_at_utc : String,
+  contract_version : String,
+) -> String {
+  @api.triad_contract_wasm(
+    tokens_csv,
+    peer_refs_csv,
+    merkin_head,
+    mu_head,
+    lang_head,
+    merkin_branch_raw,
+    mu_branch_raw,
+    lang_branch_raw,
+    wasm_exports_csv,
+    generated_at_utc,
+    contract_version,
+  )
+}
+
+///|
 /// tree_seal: freeze current epoch, return root hash.
 pub fn tree_seal() -> String {
   @api.tree_seal()
@@ -265,6 +316,24 @@ pub fn lm_tree_ingest() -> Unit {
 ///  Writes "node_count=N\nroot=<key>" to output buffer.
 pub fn lm_tree_sparse() -> Unit {
   lm_encode(@api.tree_sparse(lm_decode(lm_s1, lm_s1_len.val)))
+}
+
+///|
+/// plan_finger_wasm — tokens_csv in slot 1, peer_refs_csv in slot 2.
+/// Writes `.plan` wire to output buffer.
+pub fn lm_plan_finger_wasm() -> Unit {
+  let tokens_csv = lm_decode(lm_s1, lm_s1_len.val)
+  let peer_refs_csv = lm_decode(lm_s2, lm_s2_len.val)
+  lm_encode(@api.plan_finger_wasm(tokens_csv, peer_refs_csv))
+}
+
+///|
+/// plan_drift_commitment — tokens_csv in slot 1, peer_refs_csv in slot 2.
+/// Writes deterministic drift hash key to output buffer.
+pub fn lm_plan_drift_commitment() -> Unit {
+  let tokens_csv = lm_decode(lm_s1, lm_s1_len.val)
+  let peer_refs_csv = lm_decode(lm_s2, lm_s2_len.val)
+  lm_encode(@api.plan_drift_commitment(tokens_csv, peer_refs_csv))
 }
 
 ///|

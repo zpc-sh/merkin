@@ -6,12 +6,12 @@ This guide organizes Merkin as a library, with practical entrypoints.
 
 If you're embedding Merkin into another project, there are two common paths:
 
-1. **Lazy Merkle-like path** (minimum moving parts)
+1. **Lazy tree path** (minimum moving parts)
 2. **Full substrate path** (envelopes, policy, daemon, conversation)
 
 ---
 
-## 1) Lazy Merkle-like usage path
+## 1) Lazy tree usage path
 
 This is the "most lazy approach" requested for first adoption.
 
@@ -32,7 +32,7 @@ ignore(tree.ingest(envelope_id, ["default", "blob"]))
 let sealed = tree.seal()
 ```
 
-### Why this is "Merkle-like"
+### Why this is the minimal tree path
 
 - You can treat `envelope_id` as your content-addressed leaf id.
 - Sealing creates a deterministic epoch boundary and frozen node state.
@@ -100,4 +100,60 @@ Core operations:
 
 - Use **library APIs** when embedding in services or internal runtimes.
 - Use **CLI** for operational runs, CI checks, and manual diagnostics.
-- You can start with the lazy Merkle-like path and incrementally adopt policy/daemon/Yata layers.
+- You can start with the lazy tree path and incrementally adopt policy/daemon/Yata layers.
+
+---
+
+## 6) Triad contract import path
+
+If another repo needs machine-readable synchronization state for `merkin` + `mu` + `lang`, import:
+
+- `zpc/merkin/triad`
+
+Dependency wiring example:
+
+```json
+{
+  "deps": {
+    "zpc/merkin": { "path": "../merkin" }
+  }
+}
+```
+
+Package import:
+
+```moonbit
+import {
+  "zpc/merkin/triad" @triad,
+}
+```
+
+Core typed entrypoints:
+
+- `@triad.seed_sparse_tree(routes, seal)`
+- `@triad.abi_expected_exports()`
+- `@triad.abi_status(exports)`
+- `@triad.emit_contract(input)`
+
+Minimal example:
+
+```moonbit
+let pins = @triad.TriadRepoPins::new(
+  "merkin-head",
+  "mu-head",
+  "lang-head",
+  "main",
+  "main",
+  "main",
+)
+@triad.seed_sparse_tree([["alpha", "doc"]], true)
+let input = @triad.TriadContractInput::new(
+  ["alpha"],
+  ["mu:abc", "lang:def"],
+  @triad.abi_expected_exports(),
+  "2026-04-14T12:00:00Z",
+  "v0.1",
+  pins,
+)
+let json = @triad.emit_contract(input)
+```

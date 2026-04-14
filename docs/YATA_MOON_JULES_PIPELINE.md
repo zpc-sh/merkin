@@ -44,38 +44,12 @@ tools/yata-jules-recursive-test.sh \
   --max-rounds 3
 ```
 
-Compile pipeline outputs into cognitive semantic IR/FSM (`v0.3`):
+The cognitive compiler/FSM/distributed planner commands are intentionally
+de-scoped from the active workflow. This pipeline now focuses on:
 
-```bash
-tools/cognitive-semantic-compile-v0_3.sh
-```
-
-Emit cognitive + distributed planner artifacts in one command:
-
-```bash
-tools/cognitive-semantic-compile-v0_3.sh \
-  --emit-distributed \
-  --distributed-shards 16 \
-  --distributed-replicas 2 \
-  --distributed-max-inflight-per-shard 64
-```
-
-Compile distributed planner artifacts (shards/lanes/capacity) from cognitive outputs:
-
-```bash
-tools/cognitive-distributed-plan-v0_3.sh \
-  --compiler-out-dir _build/cognitive/v0.3/latest \
-  --shards 16 \
-  --replicas 2 \
-  --max-inflight-per-shard 64
-```
-
-Estimate offload and typed-hole additive measurements from compiler summaries:
-
-```bash
-tools/cognitive-offload-measure-v0_3.sh \
-  --summary-file _build/cognitive/v0.3/latest/summary.txt
-```
+- `moon build` diagnostics capture
+- Yata `.plan` emission
+- Jules task generation and callback orchestration
 
 Override callback metadata (no hook required):
 
@@ -218,8 +192,10 @@ Required env for `jules-mcp` mode:
 - `AI_JULES_MCP_STATUS_CMD` (shell command; last line must be JSON like `{"done":...,"ok":...,"state":"...","detail":"..."}`)
 - `AI_JULES_MCP_CANCEL_CMD` (shell command; last line must be JSON like `{"done":...,"ok":...,"state":"...","detail":"..."}`)
 
-For the full `v0.3` architecture (multi-FSM compiler over Merkin tree + Yata), see `docs/COGNITIVE_SEMANTIC_COMPILER_v0.3.md`.
-
-For distributed network design and scaling strategy, see `docs/COGNITIVE_SEMANTIC_COMPILER_DISTRIBUTED_v0.3.md`.
+The `v0.3` cognitive compiler documents are kept for historical reference only and are not part of the active implementation roadmap.
 
 For provider-neutral adapter response/dispatch contract (`submit/status/cancel`), see `docs/AI_PROVIDER_ADAPTER_CONTRACT_v0.3.md`.
+
+For a curated Mu language compiler/runtime handoff bundle, see:
+
+- `docs/MU_LANG_COMPILER_HANDOFF.md`

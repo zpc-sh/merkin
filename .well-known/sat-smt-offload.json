@@ -1,0 +1,9 @@
+{
+  "kind": "merkin.sat_smt.offload",
+  "version": "0.1-draft",
+  "sat_smt_offloaded": true,
+  "solve_kind": "smt",
+  "solve_report_offloaded_to": "mu.local.z3",
+  "proof_surface": "moon prove",
+  "proof_entrypoint": "tools/moon-prove-offloaded.sh storage"
+}

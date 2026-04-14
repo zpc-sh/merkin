@@ -31,9 +31,8 @@ moon run cmd/main -- daemon conv replay --hall saba --topic debate --seed-non-re
 moon run cmd/main -- daemon conv embed --file-ref docs/sample.bin --embedding-action flip-aot --embedding-count 3
 moon run cmd/main -- daemon conv embed-purge --purge-after-turns 1 --current-turn-seq 2
 moon run cmd/main -- daemon yata topology --yata-branch-factor 5 --yata-max-children 3
-moon run cmd/main -- daemon cognitive compile --mode markup --emit-distributed true --distributed-shards 16
-moon run cmd/main -- daemon cognitive distributed --compiler-out-dir _build/cognitive/v0.3/latest --distributed-shards 16
-moon run cmd/main -- daemon cognitive measure --summary-file _build/cognitive/v0.3/latest/summary.txt
+moon run cmd/main -- daemon yata wasm-plan --routes alpha/doc,beta/doc --tokens alpha --drift-peers mu:abc,muyata:def
+moon run cmd/main -- daemon yata triad-contract --routes alpha/doc,beta/doc --tokens alpha --drift-peers mu:abc,lang:def --merkin-head aaa --mu-head bbb --lang-head ccc
 moon run cmd/main -- daemon adapter validate --action status --file /tmp/adapter.json
 
 # Legacy
@@ -54,8 +53,8 @@ moon run cmd/main -- daemon --action demo --mode receiver
 - `oci`: `capabilities | put`
 - `tree`: `sparse | diff`
 - `conv`: `turn | replay | embed | embed-purge`
-- `yata`: `topology`
-- `cognitive`: `compile | distributed | measure`
+- `yata`: `topology | wasm-plan | triad-contract`
+- `cognitive`: `compile | distributed | measure` (legacy bridge-only, de-scoped from active roadmap)
 - `adapter`: `validate`
 
 ## Flags
@@ -102,6 +101,17 @@ moon run cmd/main -- daemon --action demo --mode receiver
 - `--yata-detached-depth`: synthetic detached chain length for topology diagnostics
 - `--yata-max-children`: threshold used by overbranch hotspot detection
 - `--yata-max-depth`: traversal depth bound for detached-hole detection
+- `--drift-peers`: two peer refs for drift coordination in `yata wasm-plan` and `yata triad-contract` (`<peer-a>,<peer-b>`)
+- `--seal`: `true | false` pre-seal synthetic sparse tree before `yata wasm-plan` or `yata triad-contract`
+- `--merkin-head`: Merkin git head pin for `yata triad-contract`
+- `--mu-head`: Mu git head pin for `yata triad-contract`
+- `--lang-head`: lang git head pin for `yata triad-contract`
+- `--merkin-branch`: raw Merkin branch string for byte-level ghost audit in `yata triad-contract`
+- `--mu-branch`: raw Mu branch string for byte-level ghost audit in `yata triad-contract`
+- `--lang-branch`: raw lang branch string for byte-level ghost audit in `yata triad-contract`
+- `--wasm-exports`: comma-separated Merkin wasm export list for ABI checks in `yata triad-contract`
+- `--generated-at-utc`: RFC3339 generation timestamp for `yata triad-contract`
+- `--contract-version`: contract schema version label for `yata triad-contract`
 - `--emit-distributed`: `true | false` for `cognitive compile` bridge
 - `--distributed-out-dir`: output dir for distributed planner bridge
 - `--distributed-cluster-name`: cluster name for distributed planner bridge
@@ -122,12 +132,23 @@ moon run cmd/main -- daemon --action demo --mode receiver
 
 ## Bridge Commands
 
-`cognitive` and `adapter` categories currently run as bridge emitters from `cmd/main`:
+`adapter` category currently runs as a bridge emitter from `cmd/main`:
 
 - they print `status=bridge_only`
 - they emit `bridge_command=...` for the shell tool to execute
 
-This keeps the CLI categorical and stable while full native runtime integration is synthesized.
+`cognitive` bridge commands are retained for compatibility only and are not part of the active implementation roadmap.
+Use `tools/moon-build-yata-jules.sh` for the active compiler-diagnostics workflow.
+
+Cross-repo drift helper for `finger.plan.wasm`:
+
+- `tools/yata-wasm-plan-drift-sync.sh`
+- `make wasm-plan-drift`
+
+Cross-repo triad contract helper for Merkin + Mu + lang:
+
+- `tools/yata-triad-contract-sync.sh`
+- `make triad-contract-sync`
 
 ## Mode Semantics
 

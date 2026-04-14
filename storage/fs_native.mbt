@@ -117,11 +117,11 @@ fn fs_read_file(path : String) -> Bytes? {
       break
     }
     // Copy the read bytes
-    let chunk = Bytes::new(n)
+    let chunk_buf = FixedArray::make(n, b'\x00')
     for i = 0; i < n; i = i + 1 {
-      chunk[i] = buf[i]
+      chunk_buf[i] = buf[i]
     }
-    chunks.push(chunk)
+    chunks.push(Bytes::from_array(chunk_buf))
     total = total + n
   }
   ignore(c_close(fd))
@@ -129,15 +129,15 @@ fn fs_read_file(path : String) -> Bytes? {
     return Some(Bytes::new(0))
   }
   // Concatenate chunks
-  let result = Bytes::new(total)
+  let result_buf = FixedArray::make(total, b'\x00')
   let mut offset = 0
   for chunk in chunks {
     for i = 0; i < chunk.length(); i = i + 1 {
-      result[offset] = chunk[i]
+      result_buf[offset] = chunk[i]
       offset = offset + 1
     }
   }
-  Some(result)
+  Some(Bytes::from_array(result_buf))
 }
 
 ///|

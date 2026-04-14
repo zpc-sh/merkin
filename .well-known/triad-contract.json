@@ -1,0 +1,19 @@
+{
+  "kind": "merkin.triad.contract.mirror",
+  "version": "0.1-draft",
+  "canonical_spec": "docs/TRIAD_CONTRACT_SPEC.md",
+  "primary_surface": "finger.plan.wasm",
+  "generated_contract_path": "_build/yata/triad/latest/triad-contract.json",
+  "generator_command": "make triad-contract-sync",
+  "required_wasm_exports": [
+    "plan_finger_wasm",
+    "plan_drift_commitment",
+    "triad_contract_wasm"
+  ],
+  "branch_ghost_bytes": [
+    "U+200B",
+    "U+200C",
+    "U+FEFF"
+  ],
+  "drift_rule": "Changes to triad repo pinning, ghost-byte branch handling, or required Merkin wasm exports must update the generated triad contract and this compatibility mirror in the same change."
+}

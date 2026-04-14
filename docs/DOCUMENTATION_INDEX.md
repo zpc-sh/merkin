@@ -2,9 +2,11 @@
 
 This file is the top-level map for Merkin documentation.
 
+Active scope and de-scoped tracks: `docs/ROADMAP_SCOPE.md`.
+
 ## 1) Start here by intent
 
-### I just want a simple Merkle-tree-like flow (lazy mode)
+### I just want a simple tree-sealing flow (lazy mode)
 
 Use:
 
@@ -14,7 +16,7 @@ Use:
 
 Read first:
 
-- `docs/LIBRARY_API_GUIDE.md` (section: **Lazy Merkle-like usage path**)
+- `docs/LIBRARY_API_GUIDE.md` (section: **Lazy tree usage path**)
 - `tree/tree.mbt`
 - `tree/node.mbt`
 
@@ -26,8 +28,6 @@ Use:
 - `docs/DAEMON_CLI.md`
 - `docs/YATA_MOON_JULES_PIPELINE.md`
 - `docs/AI_PROVIDER_ADAPTER_CONTRACT_v0.3.md`
-- `docs/COGNITIVE_SEMANTIC_COMPILER_v0.3.md`
-- `docs/COGNITIVE_SEMANTIC_COMPILER_DISTRIBUTED_v0.3.md`
 
 Actions include:
 
@@ -36,8 +36,8 @@ Actions include:
 - conversational host workflows
 - Yata topology diagnostics (`--action yata-topology`)
 - moon compiler bug ingestion into Yata + Jules tasks
-- cognitive semantic compiler (`v0.3`) IR/FSM emission
-- offload and typed-hole additive measurement emission
+- WASM `finger.plan` emission for cross-repo drift coordination (`--action yata-wasm-plan`)
+- triad contract emission for Merkin/Mu/lang coordination (`--action yata-triad-contract`)
 
 ### I need protocol/spec contracts
 
@@ -55,8 +55,19 @@ Use:
 - `docs/MUYATA_SPEC.md`
 - `docs/YATA_COGNITIVE_ENVELOPE_DESIGN.md`
 - `docs/AI_PROVIDER_ADAPTER_CONTRACT_v0.3.md`
-- `docs/COGNITIVE_SEMANTIC_COMPILER_v0.3.md`
-- `docs/COGNITIVE_SEMANTIC_COMPILER_DISTRIBUTED_v0.3.md`
+- `docs/TRIAD_CONTRACT_SPEC.md`
+
+### I need to hand off compiler docs to the Mu language project
+
+Use:
+
+- `docs/MU_LANG_COMPILER_HANDOFF.md`
+- `docs/MU_LANG_COMPILER_HANDOFF_MANIFEST.txt`
+- `make mu-lang-handoff`
+
+The generated transfer bundle lands at:
+
+- `_build/handoff/mu-lang-compiler-docs/latest/merkin-mu-lang-compiler-docs.tar.gz`
 
 ---
 
@@ -70,6 +81,7 @@ Use:
 - `store/` — basic in-memory artifact store
 - `storage/` — policy, queue, OCI, union store
 - `daemon/` — daemon runtime and conversation host
+- `triad/` — import-friendly triad contract wrapper for Merkin/Mu/lang sync
 - `conformance/` — core and optional profile tests/bench
 
 ---
@@ -101,8 +113,11 @@ Detailed examples: `docs/LIBRARY_API_GUIDE.md`.
 
 ---
 
-## 5) Well-Known Interface Surface
+## 5) Drift Surface
 
+- `finger.plan.wasm` (via `moon run cmd/main -- daemon yata wasm-plan ...`)
+- `triad-contract.json` (via `moon run cmd/main -- daemon yata triad-contract ...`)
 - `/.well-known/mu-interface.json`
 - `/.well-known/procsi-sections.json`
 - `/.well-known/interface-drift-policy.md`
+- `/.well-known/triad-contract.json`

@@ -114,7 +114,7 @@ pub fn Imprint::new(
     source, kind, surface_projection, route_projection, contract_graph, parent_imprint,
     horizon, mode, confidence,
   )
-  let imprint_id = @hash.Hash::of_bytes(string_to_bytes(material))
+  let imprint_id = @hash.Hash::of_bytes(imprint_string_to_bytes(material))
   {
     imprint_id,
     source,
@@ -261,7 +261,7 @@ fn mode_to_tag(mode : MirageMode) -> String {
 }
 
 ///|
-fn string_to_bytes(s : String) -> Bytes {
+fn imprint_string_to_bytes(s : String) -> Bytes {
   let mut total = 0
   for _ch in s {
     total = total + 4

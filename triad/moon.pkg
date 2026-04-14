@@ -1,0 +1,3 @@
+import {
+  "zpc/merkin/api" @api,
+}

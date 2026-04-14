@@ -1,4 +1,5 @@
 import {
+  "zpc/merkin/api" @api,
   "moonbitlang/core/env" @env,
   "zpc/merkin/daemon" @daemon,
   "zpc/merkin/hash" @hash,

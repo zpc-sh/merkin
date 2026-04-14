@@ -25,5 +25,5 @@
       "payload_versioning": "v1-fixed-layout"
     }
   ],
-  "drift_rule": "Any change to .mks, .prc, or .pr1 binary layout, validation, or semantics must update this file and the canonical mu spec together."
+  "drift_rule": "Any change to .mks, .prc, or .pr1 binary layout, validation, or semantics must update finger.plan.wasm plus this compatibility mirror and the canonical mu spec together."
 }

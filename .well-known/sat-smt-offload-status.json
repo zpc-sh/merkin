@@ -1,0 +1,10 @@
+{
+  "kind": "merkin.sat_smt.offload.status",
+  "sat_smt_offloaded": true,
+  "solve_kind": "smt",
+  "solve_report_offloaded_to": "mu.local.z3",
+  "solver_path": "/home/locnguyen/ratio/merkin/tools/solver/z3-4.13.0-x64-glibc-2.35/bin/z3",
+  "solver_version": "Z3 version 4.13.0 - 64 bit",
+  "moon_prove": "failed",
+  "reason": "why3_harness has no configured provers available"
+}

@@ -1,5 +1,7 @@
 # Cognitive Semantic Compiler (v0.3-draft)
 
+> Status: archived/de-scoped. This document is not part of the active implementation roadmap.
+
 This document defines a `v0.3` cognitive semantic compiler for Merkin.
 
 The goal is to stay ahead of active AI work by compiling runtime signals (compiler diagnostics, Yata state, delegation status, provenance, embeddings) into a deterministic semantic control plane.

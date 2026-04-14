@@ -1,5 +1,7 @@
 # Cognitive Semantic Compiler Distributed Network (v0.3-draft)
 
+> Status: archived/de-scoped. This document is not part of the active implementation roadmap.
+
 This document expands `v0.3` into a distributed compiler network for large-scale, recursive AI-assisted maintenance.
 
 It is designed to keep cognitive compilation feasible when total work includes both:

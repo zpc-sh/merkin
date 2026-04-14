@@ -527,6 +527,8 @@ fn main {
         parse_uint(value_after(args, "--yata-max-children", "2"), 2U),
         parse_uint(value_after(args, "--yata-max-depth", "8"), 8U),
       )
+    "yata-wasm-plan" => run_yata_wasm_plan(args)
+    "yata-triad-contract" => run_yata_triad_contract(args)
     _ => {
       // demo: put then read
       let payload = b"demo-payload"
@@ -577,7 +579,7 @@ fn print_usage() -> Unit {
   println("  oci: capabilities | put")
   println("  tree: sparse | diff")
   println("  conv: turn | replay | embed | embed-purge")
-  println("  yata: topology")
+  println("  yata: topology | wasm-plan | triad-contract")
   println("  cognitive: compile | distributed | measure")
   println("  adapter: validate")
   println("")
@@ -606,6 +608,12 @@ fn print_usage() -> Unit {
   )
   println(
     "  moon run cmd/main -- daemon yata topology --yata-branch-factor 5 --yata-max-children 3",
+  )
+  println(
+    "  moon run cmd/main -- daemon yata wasm-plan --routes alpha/doc,beta/doc --tokens alpha --drift-peers mu:abc,muyata:def",
+  )
+  println(
+    "  moon run cmd/main -- daemon yata triad-contract --routes alpha/doc,beta/doc --tokens alpha --drift-peers mu:abc,lang:def --merkin-head aaa --mu-head bbb --lang-head ccc",
   )
   println(
     "  moon run cmd/main -- daemon cognitive compile --mode markup --emit-distributed true",
@@ -649,9 +657,15 @@ fn print_usage() -> Unit {
   println(
     "  moon run cmd/main -- daemon --action yata-topology --yata-branch-factor 5 --yata-max-children 3",
   )
+  println(
+    "  moon run cmd/main -- daemon --action yata-wasm-plan --routes alpha/doc,beta/doc --tokens alpha --drift-peers mu:abc,muyata:def",
+  )
+  println(
+    "  moon run cmd/main -- daemon --action yata-triad-contract --routes alpha/doc,beta/doc --tokens alpha --drift-peers mu:abc,lang:def --merkin-head aaa --mu-head bbb --lang-head ccc",
+  )
   println("Flags:")
   println(
-    "  --action capabilities|put|sparse|diff|conv-turn|conv-replay|conv-embed|conv-embed-purge|conv-plan|yata-topology|demo",
+    "  --action capabilities|put|sparse|diff|conv-turn|conv-replay|conv-embed|conv-embed-purge|conv-plan|yata-topology|yata-wasm-plan|yata-triad-contract|demo",
   )
   println("  --mode receiver|proxy|passthrough|hybrid")
   println("  --node-id <id>")
@@ -711,6 +725,17 @@ fn print_usage() -> Unit {
   println("  --yata-detached-depth <uint> (for yata-topology)")
   println("  --yata-max-children <uint> (for yata-topology)")
   println("  --yata-max-depth <uint> (for yata-topology)")
+  println("  --drift-peers <peer-a,peer-b> (for yata-wasm-plan/yata-triad-contract)")
+  println("  --seal true|false (for yata-wasm-plan/yata-triad-contract)")
+  println("  --merkin-head <git-head> (for yata-triad-contract)")
+  println("  --mu-head <git-head> (for yata-triad-contract)")
+  println("  --lang-head <git-head> (for yata-triad-contract)")
+  println("  --merkin-branch <branch> (for yata-triad-contract)")
+  println("  --mu-branch <branch> (for yata-triad-contract)")
+  println("  --lang-branch <branch> (for yata-triad-contract)")
+  println("  --wasm-exports <csv> (for yata-triad-contract)")
+  println("  --generated-at-utc <rfc3339> (for yata-triad-contract)")
+  println("  --contract-version <text> (for yata-triad-contract)")
   println("  --emit-distributed true|false (for cognitive compile bridge)")
   println("  --distributed-out-dir <dir> (for cognitive compile bridge)")
   println("  --distributed-cluster-name <name> (for cognitive compile bridge)")
@@ -812,6 +837,8 @@ fn map_conv_action(value : String) -> String {
 fn map_yata_action(value : String) -> String {
   match value {
     "topology" => "yata-topology"
+    "wasm-plan" => "yata-wasm-plan"
+    "triad-contract" => "yata-triad-contract"
     _ => "yata-topology"
   }
 }
@@ -846,6 +873,8 @@ fn normalize_direct_action(value : String) -> String {
     "conv-embed" => "conv-embed"
     "conv-embed-purge" => "conv-embed-purge"
     "yata-topology" => "yata-topology"
+    "yata-wasm-plan" => "yata-wasm-plan"
+    "yata-triad-contract" => "yata-triad-contract"
     "cognitive-compile" => "cognitive-compile"
     "cognitive-distributed" => "cognitive-distributed"
     "cognitive-measure" => "cognitive-measure"
@@ -855,6 +884,8 @@ fn normalize_direct_action(value : String) -> String {
     "embed" => "conv-embed"
     "embed-purge" => "conv-embed-purge"
     "topology" => "yata-topology"
+    "wasm-plan" => "yata-wasm-plan"
+    "triad-contract" => "yata-triad-contract"
     "compile" => "cognitive-compile"
     "distributed" => "cognitive-distributed"
     "measure" => "cognitive-measure"
@@ -1259,6 +1290,18 @@ fn path_to_string(path : Array[String]) -> String {
 }
 
 ///|
+fn path_to_csv(path : Array[String]) -> String {
+  let out = StringBuilder::new(size_hint=64)
+  for i = 0; i < path.length(); i = i + 1 {
+    if i > 0 {
+      out.write_char(',')
+    }
+    out.write_string(path[i])
+  }
+  out.to_string()
+}
+
+///|
 fn seed_routes(
   daemon : @daemon.DaemonNode,
   routes : Array[Array[String]],
@@ -1278,6 +1321,96 @@ fn seed_routes(
       }),
     )
   }
+}
+
+///|
+fn run_yata_wasm_plan(args : Array[String]) -> Unit {
+  let routes = parse_routes(value_after(args, "--routes", "alpha/doc,beta/doc"))
+  let tokens_csv = value_after(args, "--tokens", "alpha")
+  let drift_peers = value_after(
+    args, "--drift-peers", "mu:unknown,muyata:unknown",
+  )
+  let should_seal = parse_bool(value_after(args, "--seal", "true"), true)
+
+  @api.reset()
+  for i = 0; i < routes.length(); i = i + 1 {
+    let route = routes[i]
+    let route_path = path_to_string(route)
+    let envelope_id = "route:\{i}:\{route_path}"
+    ignore(@api.tree_ingest(envelope_id, path_to_csv(route)))
+  }
+  if should_seal {
+    ignore(@api.tree_seal())
+  }
+
+  let drift = @api.plan_drift_commitment(tokens_csv, drift_peers)
+  let wire = @api.plan_finger_wasm(tokens_csv, drift_peers)
+
+  println("wasm_plan=true")
+  println("route_count=\{routes.length()}")
+  println("tokens=\{tokens_csv}")
+  println("drift_peers=\{drift_peers}")
+  println("drift_commitment=\{drift}")
+  println(wire)
+}
+
+///|
+fn run_yata_triad_contract(args : Array[String]) -> Unit {
+  let routes = parse_routes(value_after(args, "--routes", "alpha/doc,beta/doc"))
+  let tokens_csv = value_after(args, "--tokens", "alpha")
+  let drift_peers = value_after(
+    args, "--drift-peers", "mu:unknown,muyata:unknown",
+  )
+  let should_seal = parse_bool(value_after(args, "--seal", "true"), true)
+
+  let merkin_head = value_after(args, "--merkin-head", "unknown")
+  let mu_head = value_after(args, "--mu-head", "unknown")
+  let lang_head = value_after(args, "--lang-head", "unknown")
+  let merkin_branch = value_after(args, "--merkin-branch", "unknown")
+  let mu_branch = value_after(args, "--mu-branch", "unknown")
+  let lang_branch = value_after(args, "--lang-branch", "unknown")
+  let wasm_exports_csv = value_after(
+    args,
+    "--wasm-exports",
+    "plan_finger_wasm,plan_drift_commitment,triad_contract_wasm",
+  )
+  let generated_at_utc = value_after(args, "--generated-at-utc", "unknown")
+  let contract_version = value_after(args, "--contract-version", "v0.1")
+
+  @api.reset()
+  for i = 0; i < routes.length(); i = i + 1 {
+    let route = routes[i]
+    let route_path = path_to_string(route)
+    let envelope_id = "route:\{i}:\{route_path}"
+    ignore(@api.tree_ingest(envelope_id, path_to_csv(route)))
+  }
+  if should_seal {
+    ignore(@api.tree_seal())
+  }
+
+  let drift = @api.plan_drift_commitment(tokens_csv, drift_peers)
+  let abi_status = @api.triad_abi_status(wasm_exports_csv)
+  let contract = @api.triad_contract_wasm(
+    tokens_csv,
+    drift_peers,
+    merkin_head,
+    mu_head,
+    lang_head,
+    merkin_branch,
+    mu_branch,
+    lang_branch,
+    wasm_exports_csv,
+    generated_at_utc,
+    contract_version,
+  )
+
+  println("triad_contract=true")
+  println("route_count=\{routes.length()}")
+  println("tokens=\{tokens_csv}")
+  println("drift_peers=\{drift_peers}")
+  println("drift_commitment=\{drift}")
+  println("abi_status=\{abi_status}")
+  println(contract)
 }
 
 ///|

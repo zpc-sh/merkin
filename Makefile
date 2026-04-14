@@ -6,7 +6,7 @@ MUYATA_PRIV := ../lang/muyata/priv
 WASM_GC_OUT := _build/wasm-gc/release/build/wasm_entry/wasm_entry.wasm
 WASM_OUT    := _build/wasm/release/build/wasm_entry/wasm_entry.wasm
 
-.PHONY: all wasm-gc wasm priv check clean
+.PHONY: all wasm-gc wasm priv check test test-yata prove-offloaded mu-lang-handoff wasm-plan-drift triad-contract-sync clean
 
 # Default: build wasm-gc (Popcorn/AtomVM target)
 all: wasm-gc
@@ -40,6 +40,28 @@ check:
 # Build and run tests
 test:
 	moon test --target wasm-gc
+
+# Focused Yata verification suite
+test-yata:
+	moon test model/yata_test.mbt --target wasm-gc
+	moon test model/yata_protocol_test.mbt --target wasm-gc
+	moon test model/yata_addressing_test.mbt --target wasm-gc
+
+# SAT/SMT offloaded proof runner (Moon + external solver)
+prove-offloaded:
+	tools/moon-prove-offloaded.sh storage
+
+# Curated compiler/runtime docs bundle for Mu language handoff
+mu-lang-handoff:
+	tools/mu-lang-compiler-docs-bundle.sh
+
+# Emit finger.plan.wasm + drift summary using sibling repo refs
+wasm-plan-drift:
+	tools/yata-wasm-plan-drift-sync.sh
+
+# Emit triad contract JSON + ABI/branch drift summary across merkin/mu/lang
+triad-contract-sync:
+	tools/yata-triad-contract-sync.sh
 
 clean:
 	moon clean

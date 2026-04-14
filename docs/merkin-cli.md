@@ -269,6 +269,6 @@ As repo-scale procsi, repository cognitive containers, and `mulsp(mulsp)` compos
 
 - `ratio` becomes the natural home of repository OCI/UKI cognitive container control
 - `genius` becomes the natural home of AI attach/inhabit/emit behavior, procsi attestation, and APP-masked identity
-- `.well-known` remains a transitional export surface rather than source of truth
+- `finger.plan.wasm` becomes the primary machine drift surface; `.well-known` remains transitional
 
 Filesystem mode to sparse-tree/procsi mode should remain transparent at the command surface.
