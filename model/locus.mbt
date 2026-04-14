@@ -72,3 +72,22 @@ pub fn Locus::add_affordance(self : Locus, hash_ref : @hash.Hash) -> Locus {
 pub fn locus_subdirs() -> Array[String] {
   ["affordances", "membranes", "schemas", "yata", "residue"]
 }
+
+///|
+/// Check if a locus name is valid (alphanumeric, underscores, dashes).
+pub fn is_valid_locus_name(name : String) -> Bool {
+  if name.length() == 0 {
+    return false
+  }
+  for ch in name {
+    let code = ch.to_uint()
+    let is_alpha_numeric = (code >= 48U && code <= 57U) || // 0-9
+      (code >= 65U && code <= 90U) || // A-Z
+      (code >= 97U && code <= 122U) // a-z
+    let is_special = code == 45U || code == 95U // - and _
+    if !is_alpha_numeric && !is_special {
+      return false
+    }
+  }
+  true
+}
