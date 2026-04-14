@@ -28,6 +28,10 @@ fn run_loci_command(args : Array[String]) -> Unit {
         return
       }
       let name = args[3]
+      if !@model.is_valid_locus_name(name) {
+        println("Error: invalid locus name. Use alphanumeric characters, underscores, and dashes.")
+        return
+      }
       let spirit = value_after(args, "--spirit", "(fill: one-line description)")
       let tags_csv = value_after(args, "--tags", "")
       let tags : Array[String] = if tags_csv == "" {
@@ -71,16 +75,20 @@ fn run_enter_command(args : Array[String]) -> Unit {
     return
   }
   let locus_name = args[2]
+  if !@model.is_valid_locus_name(locus_name) {
+    println("Error: invalid locus name. Use alphanumeric characters, underscores, and dashes.")
+    return
+  }
   let rt = make_runtime(args)
   // In filesystem mode, we read residue files from the locus directory
   // For now, emit the enter preamble with no prior residue
   let preamble = @locus.format_enter_preamble(locus_name, None)
   println(preamble)
-  println("MERKIN_LOCUS=" + locus_name)
-  println("MERKIN_SESSION=" + rt.session.display())
+  println("MERKIN_LOCUS='" + locus_name + "'")
+  println("MERKIN_SESSION='" + rt.session.display() + "'")
   println("")
   println("# To set env in your shell:")
-  println("# eval $(merkin enter " + locus_name + " --export)")
+  println("# eval \"$(merkin enter '" + locus_name + "' --export)\"")
 }
 
 ///|
@@ -91,6 +99,10 @@ fn run_sign_command(args : Array[String]) -> Unit {
   let locus_name = value_after(args, "--locus", "")
   if locus_name == "" {
     println("Error: no locus context. Use --locus <name> or set MERKIN_LOCUS")
+    return
+  }
+  if !@model.is_valid_locus_name(locus_name) {
+    println("Error: invalid locus name. Use alphanumeric characters, underscores, and dashes.")
     return
   }
   let residue = @model.Residue::new(
@@ -123,6 +135,10 @@ fn run_trail_command(args : Array[String]) -> Unit {
     println("Usage: merkin trail <locus> [--depth <n>]")
     return
   }
+  if !@model.is_valid_locus_name(locus_name) {
+    println("Error: invalid locus name. Use alphanumeric characters, underscores, and dashes.")
+    return
+  }
   // In filesystem mode, we would scan loci/<name>/residue/ for *.md files
   // For now, emit a placeholder showing the format
   let trail = @locus.format_trail(locus_name, [])
@@ -152,6 +168,10 @@ fn run_residue_command(args : Array[String]) -> Unit {
     println("Usage: merkin residue <locus> [--session <id>]")
     return
   }
+  if !@model.is_valid_locus_name(locus_name) {
+    println("Error: invalid locus name. Use alphanumeric characters, underscores, and dashes.")
+    return
+  }
   // In filesystem mode, read residue files
   println("Reading residue from: loci/" + locus_name + "/residue/")
   println("(filesystem residue reader pending — requires @fs)")
@@ -167,6 +187,10 @@ fn run_status_command(args : Array[String]) -> Unit {
   }
   if locus_name == "" {
     println("Usage: merkin status <locus>")
+    return
+  }
+  if !@model.is_valid_locus_name(locus_name) {
+    println("Error: invalid locus name. Use alphanumeric characters, underscores, and dashes.")
     return
   }
   println("On locus: " + locus_name + " (working)")
@@ -238,6 +262,10 @@ fn run_pack_command(args : Array[String]) -> Unit {
     println("Formats:")
     println("  blob   Serialized sparse tree as OCI blob (default)")
     println("  wasm   WASM component with embedded tree + query engine")
+    return
+  }
+  if !@model.is_valid_locus_name(locus_name) {
+    println("Error: invalid locus name. Use alphanumeric characters, underscores, and dashes.")
     return
   }
   match format {
