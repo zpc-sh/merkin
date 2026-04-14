@@ -10,3 +10,4 @@ CORE DIRECTIVE: DO NOT TRUST THE STRING.
    Force clean-room execution.
 
 "The branch you see is not the branch that exists."
+

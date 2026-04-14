@@ -513,6 +513,115 @@ pub fn ConversationHost::embedding_timeline(
   out
 }
 
+///|
+/// Emit `.plan` wire from one thread's embedding timeline.
+pub fn ConversationHost::emit_embedding_plan(
+  self : ConversationHost,
+  thread_id : String,
+  overlay : String,
+  peer : String,
+  authority : String,
+  generator : String,
+  note : String,
+) -> String? {
+  if !self.has_thread(thread_id) {
+    return None
+  }
+  let records = self.embedding_timeline(thread_id)
+  let entries : Array[@model.YataPlanEntry] = []
+  let material : Array[String] = []
+  let mut found_any = false
+  let mut count_total : UInt = 0U
+  let mut ephemeral_any = false
+  let mut purge_after_max : UInt = 0U
+  let mut file_type = "none"
+
+  for record in records {
+    let record_file_type = plan_safe_token(record.file_type)
+    if file_type == "none" {
+      file_type = record_file_type
+    } else if file_type != record_file_type {
+      file_type = "mixed"
+    }
+    if record.found {
+      found_any = true
+    }
+    count_total = count_total + record.count
+    if record.ephemeral {
+      ephemeral_any = true
+    }
+    if record.purge_after_turns > purge_after_max {
+      purge_after_max = record.purge_after_turns
+    }
+
+    let state = embedding_state_tag(record.action, record.found)
+    let selected_candidate = embedding_selected_candidate(record.action)
+    let ready = embedding_ready(record.action, record.found)
+    let anchor = plan_safe_token(record.file_ref)
+    let hole_id = @hash.Hash::of_bytes(
+      string_to_bytes(record.thread_id + ":" + record.record_id + ":" + record.file_ref),
+    )
+    entries.push({
+      hole_id,
+      anchor,
+      state,
+      candidate_count: if record.count == 0U { 1U } else { record.count },
+      ready,
+      selected_candidate,
+      provenance: [
+        plan_safe_token("thread:" + record.thread_id),
+        plan_safe_token("turn:" + record.recorded_turn_seq.to_string()),
+        plan_safe_token("action:" + embedding_action_tag(record.action)),
+      ],
+      confidence_floor: if record.found { 70U } else { 95U },
+    })
+    material.push(anchor)
+    material.push(state)
+    material.push(record.count.to_string())
+  }
+
+  let material_wire = if material.length() == 0 {
+    "embedding:none"
+  } else {
+    join_parts(material, ",")
+  }
+  let plan : @model.YataPlan = {
+    track: @model.Program,
+    mode: @model.Full,
+    generator: if generator == "" { "daemon.conversation" } else { generator },
+    note: if note == "" { "conversation embedding timeline" } else { note },
+    material_hash: @hash.Hash::of_bytes(string_to_bytes(material_wire)),
+    self_report: Some({
+      overlay: if overlay == "" { "chatgpt" } else { plan_safe_token(overlay) },
+      peer: if peer == "" { "shared" } else { plan_safe_token(peer) },
+      authority: if authority == "" {
+        "substrate://loc/chatgpt"
+      } else {
+        authority
+      },
+      anchor_hint: plan_safe_token(thread_id),
+      gap: 1U,
+      view_hint: "overlay",
+    }),
+    git_report: None,
+    temporal_delta: Some({
+      delta_turns: self.latest_turn_seq(thread_id).to_int(),
+      delta_bytes: embedding_delta_bytes(records),
+      causal_offset: 0,
+    }),
+    embedding_report: Some({
+      file_type,
+      found: found_any,
+      count: count_total,
+      ephemeral: ephemeral_any,
+      purge_after_turns: purge_after_max,
+      strategy: "thread-embedding-timeline",
+    }),
+    entries,
+  }
+  Some(plan.to_wire())
+}
+
 fn rejected_turn_outcome(issues : Array[ConversationIssue]) -> TurnOutcome {
   {
     accepted: false,
@@ -592,4 +701,81 @@ fn ConversationHost::set_thread_head_checkpoint(
     }
   }
   self.threads = next
+}
+
+fn embedding_state_tag(action : ConversationEmbeddingAction, found : Bool) -> String {
+  if !found {
+    return "embedding-clear"
+  }
+  match action {
+    Observe => "embedding-observed"
+    FlipAot => "embedding-flip-aot"
+    Purge => "embedding-purged"
+  }
+}
+
+fn embedding_action_tag(action : ConversationEmbeddingAction) -> String {
+  match action {
+    Observe => "observe"
+    FlipAot => "flip-aot"
+    Purge => "purge"
+  }
+}
+
+fn embedding_selected_candidate(action : ConversationEmbeddingAction) -> String? {
+  match action {
+    Observe => None
+    FlipAot => Some("flip-aot")
+    Purge => Some("purge")
+  }
+}
+
+fn embedding_ready(action : ConversationEmbeddingAction, found : Bool) -> Bool {
+  if !found {
+    return true
+  }
+  match action {
+    Observe => false
+    FlipAot => true
+    Purge => true
+  }
+}
+
+fn embedding_delta_bytes(records : Array[ThreadEmbeddingRecord]) -> Int {
+  let mut out : Int = 0
+  for record in records {
+    out = out + record.file_ref.length() + record.note.length()
+  }
+  out
+}
+
+fn join_parts(parts : Array[String], separator : String) -> String {
+  let out = StringBuilder::new(size_hint=128)
+  for i = 0; i < parts.length(); i = i + 1 {
+    if i > 0 {
+      out.write_string(separator)
+    }
+    out.write_string(parts[i])
+  }
+  out.to_string()
+}
+
+fn plan_safe_token(raw : String) -> String {
+  if raw == "" {
+    return "none"
+  }
+  let out = StringBuilder::new(size_hint=raw.length())
+  for ch in raw {
+    if ch == ' ' || ch == '\n' || ch == '\t' || ch == '\r' {
+      out.write_char('_')
+    } else {
+      out.write_char(ch)
+    }
+  }
+  let text = out.to_string()
+  if text == "" {
+    "none"
+  } else {
+    text
+  }
 }

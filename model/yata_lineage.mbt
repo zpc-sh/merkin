@@ -153,6 +153,91 @@ pub fn YataGraph::transitive_ancestry(self : YataGraph, root : @hash.Hash, max_d
 }
 
 ///|
+/// Count direct dependents (reverse edges) for a single hole.
+pub fn YataGraph::child_fanout(self : YataGraph, parent_id : @hash.Hash) -> UInt {
+  let mut count : UInt = 0U
+  for hole in self.holes {
+    if array_contains_hash(hole.dependencies, parent_id) {
+      count = count + 1U
+    }
+  }
+  count
+}
+
+///|
+/// Maximum reverse-branching pressure observed in the graph.
+pub fn YataGraph::max_branch_fanout(self : YataGraph) -> UInt {
+  let mut max : UInt = 0U
+  for hole in self.holes {
+    let fanout = self.child_fanout(hole.hole_id)
+    if fanout > max {
+      max = fanout
+    }
+  }
+  max
+}
+
+///|
+/// Return holes whose reverse fanout exceeds `max_children`.
+/// Useful to identify balancing hotspots in large Yata graphs.
+pub fn YataGraph::overbranched(self : YataGraph, max_children : UInt) -> Array[YataHole] {
+  let out : Array[YataHole] = []
+  for hole in self.holes {
+    let fanout = self.child_fanout(hole.hole_id)
+    if fanout > max_children {
+      out.push(hole)
+    }
+  }
+  out
+}
+
+///|
+/// Return holes that reference dependencies missing from this graph.
+pub fn YataGraph::holes_with_missing_dependencies(self : YataGraph) -> Array[YataHole] {
+  let out : Array[YataHole] = []
+  for hole in self.holes {
+    let mut missing = false
+    for dependency in hole.dependencies {
+      match self.get(dependency) {
+        Some(_) => ()
+        None => {
+          missing = true
+        }
+      }
+    }
+    if missing {
+      out.push(hole)
+    }
+  }
+  out
+}
+
+///|
+/// Return holes that do not reach any root (a hole with zero dependencies)
+/// within `max_depth` ancestor traversal.
+pub fn YataGraph::detached_holes(self : YataGraph, max_depth : UInt) -> Array[YataHole] {
+  let out : Array[YataHole] = []
+  for hole in self.holes {
+    let ancestry = self.transitive_ancestry(hole.hole_id, max_depth)
+    let mut attached = false
+    for ancestor_id in ancestry {
+      match self.get(ancestor_id) {
+        Some(ancestor) => {
+          if ancestor.dependencies.length() == 0 {
+            attached = true
+          }
+        }
+        None => ()
+      }
+    }
+    if !attached {
+      out.push(hole)
+    }
+  }
+  out
+}
+
+///|
 /// Replay the causal chain that leads into this hole.
 /// Returns dependencies-first order to permit deterministic forward processing.
 pub fn YataGraph::lineage_replay(self : YataGraph, root : @hash.Hash, max_depth : UInt) -> Array[YataReplayStep] {

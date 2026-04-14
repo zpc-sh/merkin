@@ -1,7 +1,9 @@
 import {
   "moonbitlang/core/env" @env,
-  "nocsi/merkin/daemon" @daemon,
-  "nocsi/merkin/storage" @storage,
+  "zpc/merkin/daemon" @daemon,
+  "zpc/merkin/locus" @locus,
+  "zpc/merkin/model" @model,
+  "zpc/merkin/storage" @storage,
 }
 
 options(
