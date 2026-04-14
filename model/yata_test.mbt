@@ -497,3 +497,17 @@ test "Yata detachment analysis finds missing and rootless chains" {
   assert_true(seen_cycle_b)
   assert_true(!seen_attached)
 }
+
+///|
+test "Yata hole can be abandoned" {
+  let contract = @model.YataContract::new(
+    "TextSummary",
+    ["sorted", "total"],
+    ["read"],
+    42U,
+  )
+  let hole = @model.YataHole::new("notes/overview.md", contract, [], [], [])
+  let abandoned_hole = hole.abandon("Too complex")
+  assert_eq(abandoned_hole.state, @model.Abandoned("Too complex"))
+  assert_eq(abandoned_hole.provenance[abandoned_hole.provenance.length() - 1], "Too complex")
+}
