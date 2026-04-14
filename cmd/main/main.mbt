@@ -14,6 +14,7 @@ fn main {
     "genius" => { run_genius_command(args); return }
     "init" => { run_ratio_alias_command(args); return }
     "loci" => { run_ratio_alias_command(args); return }
+    "app" => { run_ratio_alias_command(args); return }
     "enter" => { run_genius_alias_command(args); return }
     "sign" => { run_genius_alias_command(args); return }
     "trail" => { run_genius_alias_command(args); return }
@@ -446,6 +447,7 @@ fn print_usage() -> Unit {
   println(
     "  loci     → ratio loci",
   )
+  println("  app      → ratio app")
   println("  status   → ratio status")
   println("  pack     → ratio pack")
   println("  enter    → genius enter")
