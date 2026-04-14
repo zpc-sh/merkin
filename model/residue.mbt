@@ -9,7 +9,7 @@
 pub(all) struct Residue {
   /// Locus this residue belongs to.
   locus : String
-  /// Model tier: "haiku", "sonnet", "opus".
+  /// Session surface or tier: "haiku", "sonnet", "opus", "codex", etc.
   tier : String
   /// Short session identifier (e.g., "a7f3c").
   session_short_id : String
@@ -122,7 +122,7 @@ pub fn Residue::to_markdown(self : Residue) -> String {
     b.write_char('\n')
   }
   b.write_char('\n')
-  b.write_string("## Recommendation for next Claude\n")
+  b.write_string("## Recommendation for next AI\n")
   match self.recommendation {
     Some(rec) => b.write_string(rec)
     None => b.write_string("(none)")
@@ -160,7 +160,7 @@ pub fn Residue::from_markdown(locus : String, content : String) -> Residue? {
   }
   let did = extract_list_section(content, "## What I did")
   let left_open = extract_list_section(content, "## What I left open")
-  let rec = extract_section_body(content, "## Recommendation for next Claude")
+  let rec = extract_recommendation_body(content)
   let recommendation = if rec == "" || rec == "(none)" {
     None
   } else {
@@ -239,6 +239,16 @@ fn extract_section_body(content : String, header : String) -> String {
     }
   }
   b.to_string()
+}
+
+///|
+fn extract_recommendation_body(content : String) -> String {
+  let next_ai = extract_section_body(content, "## Recommendation for next AI")
+  if next_ai != "" {
+    next_ai
+  } else {
+    extract_section_body(content, "## Recommendation for next Claude")
+  }
 }
 
 ///|

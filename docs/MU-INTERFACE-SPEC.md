@@ -1,8 +1,14 @@
 # Merkin <-> mu Interface Specification (v0.2)
 
+> Canonical replacement:
+> `docs/MU_RUNTIME_SPEC.md` is now the primary cohesive mu specification.
+>
 > This document defines the executable interface Merkin expects from a mu runtime.
 > It replaces legacy N-Merkle wording and is aligned with `MERKIN_SUBSTRATE_SPEC_v0.1.md`.
 > **Audience:** mu runtime implementers.
+>
+> Related design note:
+> `docs/MU_GENERALIZED_SOLVE_PROFILE.md` generalizes offload-capable work across embeddings, compile, SAT/SMT, compression, and outsourced solving.
 
 ---
 
@@ -403,4 +409,3 @@ Optional profiles:
 ## 14. Terminology Migration
 
 Legacy term `N-Merkle` in older docs maps to `Merkin` in this spec.
-

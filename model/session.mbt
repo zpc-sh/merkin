@@ -1,13 +1,13 @@
 ///|
 /// SessionIdentity: the identity of an agent session.
-/// Format: <tier>/<short-id> (e.g., "sonnet/a7f3c")
+/// Format: <surface>/<short-id> (e.g., "sonnet/a7f3c", "codex/a7f3c")
 ///
 /// Sources (in priority order):
 ///   1. MERKIN_SESSION env var (fully formed "sonnet/a7f3c")
 ///   2. MERKIN_TIER env var + generated short-id
 ///   3. Default: "unknown/00000"
 pub(all) struct SessionIdentity {
-  /// Model tier: "haiku", "sonnet", "opus".
+  /// Session surface or tier: "haiku", "sonnet", "opus", "codex", etc.
   tier : String
   /// Short session id, stable within a session, not reused.
   short_id : String
@@ -32,7 +32,19 @@ pub fn SessionIdentity::with_locus(
 }
 
 ///|
-/// Canonical display: "sonnet/a7f3c".
+/// Create a session identity from a procsi-backed Genius Loci attestation.
+pub fn SessionIdentity::from_genius_attestation(
+  attestation : GeniusProcsiAttestation,
+) -> SessionIdentity {
+  {
+    tier: attestation.session_surface,
+    short_id: short_id_from_bytes(attestation.fingerprint_commitment.digest),
+    locus: attestation.locus,
+  }
+}
+
+///|
+/// Canonical display: "surface/a7f3c".
 pub fn SessionIdentity::display(self : SessionIdentity) -> String {
   self.tier + "/" + self.short_id
 }

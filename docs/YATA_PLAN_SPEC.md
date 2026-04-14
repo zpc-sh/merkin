@@ -26,6 +26,7 @@ This document defines the `.plan` wire contract used by Merkin Yata for replay, 
 - `git_report`: optional VCS provenance envelope
 - `temporal_delta`: optional signed movement vector for replay/time-travel
 - `embedding_report`: optional arbitrary-file embedding scan metadata
+- `solve_report`: optional compact generalized solve/offload summary
 - `entries`: array of plan entries
 
 `YataPlanEntry` includes:
@@ -76,6 +77,12 @@ material_hash=<text>
 [embedding_report_ephemeral=<true|false>]
 [embedding_report_purge_after_turns=<uint>]
 [embedding_report_strategy=<text>]
+[solve_report=1]
+[solve_report_kind=<text>]
+[solve_report_status=<text>]
+[solve_report_handler=<text>]
+[solve_report_offloaded_to=<text>]
+[solve_report_count=<uint>]
 - <hole_id> <anchor> <state> ready=<bool> candidates=<uint> conf_floor=<uint> selected=<id|none> provenance=<uint>
 ...
 ```
@@ -109,6 +116,7 @@ Unknown non-empty lines are rejected.
 - if `self_report=1`, then `self_report_overlay` is required
 - if `git_report=1`, then `git_report_branch` is required
 - if `embedding_report=1`, then `embedding_report_file_type` is required
+- if `solve_report=1`, then `solve_report_handler` is required
 
 ### 4.3 Numeric fields
 
@@ -119,6 +127,7 @@ Unsigned integer required for:
 - `git_report_commit_count`
 - `embedding_report_count`
 - `embedding_report_purge_after_turns`
+- `solve_report_count`
 - entry `candidates`
 - entry `conf_floor`
 - entry `provenance`
@@ -144,6 +153,7 @@ Signed integer required for:
 - `BAD_GIT_REPORT_FLAG`
 - `BAD_TEMPORAL_DELTA_FLAG`
 - `BAD_EMBEDDING_REPORT_FLAG`
+- `BAD_SOLVE_REPORT_FLAG`
 - `BAD_ENTRY`
 - `UNRECOGNIZED_LINE`
 - `MISSING_KIND`
@@ -152,6 +162,7 @@ Signed integer required for:
 - `MISSING_SELF_REPORT_OVERLAY`
 - `MISSING_GIT_REPORT_BRANCH`
 - `MISSING_EMBEDDING_FILE_TYPE`
+- `MISSING_SOLVE_REPORT_HANDLER`
 
 ### 5.2 Validation warnings (`YataPlan::validate`)
 
@@ -163,6 +174,7 @@ Signed integer required for:
 - `program` track should usually include `self_report_*` when cross-AI replay is expected.
 - `git` track should usually include `git_report_*` for branch/head/merge provenance.
 - Dual envelopes are valid and supported in one plan.
+- `solve_report_*` is appropriate when a plan is summarizing generalized solve/offload posture rather than only graph state.
 
 ## 7. Canonical examples
 
@@ -225,6 +237,24 @@ embedding_report_ephemeral=true
 embedding_report_purge_after_turns=2
 embedding_report_strategy=flip-aot
 - blake3:... docs/payload.pdf converging ready=false candidates=1 conf_floor=80 selected=none provenance=1
+```
+
+### 7.4 Program track with solve report
+
+```text
+kind: merkin.yata.plan
+track=program
+mode=full
+generator=chatgpt
+note=repair-pass
+material_hash=blake3:...
+solve_report=1
+solve_report_kind=repair
+solve_report_status=running
+solve_report_handler=provider.codex
+solve_report_offloaded_to=delegate-control
+solve_report_count=4
+- blake3:... model/parser.mbt converging ready=true candidates=2 conf_floor=70 selected=none provenance=1
 ```
 
 ## 8. Compatibility and evolution

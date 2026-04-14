@@ -1,0 +1,24 @@
+{
+  "kind": "merkin.mu.interface",
+  "version": "0.4-draft",
+  "canonical_spec": "docs/MU_RUNTIME_SPEC.md",
+  "companion_docs": [
+    "docs/AI_SUBSTRATE_FINGERPRINTS_v0.2.md",
+    "docs/MU-INTERFACE-SPEC.md",
+    "docs/MU_GENERALIZED_SOLVE_PROFILE.md",
+    "docs/YATA_PLAN_SPEC.md",
+    "docs/YATA_COGNITIVE_ENVELOPE_DESIGN.md",
+    "docs/AI_PROVIDER_ADAPTER_CONTRACT_v0.3.md"
+  ],
+  "code_companions": [
+    "model/procsi_identity.mbt",
+    "model/work_promise.mbt",
+    "model/solve.mbt"
+  ],
+  "ownership": {
+    "merkin": "structure, addressing, envelopes, work promise identity, replay transport",
+    "mu": "execution, compilation, policy, config, solve dispatch",
+    "fsm": "handle resolution, callback routing, pubsub, status transitions"
+  },
+  "drift_rule": "Changes to the canonical mu contract, solve surface, procsi section layout, or genius attestation contract must update this file in the same change."
+}

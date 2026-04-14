@@ -8,17 +8,19 @@ fn main {
 
   let cmd = args[1]
 
-  // Merkin CLI commands (stigmergy-first surface)
+  // Merkin CLI commands
   match cmd {
-    "init" => { run_init_command(args); return }
-    "loci" => { run_loci_command(args); return }
-    "enter" => { run_enter_command(args); return }
-    "sign" => { run_sign_command(args); return }
-    "trail" => { run_trail_command(args); return }
-    "where" => { run_where_command(args); return }
-    "residue" => { run_residue_command(args); return }
-    "status" => { run_status_command(args); return }
-    "pack" => { run_pack_command(args); return }
+    "ratio" => { run_ratio_command(args); return }
+    "genius" => { run_genius_command(args); return }
+    "init" => { run_ratio_alias_command(args); return }
+    "loci" => { run_ratio_alias_command(args); return }
+    "enter" => { run_genius_alias_command(args); return }
+    "sign" => { run_genius_alias_command(args); return }
+    "trail" => { run_genius_alias_command(args); return }
+    "where" => { run_genius_alias_command(args); return }
+    "residue" => { run_genius_alias_command(args); return }
+    "status" => { run_ratio_alias_command(args); return }
+    "pack" => { run_ratio_alias_command(args); return }
     "daemon" => () // fall through to existing daemon handling
     _ => { print_usage(); return }
   }
@@ -33,20 +35,6 @@ fn main {
     run_bridge_action(args, action)
     return
   }
-
-<<<<<<< HEAD
-=======
-  let action = resolve_action(args)
-  if action == "help" {
-    print_usage()
-    return
-  }
-  if action_is_bridge_only(action) {
-    run_bridge_action(args, action)
-    return
-  }
-
->>>>>>> d5515070d7d5080c7ef44b7176e239258227d05b
   let node_id = value_after(args, "--node-id", "node-1")
   let mode = parse_mode(value_after(args, "--mode", "receiver"))
   let target_ids = split_csv(value_after(args, "--targets", "local-1"))
@@ -443,31 +431,28 @@ fn main {
 ///|
 fn print_usage() -> Unit {
   println("Usage:")
-  println("  merkin <command> [args] [flags]")
+  println("  merkin <group|command> [args] [flags]")
   println("")
-  println("Stigmergy Commands:")
+  println("Canonical command groups:")
+  println("  merkin ratio <command> ...                         Repository/root surface")
+  println("  merkin genius <command> ...                        AI-only inhabitation surface")
+  println("")
+  print_ratio_usage()
+  println("")
+  print_genius_usage()
+  println("")
+  println("Compatibility aliases:")
+  println("  init     → ratio init")
   println(
-    "  loci new <name> [--tags t1,t2] [--spirit \"...\"]  Scaffold a new locus",
+    "  loci     → ratio loci",
   )
-  println("  loci ls                                          List known loci")
-  println(
-    "  enter <locus>                                    Enter a locus (read trail)",
-  )
-  println(
-    "  sign [<message>] --locus <name>                  Sign exit residue",
-  )
-  println(
-    "  trail <locus> [--depth <n>]                      Show activity trail",
-  )
-  println(
-    "  where                                            Show recent locus activity",
-  )
-  println(
-    "  residue <locus> [--session <id>]                 Read residue files",
-  )
-  println(
-    "  status <locus>                                   Working dir vs last push",
-  )
+  println("  status   → ratio status")
+  println("  pack     → ratio pack")
+  println("  enter    → genius enter")
+  println("  sign     → genius sign")
+  println("  trail    → genius trail")
+  println("  where    → genius where")
+  println("  residue  → genius residue")
   println("")
   println("Daemon Commands:")
   println("  moon run cmd/main -- daemon <category> <command> [flags]")

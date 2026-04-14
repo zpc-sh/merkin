@@ -617,6 +617,13 @@ pub fn ConversationHost::emit_embedding_plan(
       purge_after_turns: purge_after_max,
       strategy: "thread-embedding-timeline",
     }),
+    solve_report: Some({
+      solve_kind: "embed",
+      status: "materialized",
+      handler: "daemon.conversation.embedding",
+      offloaded_to: "thread:" + plan_safe_token(thread_id),
+      count: records.length().to_uint(),
+    }),
     entries,
   }
   Some(plan.to_wire())

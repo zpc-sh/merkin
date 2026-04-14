@@ -88,6 +88,16 @@ pub(all) struct YataPlanEmbeddingReport {
 } derive(Show)
 
 ///|
+/// Optional compact solve summary report for generalized solve/offload work.
+pub(all) struct YataPlanSolveReport {
+  solve_kind : String
+  status : String
+  handler : String
+  offloaded_to : String
+  count : UInt
+} derive(Show)
+
+///|
 /// Lightweight git snapshot that can be projected into `.plan` git metadata.
 pub(all) struct YataGitSnapshot {
   branch : String
@@ -109,6 +119,7 @@ pub(all) struct YataPlan {
   git_report : YataPlanGitReport?
   temporal_delta : YataPlanTemporalDelta?
   embedding_report : YataPlanEmbeddingReport?
+  solve_report : YataPlanSolveReport?
   entries : Array[YataPlanEntry]
 } derive(Show)
 
@@ -293,6 +304,7 @@ pub fn YataGraph::to_plan(
     git_report: None,
     temporal_delta: None,
     embedding_report: None,
+    solve_report: None,
     entries,
   }
 }
@@ -331,6 +343,15 @@ pub fn YataPlan::with_embedding_report(
   embedding_report : YataPlanEmbeddingReport,
 ) -> YataPlan {
   { ..self, embedding_report: Some(embedding_report) }
+}
+
+///|
+/// Attach generalized solve summary metadata.
+pub fn YataPlan::with_solve_report(
+  self : YataPlan,
+  solve_report : YataPlanSolveReport,
+) -> YataPlan {
+  { ..self, solve_report: Some(solve_report) }
 }
 
 ///|
@@ -397,6 +418,37 @@ pub fn YataGraph::snapshot_with_metadata(
   }
   match embedding_report {
     Some(report) => plan = plan.with_embedding_report(report)
+    None => ()
+  }
+  plan
+}
+
+///|
+/// One-shot `.plan` snapshot with solve summary metadata.
+pub fn YataGraph::snapshot_with_solve_metadata(
+  self : YataGraph,
+  track : YataTrack,
+  mode : YataPlanMode,
+  generator : String,
+  note : String,
+  self_report : YataPlanSelfReport?,
+  git_snapshot : YataGitSnapshot?,
+  temporal_delta : YataPlanTemporalDelta?,
+  embedding_report : YataPlanEmbeddingReport?,
+  solve_report : YataPlanSolveReport?,
+) -> YataPlan {
+  let mut plan = self.snapshot_with_metadata(
+    track,
+    mode,
+    generator,
+    note,
+    self_report,
+    git_snapshot,
+    temporal_delta,
+    embedding_report,
+  )
+  match solve_report {
+    Some(report) => plan = plan.with_solve_report(report)
     None => ()
   }
   plan
@@ -501,6 +553,22 @@ pub fn YataPlan::to_wire(self : YataPlan) -> String {
       b.write_string(report.purge_after_turns.to_string())
       b.write_string("\nembedding_report_strategy=")
       b.write_string(report.strategy)
+    }
+    None => ()
+  }
+  match self.solve_report {
+    Some(report) => {
+      b.write_string("\nsolve_report=1")
+      b.write_string("\nsolve_report_kind=")
+      b.write_string(report.solve_kind)
+      b.write_string("\nsolve_report_status=")
+      b.write_string(report.status)
+      b.write_string("\nsolve_report_handler=")
+      b.write_string(report.handler)
+      b.write_string("\nsolve_report_offloaded_to=")
+      b.write_string(report.offloaded_to)
+      b.write_string("\nsolve_report_count=")
+      b.write_string(report.count.to_string())
     }
     None => ()
   }

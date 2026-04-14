@@ -218,6 +218,47 @@ test "Yata `.plan` emits and reparses git report metadata" {
   }
 }
 
+test "Yata `.plan` emits and reparses solve report metadata" {
+  let contract = @model.YataContract::new("ParserSolve", [], [], 10U)
+  let hole = @model.YataHole::new("notes/report-solve.md", contract, [], [], [])
+    .propose(@model.YataCandidate::new("c1", "candidate", 99U, "ok"))
+    .seal("c1", None)
+    .resolve()
+  let plan = @model.YataGraph::new()
+    .add(hole)
+    .to_plan(@model.Program, @model.Full, "chatgpt", "solve-parser")
+    .with_solve_report({
+      solve_kind: "repair",
+      status: "running",
+      handler: "provider.codex",
+      offloaded_to: "delegate-control",
+      count: 2U,
+    })
+  let wire = plan.to_wire()
+  let outcome = @model.YataPlan::parse_wire_strict(wire)
+  assert_eq(outcome.ok, true)
+  match outcome.plan {
+    Some(parsed) => match parsed.solve_report {
+      Some(report) => {
+        assert_eq(report.solve_kind, "repair")
+        assert_eq(report.status, "running")
+        assert_eq(report.handler, "provider.codex")
+        assert_eq(report.offloaded_to, "delegate-control")
+        assert_eq(report.count, 2U)
+      }
+      None => assert_true(false)
+    }
+    None => assert_true(false)
+  }
+}
+
+test "Yata `.plan` strict parser flags missing solve report handler" {
+  let raw = "kind: merkin.yata.plan\ntrack=program\nmode=full\ngenerator=chatgpt\nnote=parser\nmaterial_hash=blake3:abc\nsolve_report=1\nsolve_report_kind=repair\nsolve_report_status=queued\nsolve_report_offloaded_to=delegate-control\nsolve_report_count=1\n- a1b2 state=resolved ready=true candidates=3 conf_floor=70 selected=impl_a provenance=2"
+  let outcome = @model.YataPlan::parse_wire_strict(raw)
+  assert_eq(outcome.ok, false)
+  assert_eq(outcome.issues[0].code, "MISSING_SOLVE_REPORT_HANDLER")
+}
+
 test "Yata `.plan` strict parser flags malformed git report fields" {
   let raw = "kind: merkin.yata.plan\ntrack=git\nmode=full\ngenerator=chatgpt\nnote=parser\nmaterial_hash=blake3:abc\ngit_report=1\ngit_report_remote=origin\n- a1b2 state=resolved ready=true candidates=3 conf_floor=70 selected=impl_a provenance=2"
   let outcome = @model.YataPlan::parse_wire_strict(raw)

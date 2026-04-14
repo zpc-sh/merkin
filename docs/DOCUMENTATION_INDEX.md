@@ -44,10 +44,14 @@ Actions include:
 Use:
 
 - `docs/MERKIN_SUBSTRATE_SPEC_v0.1.md`
+- `docs/AI_SUBSTRATE_FINGERPRINTS_v0.2.md`
+- `docs/MU_RUNTIME_SPEC.md`
 - `docs/MU-INTERFACE-SPEC.md`
+- `docs/MU_GENERALIZED_SOLVE_PROFILE.md`
 - `docs/PACTIS_CONVERSATIONAL_API_SPEC.md`
 - `docs/PACTIS_CONVERSATIONAL_OPENAPI.yaml`
 - `docs/YATA_FRAMEWORK.md`
+- `docs/YATA_COGNITIVE_ENVELOPE_DESIGN.md`
 - `docs/AI_PROVIDER_ADAPTER_CONTRACT_v0.3.md`
 - `docs/COGNITIVE_SEMANTIC_COMPILER_v0.3.md`
 - `docs/COGNITIVE_SEMANTIC_COMPILER_DISTRIBUTED_v0.3.md`
@@ -92,3 +96,11 @@ Detailed examples: `docs/LIBRARY_API_GUIDE.md`.
 - `docs/TESTING_AND_BENCHMARKING.md`
 - `docs/FIRST_RELEASE_READINESS.md`
 - `docs/YATA_RELEASE_CHECKLIST.md`
+
+---
+
+## 5) Well-Known Interface Surface
+
+- `/.well-known/mu-interface.json`
+- `/.well-known/procsi-sections.json`
+- `/.well-known/interface-drift-policy.md`

@@ -82,6 +82,12 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
   let mut embedding_report_ephemeral = false
   let mut embedding_report_purge_after_turns : UInt = 0U
   let mut embedding_report_strategy = ""
+  let mut solve_report_enabled = false
+  let mut solve_report_kind = ""
+  let mut solve_report_status = ""
+  let mut solve_report_handler = ""
+  let mut solve_report_offloaded_to = ""
+  let mut solve_report_count : UInt = 0U
 
   let mut line_no : Int = 0
   let mut i : Int = 0
@@ -598,6 +604,100 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
+    if line.has_prefix("solve_report=") {
+      match parse_value(line, "solve_report=") {
+        Some(value) => {
+          if value == "1" {
+            solve_report_enabled = true
+          } else {
+            issues.push({
+              line: line_no,
+              code: "BAD_SOLVE_REPORT_FLAG",
+              message: "solve_report must be `1` to enable solve metadata",
+            })
+          }
+        }
+        None => {
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `solve_report=` field",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("solve_report_kind=") {
+      match parse_value(line, "solve_report_kind=") {
+        Some(value) => solve_report_kind = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `solve_report_kind=`",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("solve_report_status=") {
+      match parse_value(line, "solve_report_status=") {
+        Some(value) => solve_report_status = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `solve_report_status=`",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("solve_report_handler=") {
+      match parse_value(line, "solve_report_handler=") {
+        Some(value) => solve_report_handler = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `solve_report_handler=`",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("solve_report_offloaded_to=") {
+      match parse_value(line, "solve_report_offloaded_to=") {
+        Some(value) => solve_report_offloaded_to = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `solve_report_offloaded_to=`",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("solve_report_count=") {
+      match parse_u32_opt_plan(parse_value(line, "solve_report_count=")) {
+        Some(value) => solve_report_count = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "BAD_HEADER_NUMBER",
+            message: "solve_report_count must be an unsigned integer",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
     if line.has_prefix("- ") {
       match parse_entry_line_strict(line) {
         Some(entry) => {
@@ -667,6 +767,13 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       message: "embedding_report enabled but `embedding_report_file_type=` is required",
     })
   }
+  if solve_report_enabled && solve_report_handler == "" {
+    issues.push({
+      line: 1,
+      code: "MISSING_SOLVE_REPORT_HANDLER",
+      message: "solve_report enabled but `solve_report_handler=` is required",
+    })
+  }
 
   let self_report = if self_report_enabled {
     Some({
@@ -713,6 +820,17 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
   } else {
     None
   }
+  let solve_report = if solve_report_enabled {
+    Some({
+      solve_kind: solve_report_kind,
+      status: solve_report_status,
+      handler: solve_report_handler,
+      offloaded_to: solve_report_offloaded_to,
+      count: solve_report_count,
+    })
+  } else {
+    None
+  }
 
   if issues.length() > 0 {
     { plan: None, issues: issues, ok: false }
@@ -740,6 +858,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
         git_report,
         temporal_delta,
         embedding_report,
+        solve_report,
         entries,
       }),
       issues: [],

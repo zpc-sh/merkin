@@ -5,6 +5,7 @@ This document defines the abstract Yata hole model used by merkin.
 Related specifications:
 
 - `docs/YATA_PLAN_SPEC.md` for the full `.plan` wire contract.
+- `docs/YATA_COGNITIVE_ENVELOPE_DESIGN.md` for guidance on cognitive envelopes, overlay profiles, and ChatGPT/OpenAI shaping.
 - `docs/YATA_PLAN_GOVERNANCE.md` for ownership, compatibility, and extension policy.
 - `docs/PACTIS_GIT_PARITY_FUNCTION_MAP.md` for Git-equivalent command/function scope in Pactis.
 - `docs/PACTIS_CONVERSATIONAL_API_SPEC.md` for AI-native conversational hosting (Saba/Pactis).
@@ -149,6 +150,8 @@ git_report_refs=...
   - `YataPlanGitReport` and `YataPlan::with_git_report`, which emits `git_report_*` headers and rehydrates during strict parse.
   - `YataPlanTemporalDelta` and `YataPlan::with_temporal_delta`, for signed replay movement vectors.
   - `YataPlanEmbeddingReport` and `YataPlan::with_embedding_report`, for filetype-agnostic embedding scan summary.
+  - `YataPlanSolveReport` and `YataPlan::with_solve_report`, for compact generalized solve/offload summaries.
+  - for design guidance on future cognitive-profile metadata, see `docs/YATA_COGNITIVE_ENVELOPE_DESIGN.md`.
   - `YataGitSnapshot::to_report` can derive git envelope fields from lightweight snapshot refs.
 
 ### Interoperability schema (strict parse)
@@ -166,6 +169,7 @@ git_report_refs=...
 - Conditional metadata:
   - if `self_report=1`, then `self_report_overlay=` is required.
   - if `git_report=1`, then `git_report_branch=` is required.
+  - if `solve_report=1`, then `solve_report_handler=` is required.
 - Track guidance:
   - `program` track should usually carry `self_report_*` for cross-layer replay.
   - `git` track should usually carry `git_report_*` for branch/head provenance.
