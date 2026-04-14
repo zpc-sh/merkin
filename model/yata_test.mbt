@@ -232,6 +232,66 @@ test "Yata `.plan` strict parser rejects bad git commit count" {
   assert_eq(outcome.issues[0].code, "BAD_HEADER_NUMBER")
 }
 
+test "Yata git snapshot helper derives refs and commit count" {
+  let snapshot = @model.YataGitSnapshot{
+    branch: "main",
+    remote: "origin",
+    merge_base: "abc123",
+    head: "def456",
+    refs: ["abc123", "def456", "789fff"],
+  }
+  let report = snapshot.to_report()
+  assert_eq(report.branch, "main")
+  assert_eq(report.remote, "origin")
+  assert_eq(report.merge_base, "abc123")
+  assert_eq(report.head, "def456")
+  assert_eq(report.commit_count, 3U)
+  assert_eq(report.refs, "abc123,def456,789fff")
+}
+
+test "Yata one-shot snapshot can attach both self and git envelopes" {
+  let contract = @model.YataContract::new("SnapshotBundle", [], [], 10U)
+  let hole = @model.YataHole::new("notes/snapshot.md", contract, [], [], [])
+    .propose(@model.YataCandidate::new("c1", "candidate", 99U, "ok"))
+    .seal("c1", None)
+    .resolve()
+  let graph = @model.YataGraph::new().add(hole)
+  let plan = graph.snapshot_with_reports(
+    @model.Program,
+    @model.Full,
+    "chatgpt",
+    "snapshot-bundle",
+    Some({
+      overlay: "chatgpt",
+      peer: "claude",
+      authority: "loc.machine",
+      anchor_hint: "notes/snapshot.md",
+      gap: 1U,
+      view_hint: "overlay",
+    }),
+    Some({
+      branch: "main",
+      remote: "origin",
+      merge_base: "abc123",
+      head: "def456",
+      refs: ["abc123", "def456"],
+    }),
+  )
+  assert_eq(plan.track, @model.Program)
+  match plan.self_report {
+    Some(report) => assert_eq(report.peer, "claude")
+    None => assert_true(false)
+  }
+  match plan.git_report {
+    Some(report) => {
+      assert_eq(report.branch, "main")
+      assert_eq(report.commit_count, 2U)
+      assert_eq(report.refs, "abc123,def456")
+    }
+    None => assert_true(false)
+  }
+}
+
 ///|
 test "Yata addresses expose cognitic overlays and are parseable across schemes" {
   let contract = @model.YataContract::new("Address", [], [], 10U)
@@ -259,6 +319,73 @@ test "Yata addresses expose cognitic overlays and are parseable across schemes" 
       assert_true(addr.scheme == "substrate")
       assert_eq(addr.anchor, "notes/address.md")
     }
+    None => assert_true(false)
+  }
+}
+
+///|
+test "Yata CAS uri roundtrips for hole-centric addressing" {
+  let contract = @model.YataContract::new("CasAddress", [], [], 10U)
+  let hole = @model.YataHole::new("notes/cas/address.md", contract, [], [], [])
+  let hint = @model.YataAddressHint{
+    overlay: "chatgpt",
+    peer: "claude",
+    mode: "surface",
+    gap: 2U,
+    view: "overlay",
+  }
+  let cas = hole.to_cas_uri("loc.machine", hint, @model.Program, "blake3")
+  match @model.YataAddress::parse(cas) {
+    Some(addr) => {
+      assert_eq(addr.scheme, "cas")
+      assert_eq(addr.cas_alg, "blake3")
+      assert_eq(addr.anchor, "notes/cas/address.md")
+      assert_eq(addr.overlay, "chatgpt")
+      assert_eq(addr.peer, "claude")
+    }
+    None => assert_true(false)
+  }
+}
+
+///|
+test "Yata address strict parser normalizes slash-heavy routes" {
+  let raw = "cog://loc.machine////notes///agenda.md/?overlay=chatgpt&peer=chatgpt&mode=surface&gap=1&track=program&id=abc#overlay"
+  let outcome = @model.YataAddress::parse_strict(raw)
+  assert_eq(outcome.ok, true)
+  match outcome.address {
+    Some(addr) => {
+      assert_eq(addr.anchor, "notes/agenda.md")
+      assert_eq(addr.gap, 1U)
+      assert_eq(addr.uri, "cog://loc.machine/notes/agenda.md?overlay=chatgpt&peer=chatgpt&mode=surface&gap=1&track=program&id=abc#overlay")
+    }
+    None => assert_true(false)
+  }
+}
+
+///|
+test "Yata CAS parser allows digest-only target without anchor" {
+  let raw = "cas://loc.machine/blake3/abc123?overlay=chatgpt&peer=chatgpt&mode=surface&gap=1&track=program#overlay"
+  let outcome = @model.YataAddress::parse_strict(raw)
+  assert_eq(outcome.ok, true)
+  match outcome.address {
+    Some(addr) => {
+      assert_eq(addr.scheme, "cas")
+      assert_eq(addr.cas_alg, "blake3")
+      assert_eq(addr.cas_digest, "abc123")
+      assert_eq(addr.anchor, "")
+    }
+    None => assert_true(false)
+  }
+}
+
+///|
+test "Yata address canonicalize helper rewrites slash-heavy uri" {
+  let raw = "substrate://loc.machine////notes///state.md/?overlay=chatgpt&peer=chatgpt&mode=surface&gap=3&track=git&id=abc#overlay"
+  match @model.YataAddress::canonicalize(raw) {
+    Some(canonical) => assert_eq(
+      canonical,
+      "substrate://loc.machine/notes/state.md?overlay=chatgpt&peer=chatgpt&mode=surface&gap=3&track=git&id=abc#overlay",
+    )
     None => assert_true(false)
   }
 }
@@ -305,4 +432,68 @@ test "Yata address strict parser emits unknown-query issue for unsupported keys"
     }
   }
   assert_true(has_unknown)
+}
+
+///|
+test "Yata topology fanout analysis highlights overbranched parents" {
+  let contract = @model.YataContract::new("Topology", [], [], 0U)
+  let root = @model.YataHole::new("notes/root.md", contract, [], [], [])
+  let c1 = @model.YataHole::new("notes/c1.md", contract, [], [root.hole_id], [])
+  let c2 = @model.YataHole::new("notes/c2.md", contract, [], [root.hole_id], [])
+  let c3 = @model.YataHole::new("notes/c3.md", contract, [], [root.hole_id], [])
+  let graph = @model.YataGraph::new().add(root).add(c1).add(c2).add(c3)
+  assert_eq(graph.child_fanout(root.hole_id), 3U)
+  assert_eq(graph.max_branch_fanout(), 3U)
+  let hotspots = graph.overbranched(2U)
+  assert_eq(hotspots.length(), 1)
+  assert_eq(hotspots[0].hole_id, root.hole_id)
+}
+
+///|
+test "Yata detachment analysis finds missing and rootless chains" {
+  let contract = @model.YataContract::new("Topology", [], [], 0U)
+  let root = @model.YataHole::new("notes/root.md", contract, [], [], [])
+  let attached = @model.YataHole::new("notes/attached.md", contract, [], [root.hole_id], [])
+
+  let orphan_dep = @hash.Hash::of_bytes(b"missing-dependency")
+  let orphan = @model.YataHole::new("notes/orphan.md", contract, [], [orphan_dep], [])
+
+  let cycle_a_seed = @model.YataHole::new("notes/cycle-a.md", contract, [], [], [])
+  let cycle_b_seed = @model.YataHole::new("notes/cycle-b.md", contract, [], [cycle_a_seed.hole_id], [])
+  let cycle_a = cycle_a_seed.add_dependency(cycle_b_seed.hole_id)
+
+  let graph = @model.YataGraph::new()
+    .add(root)
+    .add(attached)
+    .add(orphan)
+    .add(cycle_a)
+    .add(cycle_b_seed)
+
+  let missing = graph.holes_with_missing_dependencies()
+  assert_eq(missing.length(), 1)
+  assert_eq(missing[0].hole_id, orphan.hole_id)
+
+  let detached = graph.detached_holes(8U)
+  let mut seen_orphan = false
+  let mut seen_cycle_a = false
+  let mut seen_cycle_b = false
+  let mut seen_attached = false
+  for hole in detached {
+    if hole.hole_id == orphan.hole_id {
+      seen_orphan = true
+    }
+    if hole.hole_id == cycle_a.hole_id {
+      seen_cycle_a = true
+    }
+    if hole.hole_id == cycle_b_seed.hole_id {
+      seen_cycle_b = true
+    }
+    if hole.hole_id == attached.hole_id {
+      seen_attached = true
+    }
+  }
+  assert_true(seen_orphan)
+  assert_true(seen_cycle_a)
+  assert_true(seen_cycle_b)
+  assert_true(!seen_attached)
 }

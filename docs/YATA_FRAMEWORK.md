@@ -2,6 +2,14 @@
 
 This document defines the abstract Yata hole model used by merkin.
 
+Related specifications:
+
+- `docs/YATA_PLAN_SPEC.md` for the full `.plan` wire contract.
+- `docs/YATA_PLAN_GOVERNANCE.md` for ownership, compatibility, and extension policy.
+- `docs/PACTIS_GIT_PARITY_FUNCTION_MAP.md` for Git-equivalent command/function scope in Pactis.
+- `docs/PACTIS_CONVERSATIONAL_API_SPEC.md` for AI-native conversational hosting (Saba/Pactis).
+- `docs/EMBEDDING_EPHEMERAL_METADATA_SPEC.md` for filetype-agnostic embedding detection, flip-ahead-of-time, and purge rules.
+
 ## Core intuition
 
 `Yata` is a typed semantic gap, not a request queue.
@@ -54,16 +62,49 @@ Yata is *effect-conscious* only by contract:
 
 Each hole remains valid under deferred evaluation and partial truth.
 
+## Topology balancing and detached-chain reasoning
+
+For first release, Yata dependency graphs are treated as DAG-like structures with permissive construction,
+but we explicitly track two failure modes:
+
+1. **Over-branching pressure** (one parent feeding too many child holes).
+2. **Detached chains** (holes that do not connect to any root, or depend on missing nodes).
+
+### Why balancing matters
+
+- Very high fanout from a single parent tends to create noisy candidate churn and slow convergence.
+- A balanced graph is not required for correctness, but is recommended for operational stability.
+- In practice, teams should define policy thresholds per domain (for example: alert when fanout > 16).
+
+### Why detached-chain detection matters
+
+- Missing dependencies can silently strand a hole forever in non-ready states.
+- Rootless cycles can look “active” but never reach a stable, replayable root lineage.
+- Detecting detachment early prevents hidden backlog in long-running agent workflows.
+
+### Runtime support in `model/yata_lineage.mbt`
+
+- `YataGraph::child_fanout(parent_id)` — reverse-edge child count for one hole.
+- `YataGraph::max_branch_fanout()` — max fanout observed in the graph.
+- `YataGraph::overbranched(max_children)` — hotspots that exceed policy threshold.
+- `YataGraph::holes_with_missing_dependencies()` — holes referencing unknown ids.
+- `YataGraph::detached_holes(max_depth)` — holes that cannot reach any zero-dependency root within bounded ancestry traversal.
+
+These checks are diagnostic/operational signals, not hard schema constraints.
+They can be promoted to policy gates by downstream systems when stricter release posture is required.
+
 ## Cognitive address mapping (program track)
 
 Yata entities are intentionally mapped to cognitive addresses, not wall-clock.
 
 - `cog://loc/device/notes/hole-bridge.md?overlay=chatgpt&mode=surface#overlay`
 - `substrate://loc/device/notes/hole-bridge.md?overlay=chatgpt&mode=surface#overlay`
+- `cas://loc/device/blake3/abc123...?overlay=chatgpt&mode=surface&id=blake3:...&anchor=notes/hole-bridge.md#overlay`
 - `./notes/hole-bridge.md?overlay=claude&peer=claude&mode=defensive#overlay`
 
 Relative forms (`./`, `../`) are interpreted against the current cognitive perspective.
 `peer=` records intended family, and a layer can request translation into its own comparable reference.
+Slash-heavy routes are canonicalized (`////notes///x.md/` becomes `notes/x.md`) to reduce protocol confusion.
 
 ## Tracks: program track vs git track
 
@@ -86,13 +127,13 @@ generator=chatgpt
 note=semantic-lint-pass
 material_hash=blake3:...
 entries=3
-- git_report=1
-- git_report_branch=feat/yata-track
-- git_report_remote=origin
-- git_report_merge_base=...
-- git_report_head=...
-- git_report_commit_count=12
-- git_report_refs=...
+git_report=1
+git_report_branch=feat/yata-track
+git_report_remote=origin
+git_report_merge_base=...
+git_report_head=...
+git_report_commit_count=12
+git_report_refs=...
 - a1b2... state=resolved ready=true candidates=3 conf_floor=70 selected=impl_a provenance=2
 ```
 
@@ -106,13 +147,51 @@ entries=3
 - `.plan` instances can carry optional metadata envelopes:
   - `YataPlanSelfReport` and `YataPlan::with_self_report`, which emits `self_report_*` headers and rehydrates during strict parse.
   - `YataPlanGitReport` and `YataPlan::with_git_report`, which emits `git_report_*` headers and rehydrates during strict parse.
+  - `YataPlanTemporalDelta` and `YataPlan::with_temporal_delta`, for signed replay movement vectors.
+  - `YataPlanEmbeddingReport` and `YataPlan::with_embedding_report`, for filetype-agnostic embedding scan summary.
+  - `YataGitSnapshot::to_report` can derive git envelope fields from lightweight snapshot refs.
+
+### Interoperability schema (strict parse)
+
+- Required on all tracks:
+  - `kind: merkin.yata.plan`
+  - `track=` (`program` or `git`)
+  - `mode=` (`full` or `compact`)
+  - `generator=`
+  - `note=`
+  - `material_hash=`
+- Optional on all tracks:
+  - `entries=`
+  - entry lines beginning with `- `
+- Conditional metadata:
+  - if `self_report=1`, then `self_report_overlay=` is required.
+  - if `git_report=1`, then `git_report_branch=` is required.
+- Track guidance:
+  - `program` track should usually carry `self_report_*` for cross-layer replay.
+  - `git` track should usually carry `git_report_*` for branch/head provenance.
+  - dual-envelope plans are valid when a single snapshot needs both collaboration and VCS context.
+
+### Address interoperability (strict parse)
+
+- Schemes:
+  - `cog://` and `substrate://` require authority plus anchor path.
+  - `cas://` requires authority plus `<algorithm>/<digest>`.
+- Target resolution:
+  - parsers accept either explicit anchor path, explicit `id`, or both.
+  - CAS digest can act as the target id when `id` is omitted.
+- Canonicalization:
+  - repeated and trailing slashes in anchors are normalized.
+  - canonical output removes empty path segments to avoid `protocol://some//////` ambiguity.
 
 ### Cognitive projection from Yata nodes
 
 - `YataHole::to_cog_uri` and `YataHole::to_substrate_uri` emit stable, track-aware references.
+- `YataHole::to_cas_uri` emits content-addressed references for hole-centric exchange.
 - Parsing back is available via `YataAddress::parse`, and relational references can be resolved through `YataAddress::parse_in_context`
   for `./`, `../`, and query-only forms (for example `?overlay=claude&peer=claude&mode=surface`).
+- `YataAddress::to_wire_canonical` and `YataAddress::canonicalize` normalize URI shape for logging and handoff.
 - The `peer`/`overlay`/`gap` query tuple carries the translation contract for another AI layer.
+- CAS parse accepts digest-only targets and can carry `anchor=` as a human hint.
 
 ## Why this differs from language-level holes
 

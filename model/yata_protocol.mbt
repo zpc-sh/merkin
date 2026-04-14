@@ -38,8 +38,8 @@ pub(all) struct YataPlanCursor {
 ///|
 /// Parse `.plan` wire in strict mode.
 pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
-  let lines = raw.split("\n")
-  let mut issues : Array[YataParseIssue] = []
+  let lines = split_parts(raw, "\n")
+  let issues : Array[YataParseIssue] = []
   if lines.length() == 0 || (lines.length() == 1 && lines[0] == "") {
     return {
       plan: None,
@@ -55,7 +55,8 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
   let mut note = ""
   let mut expected_entries : UInt = 0U
   let mut material_hash : String? = None
-  let mut entries : Array[YataPlanEntry] = []
+  let entries : Array[YataPlanEntry] = []
+  let mut observed_entries : UInt = 0U
   let mut self_report_enabled = false
   let mut self_report_overlay = ""
   let mut self_report_peer = ""
@@ -70,6 +71,17 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
   let mut git_report_head = ""
   let mut git_report_commit_count : UInt = 0U
   let mut git_report_refs = ""
+  let mut temporal_delta_enabled = false
+  let mut temporal_delta_turns : Int = 0
+  let mut temporal_delta_bytes : Int = 0
+  let mut temporal_delta_causal_offset : Int = 0
+  let mut embedding_report_enabled = false
+  let mut embedding_report_file_type = ""
+  let mut embedding_report_found = false
+  let mut embedding_report_count : UInt = 0U
+  let mut embedding_report_ephemeral = false
+  let mut embedding_report_purge_after_turns : UInt = 0U
+  let mut embedding_report_strategy = ""
 
   let mut line_no : Int = 0
   let mut i : Int = 0
@@ -171,7 +183,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       continue
     }
     if line.has_prefix("entries=") {
-      match parse_u32_opt(parse_value(line, "entries=")) {
+      match parse_u32_opt_plan(parse_value(line, "entries=")) {
         Some(value) => expected_entries = value
         None => {
           issues.push({
@@ -277,7 +289,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       continue
     }
     if line.has_prefix("self_report_gap=") {
-      match parse_u32_opt(parse_value(line, "self_report_gap=")) {
+      match parse_u32_opt_plan(parse_value(line, "self_report_gap=")) {
         Some(value) => self_report_gap = value
         None => {
           issues.push({
@@ -385,7 +397,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       continue
     }
     if line.has_prefix("git_report_commit_count=") {
-      match parse_u32_opt(parse_value(line, "git_report_commit_count=")) {
+      match parse_u32_opt_plan(parse_value(line, "git_report_commit_count=")) {
         Some(value) => git_report_commit_count = value
         None => {
           issues.push({
@@ -412,9 +424,186 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       i = i + 1
       continue
     }
+    if line.has_prefix("temporal_delta=") {
+      match parse_value(line, "temporal_delta=") {
+        Some(value) => {
+          if value == "1" {
+            temporal_delta_enabled = true
+          } else {
+            issues.push({
+              line: line_no,
+              code: "BAD_TEMPORAL_DELTA_FLAG",
+              message: "temporal_delta must be `1` to enable signed movement metadata",
+            })
+          }
+        }
+        None => {
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `temporal_delta=` field",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("temporal_delta_turns=") {
+      match parse_i32_opt(parse_value(line, "temporal_delta_turns=")) {
+        Some(value) => temporal_delta_turns = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "BAD_HEADER_NUMBER",
+            message: "temporal_delta_turns must be a signed integer",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("temporal_delta_bytes=") {
+      match parse_i32_opt(parse_value(line, "temporal_delta_bytes=")) {
+        Some(value) => temporal_delta_bytes = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "BAD_HEADER_NUMBER",
+            message: "temporal_delta_bytes must be a signed integer",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("temporal_delta_causal_offset=") {
+      match parse_i32_opt(parse_value(line, "temporal_delta_causal_offset=")) {
+        Some(value) => temporal_delta_causal_offset = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "BAD_HEADER_NUMBER",
+            message: "temporal_delta_causal_offset must be a signed integer",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("embedding_report=") {
+      match parse_value(line, "embedding_report=") {
+        Some(value) => {
+          if value == "1" {
+            embedding_report_enabled = true
+          } else {
+            issues.push({
+              line: line_no,
+              code: "BAD_EMBEDDING_REPORT_FLAG",
+              message: "embedding_report must be `1` to enable embedding metadata",
+            })
+          }
+        }
+        None => {
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `embedding_report=` field",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("embedding_report_file_type=") {
+      match parse_value(line, "embedding_report_file_type=") {
+        Some(value) => embedding_report_file_type = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `embedding_report_file_type=`",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("embedding_report_found=") {
+      match parse_bool_opt(parse_value(line, "embedding_report_found=")) {
+        Some(value) => embedding_report_found = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "BAD_HEADER_BOOL",
+            message: "embedding_report_found must be `true` or `false`",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("embedding_report_count=") {
+      match parse_u32_opt_plan(parse_value(line, "embedding_report_count=")) {
+        Some(value) => embedding_report_count = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "BAD_HEADER_NUMBER",
+            message: "embedding_report_count must be an unsigned integer",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("embedding_report_ephemeral=") {
+      match parse_bool_opt(parse_value(line, "embedding_report_ephemeral=")) {
+        Some(value) => embedding_report_ephemeral = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "BAD_HEADER_BOOL",
+            message: "embedding_report_ephemeral must be `true` or `false`",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("embedding_report_purge_after_turns=") {
+      match parse_u32_opt_plan(parse_value(line, "embedding_report_purge_after_turns=")) {
+        Some(value) => embedding_report_purge_after_turns = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "BAD_HEADER_NUMBER",
+            message: "embedding_report_purge_after_turns must be an unsigned integer",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
+    if line.has_prefix("embedding_report_strategy=") {
+      match parse_value(line, "embedding_report_strategy=") {
+        Some(value) => embedding_report_strategy = value
+        None => {
+          issues.push({
+            line: line_no,
+            code: "MALFORMED_HEADER",
+            message: "could not parse `embedding_report_strategy=`",
+          })
+        }
+      }
+      i = i + 1
+      continue
+    }
     if line.has_prefix("- ") {
       match parse_entry_line_strict(line) {
-        Some(entry) => entries.push(entry)
+        Some(entry) => {
+          entries.push(entry)
+          observed_entries = observed_entries + 1U
+        }
         None => {
           issues.push({
             line: line_no,
@@ -450,7 +639,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       message: "expected `material_hash=` field",
     })
   }
-  if expected_entries > 0U && entries.length() != expected_entries {
+  if expected_entries > 0U && observed_entries != expected_entries {
     issues.push({
       line: 0,
       code: "ENTRY_COUNT_MISMATCH",
@@ -469,6 +658,13 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
       line: 1,
       code: "MISSING_GIT_REPORT_BRANCH",
       message: "git_report enabled but `git_report_branch=` is required",
+    })
+  }
+  if embedding_report_enabled && embedding_report_file_type == "" {
+    issues.push({
+      line: 1,
+      code: "MISSING_EMBEDDING_FILE_TYPE",
+      message: "embedding_report enabled but `embedding_report_file_type=` is required",
     })
   }
 
@@ -496,6 +692,27 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
   } else {
     None
   }
+  let temporal_delta = if temporal_delta_enabled {
+    Some({
+      delta_turns: temporal_delta_turns,
+      delta_bytes: temporal_delta_bytes,
+      causal_offset: temporal_delta_causal_offset,
+    })
+  } else {
+    None
+  }
+  let embedding_report = if embedding_report_enabled {
+    Some({
+      file_type: embedding_report_file_type,
+      found: embedding_report_found,
+      count: embedding_report_count,
+      ephemeral: embedding_report_ephemeral,
+      purge_after_turns: embedding_report_purge_after_turns,
+      strategy: embedding_report_strategy,
+    })
+  } else {
+    None
+  }
 
   if issues.length() > 0 {
     { plan: None, issues: issues, ok: false }
@@ -510,7 +727,7 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
           @hash.Hash::of_bytes(string_to_bytes(raw_hash))
         }
       }
-      None => @hash.Hash::of_bytes(string_to_bytes("")),
+      None => @hash.Hash::of_bytes(string_to_bytes(""))
     }
     {
       plan: Some({
@@ -521,6 +738,8 @@ pub fn YataPlan::parse_wire_strict(raw : String) -> YataParseOutcome {
         material_hash: material,
         self_report,
         git_report,
+        temporal_delta,
+        embedding_report,
         entries,
       }),
       issues: [],
@@ -549,12 +768,13 @@ pub fn YataPlan::to_cursor(self : YataPlan) -> YataPlanCursor {
 ///|
 /// Validate `.plan` content consistency.
 pub fn YataPlan::validate(self : YataPlan) -> YataPlanCursor {
-  let mut warnings : Array[YataParseIssue] = []
-  let expected = self.entries.length()
+  let warnings : Array[YataParseIssue] = []
+  let mut expected : UInt = 0U
   let mut observed : UInt = 0U
   let mut ready_count : UInt = 0U
   let mut unresolved_count : UInt = 0U
   for entry in self.entries {
+    expected = expected + 1U
     observed = observed + 1U
     if entry.ready {
       ready_count = ready_count + 1U
@@ -586,8 +806,8 @@ pub fn YataPlan::validate(self : YataPlan) -> YataPlanCursor {
 }
 
 fn parse_entry_line_strict(line : String) -> YataPlanEntry? {
-  let tokens = line.split(" ")
-  if tokens.count() != 9 {
+  let tokens = split_parts(line, " ")
+  if tokens.length() != 9 {
     return None
   }
   if tokens[0] != "-" {
@@ -620,11 +840,11 @@ fn parse_entry_line_strict(line : String) -> YataPlanEntry? {
   }
 
   let maybe_ready = parse_bool_opt(parse_value(ready_token, "ready="))
-  let maybe_candidate_count = parse_u32_opt(parse_value(candidates_token, "candidates="))
-  let maybe_confidence = parse_u32_opt(parse_value(conf_token, "conf_floor="))
+  let maybe_candidate_count = parse_u32_opt_plan(parse_value(candidates_token, "candidates="))
+  let maybe_confidence = parse_u32_opt_plan(parse_value(conf_token, "conf_floor="))
   match parse_value(provenance_field, "provenance=") {
     Some(p) => {
-      if parse_u32_opt(Some(p)) == None {
+      if parse_u32_opt_plan(Some(p)) == None {
         return None
       }
     }
@@ -675,7 +895,7 @@ fn parse_value(raw : String, prefix : String) -> String? {
   }
 }
 
-fn parse_u32_opt(raw : String?) -> UInt? {
+fn parse_u32_opt_plan(raw : String?) -> UInt? {
   match raw {
     Some(text) => {
       if text == "" {
@@ -685,14 +905,45 @@ fn parse_u32_opt(raw : String?) -> UInt? {
       let mut out : UInt = 0U
       let mut i : Int = 0
       while i < bytes.length() {
-        let b = bytes[i].to_int()
-        if b < 48 || b > 57 {
+        let b = bytes[i].to_uint()
+        if b < 48U || b > 57U {
           return None
         }
         out = out * 10U + (b - 48U)
         i = i + 1
       }
       Some(out)
+    }
+    None => None
+  }
+}
+
+fn parse_i32_opt(raw : String?) -> Int? {
+  match raw {
+    Some(text) => {
+      if text == "" {
+        return None
+      }
+      let bytes = string_to_bytes(text)
+      let mut i : Int = 0
+      let mut sign : Int = 1
+      if bytes.length() > 0 && bytes[0].to_uint() == 45U {
+        sign = -1
+        i = 1
+      }
+      if i >= bytes.length() {
+        return None
+      }
+      let mut out : Int = 0
+      while i < bytes.length() {
+        let b = bytes[i].to_uint()
+        if b < 48U || b > 57U {
+          return None
+        }
+        out = out * 10 + (b - 48U).to_int()
+        i = i + 1
+      }
+      Some(out * sign)
     }
     None => None
   }
@@ -714,12 +965,20 @@ fn parse_bool_opt(raw : String?) -> Bool? {
 }
 
 fn split_after(raw : String, prefix : String) -> String {
-  let chunks = raw.split(prefix)
-  if chunks.count() < 2 {
+  let chunks = split_parts(raw, prefix)
+  if chunks.length() < 2 {
     ""
   } else {
     chunks[1]
   }
+}
+
+fn split_parts(raw : String, separator : String) -> Array[String] {
+  let out : Array[String] = []
+  for part in raw.split(separator) {
+    out.push(part.to_string())
+  }
+  out
 }
 
 fn parse_hash_token(token : String) -> @hash.Hash {

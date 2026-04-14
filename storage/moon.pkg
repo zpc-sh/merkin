@@ -1,5 +1,12 @@
 import {
-  "nocsi/merkin/hash" @hash,
-  "nocsi/merkin/model" @model,
-  "nocsi/merkin/store" @store,
+  "zpc/merkin/hash" @hash,
+  "zpc/merkin/model" @model,
+  "zpc/merkin/store" @store,
 }
+
+options(
+  targets: {
+    "fs_native.mbt": [ "native", "llvm" ],
+    "fs_wasm.mbt": [ "wasm", "wasm-gc" ],
+  },
+)

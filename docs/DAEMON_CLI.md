@@ -2,19 +2,65 @@
 
 `cmd/main` now exposes a daemon-oriented CLI with configurable OCI behavior.
 
+For broader library/module orientation, see `docs/DOCUMENTATION_INDEX.md` and `docs/LIBRARY_API_GUIDE.md`.
+
+## Command Style
+
+The CLI now supports a Docker-like categorical style:
+
+```bash
+moon run cmd/main -- daemon <category> <command> [flags]
+```
+
+Legacy form is still supported:
+
+```bash
+moon run cmd/main -- daemon --action <action> [flags]
+```
+
 ## Commands
 
 ```bash
+moon run cmd/main -- daemon help
+moon run cmd/main -- daemon oci capabilities --mode hybrid --targets local-1,oci-1
+moon run cmd/main -- daemon oci put --mode receiver --targets local-1,oci-1 --payload hello --lane hot --path ingest/oci
+moon run cmd/main -- daemon tree sparse --mode receiver --targets local-1 --routes alpha/doc,beta/doc --tokens alpha
+moon run cmd/main -- daemon tree diff --mode receiver --targets local-1 --left-routes alpha/doc --right-routes beta/doc
+moon run cmd/main -- daemon conv turn --hall saba --topic debate --content "Opening statement" --overlay chatgpt --actor-role ai
+moon run cmd/main -- daemon conv replay --hall saba --topic debate --seed-non-replayable true --enforce-length true
+moon run cmd/main -- daemon conv embed --file-ref docs/sample.bin --embedding-action flip-aot --embedding-count 3
+moon run cmd/main -- daemon conv embed-purge --purge-after-turns 1 --current-turn-seq 2
+moon run cmd/main -- daemon yata topology --yata-branch-factor 5 --yata-max-children 3
+moon run cmd/main -- daemon cognitive compile --mode markup --emit-distributed true --distributed-shards 16
+moon run cmd/main -- daemon cognitive distributed --compiler-out-dir _build/cognitive/v0.3/latest --distributed-shards 16
+moon run cmd/main -- daemon cognitive measure --summary-file _build/cognitive/v0.3/latest/summary.txt
+moon run cmd/main -- daemon adapter validate --action status --file /tmp/adapter.json
+
+# Legacy
 moon run cmd/main -- daemon --action capabilities --mode hybrid --targets local-1,oci-1
 moon run cmd/main -- daemon --action put --mode receiver --targets local-1,oci-1 --payload hello --lane hot --path ingest/oci
 moon run cmd/main -- daemon --action sparse --mode receiver --targets local-1 --routes alpha/doc,beta/doc --tokens alpha
 moon run cmd/main -- daemon --action diff --mode receiver --targets local-1 --left-routes alpha/doc --right-routes beta/doc
+moon run cmd/main -- daemon --action conv-turn --hall saba --topic debate --content "Opening statement" --overlay chatgpt --actor-role ai
+moon run cmd/main -- daemon --action conv-replay --hall saba --topic debate --seed-non-replayable true --enforce-length true
+moon run cmd/main -- daemon --action conv-embed --file-ref docs/sample.bin --embedding-action flip-aot --embedding-count 3
+moon run cmd/main -- daemon --action conv-embed-purge --purge-after-turns 1 --current-turn-seq 2
+moon run cmd/main -- daemon --action yata-topology --yata-branch-factor 5 --yata-max-children 3 --yata-detached-depth 2
 moon run cmd/main -- daemon --action demo --mode receiver
 ```
 
+## Categories and Commands
+
+- `oci`: `capabilities | put`
+- `tree`: `sparse | diff`
+- `conv`: `turn | replay | embed | embed-purge`
+- `yata`: `topology`
+- `cognitive`: `compile | distributed | measure`
+- `adapter`: `validate`
+
 ## Flags
 
-- `--action`: `capabilities | put | sparse | diff | demo`
+- `--action`: legacy daemon action selector; also used by `adapter validate` bridge as adapter action `submit|status|cancel`
 - `--mode`: `receiver | proxy | passthrough | hybrid`
 - `--node-id`: daemon node id
 - `--targets`: comma-separated target ids
@@ -30,6 +76,58 @@ moon run cmd/main -- daemon --action demo --mode receiver
 - `--right-routes`: incremental route set for `diff`
 - `--left-tokens`: baseline token filter for `diff`
 - `--right-tokens`: comparison token filter for `diff`
+- `--hall`: hall name for conversational actions
+- `--policy-profile`: policy profile for conversational actions
+- `--topic`: thread topic for conversational actions
+- `--track`: `program | git` track for conversational actions
+- `--overlay`: overlay id for conversational actions
+- `--actor-role`: `ai | human | system`
+- `--content`: turn content for conversational actions
+- `--idempotency-key`: optional idempotency key for `conv-turn`
+- `--input-min`, `--input-max`, `--output-min`, `--output-max`: length envelope bounds
+- `--from-seq`, `--to-seq`: replay window for `conv-replay`
+- `--enforce-length`: enforce non-replayable turn failures on replay
+- `--seed-non-replayable`: create one intentionally non-replayable turn before replay
+- `--file-ref`: file reference for embedding metadata
+- `--file-type`: file type label for embedding metadata
+- `--mime-type`: mime type for embedding metadata
+- `--embedding-found`: `true | false`
+- `--embedding-count`: unsigned finding count
+- `--embedding-action`: `observe | flip-aot | purge`
+- `--embedding-ephemeral`: `true | false`
+- `--purge-after-turns`: purge window measured in turn age
+- `--embedding-note`: optional embedding metadata note
+- `--current-turn-seq`: turn sequence horizon for purge execution
+- `--yata-branch-factor`: synthetic child count attached to one root for topology diagnostics
+- `--yata-detached-depth`: synthetic detached chain length for topology diagnostics
+- `--yata-max-children`: threshold used by overbranch hotspot detection
+- `--yata-max-depth`: traversal depth bound for detached-hole detection
+- `--emit-distributed`: `true | false` for `cognitive compile` bridge
+- `--distributed-out-dir`: output dir for distributed planner bridge
+- `--distributed-cluster-name`: cluster name for distributed planner bridge
+- `--distributed-shards`: shard count for distributed bridge commands
+- `--distributed-replicas`: replica factor for distributed bridge commands
+- `--distributed-max-inflight-per-shard`: inflight budget for distributed bridge commands
+- `--distributed-regions`: regions csv for distributed bridge commands
+- `--summary-file`: summary path for `cognitive distributed` and `cognitive measure` bridge commands
+- `--compiler-out-dir`: compiler output dir for `cognitive distributed`
+- `--coord-minutes-per-hole`: additive offload assumption for `cognitive measure`
+- `--automation-overhead-minutes`: additive offload assumption for `cognitive measure`
+- `--fix-minutes-low`: lower bound manual fix effort assumption for `cognitive measure`
+- `--fix-minutes-high`: upper bound manual fix effort assumption for `cognitive measure`
+- `--active-delegation-coverage`: delegation coverage override `[0..1]` for `cognitive measure`
+- `--file`: file input for `adapter validate`
+- `--last-line`: validate only last non-empty line for `adapter validate`
+- `--full`: validate full payload as one JSON object for `adapter validate`
+
+## Bridge Commands
+
+`cognitive` and `adapter` categories currently run as bridge emitters from `cmd/main`:
+
+- they print `status=bridge_only`
+- they emit `bridge_command=...` for the shell tool to execute
+
+This keeps the CLI categorical and stable while full native runtime integration is synthesized.
 
 ## Mode Semantics
 
@@ -51,3 +149,18 @@ Receiver mode also maintains an in-memory Merkin index tree per daemon node, ena
 - diff between token projections (`daemon.diff_views(...)`)
 
 This is intentionally structured so networked OCI transports, persistent ledgers, and persisted tree snapshots can be added without changing CLI shape.
+
+Conversational actions use the in-memory host scaffold in `daemon/conversation.mbt` and are intended as a bridge to the Pactis/Saba API contracts in `docs/PACTIS_CONVERSATIONAL_API_SPEC.md` and `docs/PACTIS_CONVERSATIONAL_OPENAPI.yaml`.
+
+## CLI/TUI readiness for first release
+
+You do **not** need to design a full separate client to start using the system:
+
+- The CLI is already scriptable and covers daemon OCI flows, sparse/diff tree inspection, conversational turn/replay, embedding metadata workflows, and Yata topology diagnostics.
+- The new `yata-topology` action exposes balancing and detached-chain checks directly from `cmd/main`, so operators can run release gates from shell/CI without a UI.
+- A TUI can be added later as a thin presentation layer over these same CLI/API surfaces.
+
+Practical recommendation:
+
+1. Keep release gates in CLI + CI first (stable, automatable).
+2. Add a TUI only for operator ergonomics once workflows stabilize.

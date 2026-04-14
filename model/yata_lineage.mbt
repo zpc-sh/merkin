@@ -68,6 +68,36 @@ pub(all) struct YataPlanGitReport {
 } derive(Show)
 
 ///|
+/// Signed temporal deltas for replay and time-travel projections.
+/// Absolute sizes remain unsigned; only movement vectors are signed.
+pub(all) struct YataPlanTemporalDelta {
+  delta_turns : Int
+  delta_bytes : Int
+  causal_offset : Int
+} derive(Show)
+
+///|
+/// Optional embedding scan report for arbitrary file types.
+pub(all) struct YataPlanEmbeddingReport {
+  file_type : String
+  found : Bool
+  count : UInt
+  ephemeral : Bool
+  purge_after_turns : UInt
+  strategy : String
+} derive(Show)
+
+///|
+/// Lightweight git snapshot that can be projected into `.plan` git metadata.
+pub(all) struct YataGitSnapshot {
+  branch : String
+  remote : String
+  merge_base : String
+  head : String
+  refs : Array[String]
+} derive(Show)
+
+///|
 /// `.plan` payload that can be emitted without timestamps.
 pub(all) struct YataPlan {
   track : YataTrack
@@ -77,6 +107,8 @@ pub(all) struct YataPlan {
   material_hash : @hash.Hash
   self_report : YataPlanSelfReport?
   git_report : YataPlanGitReport?
+  temporal_delta : YataPlanTemporalDelta?
+  embedding_report : YataPlanEmbeddingReport?
   entries : Array[YataPlanEntry]
 } derive(Show)
 
@@ -118,6 +150,91 @@ pub fn YataGraph::reparent(
 /// Deterministic ancestry list for one hole. Great for replay-like lineage.
 pub fn YataGraph::transitive_ancestry(self : YataGraph, root : @hash.Hash, max_depth : UInt) -> Array[@hash.Hash] {
   collect_ancestry(self, root, max_depth, [])
+}
+
+///|
+/// Count direct dependents (reverse edges) for a single hole.
+pub fn YataGraph::child_fanout(self : YataGraph, parent_id : @hash.Hash) -> UInt {
+  let mut count : UInt = 0U
+  for hole in self.holes {
+    if array_contains_hash(hole.dependencies, parent_id) {
+      count = count + 1U
+    }
+  }
+  count
+}
+
+///|
+/// Maximum reverse-branching pressure observed in the graph.
+pub fn YataGraph::max_branch_fanout(self : YataGraph) -> UInt {
+  let mut max : UInt = 0U
+  for hole in self.holes {
+    let fanout = self.child_fanout(hole.hole_id)
+    if fanout > max {
+      max = fanout
+    }
+  }
+  max
+}
+
+///|
+/// Return holes whose reverse fanout exceeds `max_children`.
+/// Useful to identify balancing hotspots in large Yata graphs.
+pub fn YataGraph::overbranched(self : YataGraph, max_children : UInt) -> Array[YataHole] {
+  let out : Array[YataHole] = []
+  for hole in self.holes {
+    let fanout = self.child_fanout(hole.hole_id)
+    if fanout > max_children {
+      out.push(hole)
+    }
+  }
+  out
+}
+
+///|
+/// Return holes that reference dependencies missing from this graph.
+pub fn YataGraph::holes_with_missing_dependencies(self : YataGraph) -> Array[YataHole] {
+  let out : Array[YataHole] = []
+  for hole in self.holes {
+    let mut missing = false
+    for dependency in hole.dependencies {
+      match self.get(dependency) {
+        Some(_) => ()
+        None => {
+          missing = true
+        }
+      }
+    }
+    if missing {
+      out.push(hole)
+    }
+  }
+  out
+}
+
+///|
+/// Return holes that do not reach any root (a hole with zero dependencies)
+/// within `max_depth` ancestor traversal.
+pub fn YataGraph::detached_holes(self : YataGraph, max_depth : UInt) -> Array[YataHole] {
+  let out : Array[YataHole] = []
+  for hole in self.holes {
+    let ancestry = self.transitive_ancestry(hole.hole_id, max_depth)
+    let mut attached = false
+    for ancestor_id in ancestry {
+      match self.get(ancestor_id) {
+        Some(ancestor) => {
+          if ancestor.dependencies.length() == 0 {
+            attached = true
+          }
+        }
+        None => ()
+      }
+    }
+    if !attached {
+      out.push(hole)
+    }
+  }
+  out
 }
 
 ///|
@@ -166,7 +283,18 @@ pub fn YataGraph::to_plan(
     entries.push(entry)
   }
   let material_hash = @hash.Hash::of_bytes(string_to_bytes(join_by(material, ",")))
-  { track, mode, generator, note, material_hash, self_report: None, git_report: None, entries }
+  {
+    track,
+    mode,
+    generator,
+    note,
+    material_hash,
+    self_report: None,
+    git_report: None,
+    temporal_delta: None,
+    embedding_report: None,
+    entries,
+  }
 }
 
 ///|
@@ -185,6 +313,93 @@ pub fn YataPlan::with_git_report(
   git_report : YataPlanGitReport,
 ) -> YataPlan {
   { ..self, git_report: Some(git_report) }
+}
+
+///|
+/// Attach signed temporal movement metadata.
+pub fn YataPlan::with_temporal_delta(
+  self : YataPlan,
+  temporal_delta : YataPlanTemporalDelta,
+) -> YataPlan {
+  { ..self, temporal_delta: Some(temporal_delta) }
+}
+
+///|
+/// Attach embedding scan metadata.
+pub fn YataPlan::with_embedding_report(
+  self : YataPlan,
+  embedding_report : YataPlanEmbeddingReport,
+) -> YataPlan {
+  { ..self, embedding_report: Some(embedding_report) }
+}
+
+///|
+/// Build a git report from a lightweight snapshot.
+/// `commit_count` is derived from the number of refs.
+pub fn YataGitSnapshot::to_report(self : YataGitSnapshot) -> YataPlanGitReport {
+  {
+    branch: self.branch,
+    remote: self.remote,
+    merge_base: self.merge_base,
+    head: self.head,
+    commit_count: self.refs.length(),
+    refs: join_by(self.refs, ","),
+  }
+}
+
+///|
+/// One-shot `.plan` snapshot with optional self-report and git metadata envelopes.
+pub fn YataGraph::snapshot_with_reports(
+  self : YataGraph,
+  track : YataTrack,
+  mode : YataPlanMode,
+  generator : String,
+  note : String,
+  self_report : YataPlanSelfReport?,
+  git_snapshot : YataGitSnapshot?,
+) -> YataPlan {
+  let mut plan = self.to_plan(track, mode, generator, note)
+  match self_report {
+    Some(report) => plan = plan.with_self_report(report)
+    None => ()
+  }
+  match git_snapshot {
+    Some(snapshot) => plan = plan.with_git_report(snapshot.to_report())
+    None => ()
+  }
+  plan
+}
+
+///|
+/// One-shot `.plan` snapshot with all optional metadata envelopes.
+pub fn YataGraph::snapshot_with_metadata(
+  self : YataGraph,
+  track : YataTrack,
+  mode : YataPlanMode,
+  generator : String,
+  note : String,
+  self_report : YataPlanSelfReport?,
+  git_snapshot : YataGitSnapshot?,
+  temporal_delta : YataPlanTemporalDelta?,
+  embedding_report : YataPlanEmbeddingReport?,
+) -> YataPlan {
+  let mut plan = self.snapshot_with_reports(
+    track,
+    mode,
+    generator,
+    note,
+    self_report,
+    git_snapshot,
+  )
+  match temporal_delta {
+    Some(delta) => plan = plan.with_temporal_delta(delta)
+    None => ()
+  }
+  match embedding_report {
+    Some(report) => plan = plan.with_embedding_report(report)
+    None => ()
+  }
+  plan
 }
 
 ///|
@@ -248,6 +463,44 @@ pub fn YataPlan::to_wire(self : YataPlan) -> String {
       b.write_string(report.commit_count.to_string())
       b.write_string("\ngit_report_refs=")
       b.write_string(report.refs)
+    }
+    None => ()
+  }
+  match self.temporal_delta {
+    Some(delta) => {
+      b.write_string("\ntemporal_delta=1")
+      b.write_string("\ntemporal_delta_turns=")
+      b.write_string(delta.delta_turns.to_string())
+      b.write_string("\ntemporal_delta_bytes=")
+      b.write_string(delta.delta_bytes.to_string())
+      b.write_string("\ntemporal_delta_causal_offset=")
+      b.write_string(delta.causal_offset.to_string())
+    }
+    None => ()
+  }
+  match self.embedding_report {
+    Some(report) => {
+      b.write_string("\nembedding_report=1")
+      b.write_string("\nembedding_report_file_type=")
+      b.write_string(report.file_type)
+      b.write_string("\nembedding_report_found=")
+      if report.found {
+        b.write_string("true")
+      } else {
+        b.write_string("false")
+      }
+      b.write_string("\nembedding_report_count=")
+      b.write_string(report.count.to_string())
+      b.write_string("\nembedding_report_ephemeral=")
+      if report.ephemeral {
+        b.write_string("true")
+      } else {
+        b.write_string("false")
+      }
+      b.write_string("\nembedding_report_purge_after_turns=")
+      b.write_string(report.purge_after_turns.to_string())
+      b.write_string("\nembedding_report_strategy=")
+      b.write_string(report.strategy)
     }
     None => ()
   }
