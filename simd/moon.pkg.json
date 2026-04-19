@@ -1,8 +1,0 @@
-{
-  "native-stub": ["simd_stub.c"],
-  "warn-list": "-0055",
-  "targets": {
-    "simd.mbt": ["native"],
-    "simd_test.mbt": ["native"]
-  }
-}

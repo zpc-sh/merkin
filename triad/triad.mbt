@@ -8,11 +8,7 @@
 ///|
 /// Required Merkin WASM export names for triad compatibility.
 pub fn abi_expected_exports() -> Array[String] {
-  [
-    "plan_finger_wasm",
-    "plan_drift_commitment",
-    "triad_contract_wasm",
-  ]
+  ["plan_finger_wasm", "plan_drift_commitment", "triad_contract_wasm"]
 }
 
 ///|
@@ -48,12 +44,7 @@ pub fn TriadRepoPins::new(
 ///|
 pub fn TriadRepoPins::unknown() -> TriadRepoPins {
   TriadRepoPins::new(
-    "unknown",
-    "unknown",
-    "unknown",
-    "unknown",
-    "unknown",
-    "unknown",
+    "unknown", "unknown", "unknown", "unknown", "unknown", "unknown",
   )
 }
 
@@ -77,14 +68,7 @@ pub fn TriadContractInput::new(
   contract_version : String,
   pins : TriadRepoPins,
 ) -> TriadContractInput {
-  {
-    tokens,
-    peer_refs,
-    wasm_exports,
-    generated_at_utc,
-    contract_version,
-    pins,
-  }
+  { tokens, peer_refs, wasm_exports, generated_at_utc, contract_version, pins }
 }
 
 ///|

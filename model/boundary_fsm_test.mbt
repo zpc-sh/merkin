@@ -1,10 +1,7 @@
 ///|
 test "BoundaryWalkerFSM emits clean posture for clean scalars" {
   let fsm = @model.BoundaryWalkerFsm::new("codex", "ratio://merkin/root")
-    .walk_scalars([
-      ("branch", "main"),
-      ("peer_ref", "mu:abc"),
-    ])
+    .walk_scalars([("branch", "main"), ("peer_ref", "mu:abc")])
     .mark()
   assert_eq(fsm.status(), @model.Clean)
   let wire = fsm.emit_stigmergy(note="clean pass")

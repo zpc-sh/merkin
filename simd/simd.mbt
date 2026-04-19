@@ -89,11 +89,7 @@ pub fn vnni_accumulate(a : Bytes, b : Bytes, blocks : Int, acc : Bytes) -> Unit 
 /// Each lane uses a different seed → 8 independent bloom positions.
 /// Requires AVX-VNNI.
 #borrow(data)
-extern "C" fn merkin_vnni_fnv_x8(
-  data : Bytes,
-  len : Int,
-  out : Bytes,
-) -> Unit = "merkin_vnni_fnv_x8"
+extern "C" fn merkin_vnni_fnv_x8(data : Bytes, len : Int, out : Bytes) -> Unit = "merkin_vnni_fnv_x8"
 
 ///|
 pub fn vnni_fnv_x8(data : Bytes) -> Bytes {

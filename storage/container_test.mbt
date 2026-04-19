@@ -92,7 +92,9 @@ test "CognitiveContainer export pushes pack blobs including plugins" {
   assert_true(
     reg.has_blob("repo/pack-a", @hash.Hash::of_bytes(b"\x00asm-plugin-b").key()),
   )
-  assert_true(reg.has_blob("repo/pack-a", @hash.Hash::of_bytes(b"node-pr1").key()))
+  assert_true(
+    reg.has_blob("repo/pack-a", @hash.Hash::of_bytes(b"node-pr1").key()),
+  )
   assert_true(
     reg.has_blob("repo/pack-a", @hash.Hash::of_bytes(b"node-config").key()),
   )
@@ -167,24 +169,16 @@ test "Packfile manifest export/import roundtrip via OCI manifest transport" {
 ///|
 test "ContainerManifest merge replaces keyed layers and overlays annotations" {
   let layer_void_v1 = @storage.LayerDescriptor::new(
-    "application/vnd.merkin.void.v1",
-    b"void-v1",
-    "void",
+    "application/vnd.merkin.void.v1", b"void-v1", "void",
   )
   let layer_tree_v1 = @storage.LayerDescriptor::new(
-    "application/vnd.merkin.tree.v1",
-    b"tree-v1",
-    "tree",
+    "application/vnd.merkin.tree.v1", b"tree-v1", "tree",
   )
   let layer_void_v2 = @storage.LayerDescriptor::new(
-    "application/vnd.merkin.void.v1",
-    b"void-v2",
-    "void",
+    "application/vnd.merkin.void.v1", b"void-v2", "void",
   )
   let layer_bloom_v1 = @storage.LayerDescriptor::new(
-    "application/vnd.merkin.bloom.v1",
-    b"bloom-v1",
-    "bloom",
+    "application/vnd.merkin.bloom.v1", b"bloom-v1", "bloom",
   )
 
   let left0 = @storage.ContainerManifest::new()
@@ -236,19 +230,13 @@ test "ContainerManifest merge replaces keyed layers and overlays annotations" {
 ///|
 test "ContainerManifest merge keeps same names when media types differ" {
   let void_shared = @storage.LayerDescriptor::new(
-    "application/vnd.merkin.void.v1",
-    b"void-shared-v1",
-    "shared",
+    "application/vnd.merkin.void.v1", b"void-shared-v1", "shared",
   )
   let tree_shared = @storage.LayerDescriptor::new(
-    "application/vnd.merkin.tree.v1",
-    b"tree-shared-v1",
-    "shared",
+    "application/vnd.merkin.tree.v1", b"tree-shared-v1", "shared",
   )
   let bloom_unique = @storage.LayerDescriptor::new(
-    "application/vnd.merkin.bloom.v1",
-    b"bloom-only-v1",
-    "bloom",
+    "application/vnd.merkin.bloom.v1", b"bloom-only-v1", "bloom",
   )
 
   let left = @storage.ContainerManifest::new().add_layer(void_shared)
@@ -263,27 +251,24 @@ test "ContainerManifest merge keeps same names when media types differ" {
     void_shared.size + tree_shared.size + bloom_unique.size,
   )
 
-  match find_layer_by_media_and_name(
-    merged,
-    "application/vnd.merkin.void.v1",
-    "shared",
-  ) {
+  match
+    find_layer_by_media_and_name(
+      merged, "application/vnd.merkin.void.v1", "shared",
+    ) {
     Some(layer) => assert_eq(layer.digest.key(), void_shared.digest.key())
     None => assert_true(false)
   }
-  match find_layer_by_media_and_name(
-    merged,
-    "application/vnd.merkin.tree.v1",
-    "shared",
-  ) {
+  match
+    find_layer_by_media_and_name(
+      merged, "application/vnd.merkin.tree.v1", "shared",
+    ) {
     Some(layer) => assert_eq(layer.digest.key(), tree_shared.digest.key())
     None => assert_true(false)
   }
-  match find_layer_by_media_and_name(
-    merged,
-    "application/vnd.merkin.bloom.v1",
-    "bloom",
-  ) {
+  match
+    find_layer_by_media_and_name(
+      merged, "application/vnd.merkin.bloom.v1", "bloom",
+    ) {
     Some(layer) => assert_eq(layer.digest.key(), bloom_unique.digest.key())
     None => assert_true(false)
   }
@@ -294,9 +279,7 @@ test "Packfile manifest import rejects invalid magic and truncation" {
   let manifest = @storage.ContainerManifest::new()
     .add_layer(
       @storage.LayerDescriptor::new(
-        "application/vnd.merkin.void.v1",
-        b"void-snapshot-vx",
-        "void",
+        "application/vnd.merkin.void.v1", b"void-snapshot-vx", "void",
       ),
     )
     .set_annotation("finger.plan", "wire-check")

@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    name: test (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: wasm-gc
+            cmd: moon test --target wasm-gc
+          - target: native-simd
+            cmd: moon test --target native --package zpc/merkin/simd
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: moon version
+        run: moon version
+
+      - name: moon check
+        run: moon check --target wasm-gc
+
+      - name: ${{ matrix.target }}
+        run: ${{ matrix.cmd }}

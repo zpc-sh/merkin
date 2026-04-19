@@ -1,0 +1,45 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "zpc/merkin/triad"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn abi_expected_exports() -> Array[String]
+
+pub fn abi_status(Array[String]) -> String
+
+pub fn emit_contract(TriadContractInput) -> String
+
+pub fn seed_sparse_tree(Array[Array[String]], Bool) -> Unit
+
+// Errors
+
+// Types and methods
+pub(all) struct TriadContractInput {
+  tokens : Array[String]
+  peer_refs : Array[String]
+  wasm_exports : Array[String]
+  generated_at_utc : String
+  contract_version : String
+  pins : TriadRepoPins
+} derive(@debug.Debug)
+pub fn TriadContractInput::default() -> Self
+pub fn TriadContractInput::new(Array[String], Array[String], Array[String], String, String, TriadRepoPins) -> Self
+
+pub(all) struct TriadRepoPins {
+  merkin_head : String
+  mu_head : String
+  lang_head : String
+  merkin_branch_raw : String
+  mu_branch_raw : String
+  lang_branch_raw : String
+} derive(@debug.Debug)
+pub fn TriadRepoPins::new(String, String, String, String, String, String) -> Self
+pub fn TriadRepoPins::unknown() -> Self
+
+// Type aliases
+
+// Traits
+

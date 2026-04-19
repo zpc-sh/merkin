@@ -725,7 +725,9 @@ fn print_usage() -> Unit {
   println("  --yata-detached-depth <uint> (for yata-topology)")
   println("  --yata-max-children <uint> (for yata-topology)")
   println("  --yata-max-depth <uint> (for yata-topology)")
-  println("  --drift-peers <peer-a,peer-b> (for yata-wasm-plan/yata-triad-contract)")
+  println(
+    "  --drift-peers <peer-a,peer-b> (for yata-wasm-plan/yata-triad-contract)",
+  )
   println("  --seal true|false (for yata-wasm-plan/yata-triad-contract)")
   println("  --merkin-head <git-head> (for yata-triad-contract)")
   println("  --mu-head <git-head> (for yata-triad-contract)")
@@ -1358,13 +1360,13 @@ fn run_yata_wasm_plan(args : Array[String]) -> Unit {
   let peer_a = drift_peer_or_none(raw_peers, 0)
   let peer_b = drift_peer_or_none(raw_peers, 1)
   let boundary_fsm = @model.BoundaryWalkerFsm::new(
-    "daemon.yata.wasm-plan",
-    "ratio://merkin/cmd/main",
-  )
+      "daemon.yata.wasm-plan", "ratio://merkin/cmd/main",
+    )
     .walk_scalars([("peer_a", peer_a), ("peer_b", peer_b)])
     .mark()
-  let boundary_stigmergy = boundary_fsm
-    .emit_stigmergy(note="daemon yata wasm-plan boundary walk")
+  let boundary_stigmergy = boundary_fsm.emit_stigmergy(
+    note="daemon yata wasm-plan boundary walk",
+  )
   let boundary_attention_saturated = if boundary_fsm.attention_saturated() {
     "1"
   } else {
@@ -1400,9 +1402,7 @@ fn run_yata_triad_contract(args : Array[String]) -> Unit {
   let mu_branch = value_after(args, "--mu-branch", "unknown")
   let lang_branch = value_after(args, "--lang-branch", "unknown")
   let wasm_exports_csv = value_after(
-    args,
-    "--wasm-exports",
-    "plan_finger_wasm,plan_drift_commitment,triad_contract_wasm",
+    args, "--wasm-exports", "plan_finger_wasm,plan_drift_commitment,triad_contract_wasm",
   )
   let generated_at_utc = value_after(args, "--generated-at-utc", "unknown")
   let contract_version = value_after(args, "--contract-version", "v0.1")
@@ -1421,17 +1421,8 @@ fn run_yata_triad_contract(args : Array[String]) -> Unit {
   let drift = @api.plan_drift_commitment(tokens_csv, drift_peers)
   let abi_status = @api.triad_abi_status(wasm_exports_csv)
   let contract = @api.triad_contract_wasm(
-    tokens_csv,
-    drift_peers,
-    merkin_head,
-    mu_head,
-    lang_head,
-    merkin_branch,
-    mu_branch,
-    lang_branch,
-    wasm_exports_csv,
-    generated_at_utc,
-    contract_version,
+    tokens_csv, drift_peers, merkin_head, mu_head, lang_head, merkin_branch, mu_branch,
+    lang_branch, wasm_exports_csv, generated_at_utc, contract_version,
   )
 
   println("triad_contract=true")

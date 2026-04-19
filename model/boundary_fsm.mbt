@@ -105,7 +105,8 @@ pub fn BoundaryWalkerFsm::walk_scalar(
     state,
     walked_scalars: self.walked_scalars + 1U,
     findings,
-    sanitized_scalars: self.sanitized_scalars + (if scan.sanitized { 1U } else { 0U }),
+    sanitized_scalars: self.sanitized_scalars +
+    (if scan.sanitized { 1U } else { 0U }),
     ghost_u200b: self.ghost_u200b + scan.ghost_u200b,
     ghost_u200c: self.ghost_u200c + scan.ghost_u200c,
     ghost_ufeff: self.ghost_ufeff + scan.ghost_ufeff,
@@ -136,14 +137,15 @@ pub fn BoundaryWalkerFsm::mark(self : BoundaryWalkerFsm) -> BoundaryWalkerFsm {
     BoundaryFsmState::Failed => BoundaryFsmState::Failed
     _ => BoundaryFsmState::Marked
   }
-  { ..self, state }
+  { ..self, state, }
 }
 
 ///|
 pub fn BoundaryWalkerFsm::status(self : BoundaryWalkerFsm) -> BoundaryStatus {
   if self.bidi_controls > 0U || self.ascii_controls > 0U {
     Containment
-  } else if self.ghost_u200b > 0U || self.ghost_u200c > 0U ||
+  } else if self.ghost_u200b > 0U ||
+    self.ghost_u200c > 0U ||
     self.ghost_ufeff > 0U {
     Attention
   } else {
@@ -162,13 +164,17 @@ pub fn BoundaryWalkerFsm::attention_ticks(self : BoundaryWalkerFsm) -> UInt {
 /// Heavier weights are assigned to controls known to drive display/attention confusion.
 pub fn BoundaryWalkerFsm::attention_score(self : BoundaryWalkerFsm) -> UInt {
   let ghost_total = self.ghost_u200b + self.ghost_u200c + self.ghost_ufeff
-  ghost_total * 2U + self.bidi_controls * 8U + self.ascii_controls * 6U +
+  ghost_total * 2U +
+  self.bidi_controls * 8U +
+  self.ascii_controls * 6U +
   self.sanitized_scalars
 }
 
 ///|
 /// Gradient of attention pressure seen by this FSM without attaching intelligence.
-pub fn BoundaryWalkerFsm::attention_gradient(self : BoundaryWalkerFsm) -> String {
+pub fn BoundaryWalkerFsm::attention_gradient(
+  self : BoundaryWalkerFsm,
+) -> String {
   let score = self.attention_score()
   if score == 0U {
     "quiescent"
@@ -183,7 +189,9 @@ pub fn BoundaryWalkerFsm::attention_gradient(self : BoundaryWalkerFsm) -> String
 
 ///|
 pub fn BoundaryWalkerFsm::attention_saturated(self : BoundaryWalkerFsm) -> Bool {
-  self.attention_score() >= 12U || self.bidi_controls > 1U || self.ascii_controls > 1U
+  self.attention_score() >= 12U ||
+  self.bidi_controls > 1U ||
+  self.ascii_controls > 1U
 }
 
 ///|
@@ -326,10 +334,17 @@ fn scan_scalar(value : String) -> ScalarScan {
   }
   let canonical_value = canonical.to_string()
   let sanitized = canonical_value != value
-  let suspicious = ghost_u200b > 0U || ghost_u200c > 0U || ghost_ufeff > 0U ||
-    bidi_controls > 0U || ascii_controls > 0U
+  let suspicious = ghost_u200b > 0U ||
+    ghost_u200c > 0U ||
+    ghost_ufeff > 0U ||
+    bidi_controls > 0U ||
+    ascii_controls > 0U
   {
-    canonical: if canonical_value == "" { "none" } else { canonical_value },
+    canonical: if canonical_value == "" {
+      "none"
+    } else {
+      canonical_value
+    },
     raw_hex: scalar_hex(value),
     ghost_u200b,
     ghost_u200c,
@@ -343,14 +358,21 @@ fn scan_scalar(value : String) -> ScalarScan {
 
 ///|
 fn is_ascii_control(code : Int) -> Bool {
-  (code >= 0 && code < 32 && code != 9 && code != 10 && code != 13) || code == 127
+  (code >= 0 && code < 32 && code != 9 && code != 10 && code != 13) ||
+  code == 127
 }
 
 ///|
 fn is_bidi_control(code : Int) -> Bool {
   // Embedding/override controls + isolate controls.
-  code == 0x202A || code == 0x202B || code == 0x202D || code == 0x202E ||
-  code == 0x202C || code == 0x2066 || code == 0x2067 || code == 0x2068 ||
+  code == 0x202A ||
+  code == 0x202B ||
+  code == 0x202D ||
+  code == 0x202E ||
+  code == 0x202C ||
+  code == 0x2066 ||
+  code == 0x2067 ||
+  code == 0x2068 ||
   code == 0x2069
 }
 
@@ -369,7 +391,11 @@ fn scalar_hex(value : String) -> String {
     out.write_char(int_to_hex(code & 0xF))
   }
   let hex = out.to_string()
-  if hex == "" { "none" } else { hex }
+  if hex == "" {
+    "none"
+  } else {
+    hex
+  }
 }
 
 ///|
@@ -392,7 +418,11 @@ fn sanitize_line(value : String) -> String {
     }
   }
   let s = out.to_string()
-  if s == "" { "none" } else { s }
+  if s == "" {
+    "none"
+  } else {
+    s
+  }
 }
 
 ///|

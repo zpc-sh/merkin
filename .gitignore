@@ -9,3 +9,6 @@ dist/
 .moonlogs
 .claude/
 .codex/
+.codex
+.protools
+trace.json

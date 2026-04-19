@@ -31,12 +31,7 @@ test "triad package emits contract with typed input" {
   @triad.seed_sparse_tree([["alpha", "doc"], ["beta", "doc"]], true)
 
   let pins = @triad.TriadRepoPins::new(
-    "merkin-head",
-    "mu-head",
-    "lang-head",
-    "main",
-    "main",
-    "main",
+    "merkin-head", "mu-head", "lang-head", "main", "main", "main",
   )
   let input = @triad.TriadContractInput::new(
     ["alpha"],
@@ -55,10 +50,7 @@ test "triad package emits contract with typed input" {
 
 ///|
 test "triad package ABI helper reports missing exports" {
-  assert_eq(
-    @triad.abi_status(@triad.abi_expected_exports()),
-    "ok",
-  )
+  assert_eq(@triad.abi_status(@triad.abi_expected_exports()), "ok")
   assert_eq(
     @triad.abi_status(["plan_finger_wasm"]),
     "missing:plan_drift_commitment,triad_contract_wasm",

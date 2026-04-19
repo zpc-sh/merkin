@@ -1,0 +1,40 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "zpc/merkin/locus"
+
+import {
+  "zpc/merkin/model",
+}
+
+// Values
+pub fn format_enter_preamble(String, @model.Residue?) -> String
+
+pub fn format_residue(@model.Residue) -> String
+
+pub fn format_trail(String, Array[@model.Residue]) -> String
+
+pub fn format_where(Array[(String, @model.Residue?)]) -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct LocusConfig {
+  loci_root : String
+  store_path : String
+} derive(Show)
+pub fn LocusConfig::default() -> Self
+
+pub(all) struct LocusRuntime {
+  config : LocusConfig
+  session : @model.SessionIdentity
+} derive(Show)
+pub fn LocusRuntime::default(@model.SessionIdentity) -> Self
+pub fn LocusRuntime::locus_path(Self, String) -> String
+pub fn LocusRuntime::new(LocusConfig, @model.SessionIdentity) -> Self
+pub fn LocusRuntime::residue_path(Self, String) -> String
+pub fn LocusRuntime::scaffold_paths(Self, String) -> Array[String]
+pub fn LocusRuntime::scaffold_readme(Self, @model.Locus) -> String
+
+// Type aliases
+
+// Traits
+

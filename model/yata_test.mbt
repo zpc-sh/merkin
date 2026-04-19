@@ -245,5 +245,8 @@ test "Yata hole can be abandoned" {
   let hole = @model.YataHole::new("notes/overview.md", contract, [], [], [])
   let abandoned_hole = hole.abandon("Too complex")
   assert_eq(abandoned_hole.state, @model.Abandoned("Too complex"))
-  assert_eq(abandoned_hole.provenance[abandoned_hole.provenance.length() - 1], "Too complex")
+  assert_eq(
+    abandoned_hole.provenance[abandoned_hole.provenance.length() - 1],
+    "Too complex",
+  )
 }

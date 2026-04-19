@@ -1,0 +1,46 @@
+import {
+  "zpc/merkin/api" @api,
+}
+
+options(
+  link: {
+    "wasm": {
+      "exports": [
+        "bloom_add",
+        "bloom_check",
+        "bloom_serialize",
+        "bloom_popcount",
+        "tree_ingest",
+        "tree_sparse",
+        "tree_seal",
+        "tree_epoch",
+        "tree_node_count",
+        "plan_finger_wasm",
+        "plan_drift_commitment",
+        "triad_abi_status",
+        "triad_contract_wasm",
+        "hash_bytes",
+        "reset",
+      ],
+    },
+    "wasm-gc": {
+      "exports": [
+        "bloom_add",
+        "bloom_check",
+        "bloom_serialize",
+        "bloom_popcount",
+        "tree_ingest",
+        "tree_sparse",
+        "tree_seal",
+        "tree_epoch",
+        "tree_node_count",
+        "plan_finger_wasm",
+        "plan_drift_commitment",
+        "triad_abi_status",
+        "triad_contract_wasm",
+        "hash_bytes",
+        "reset",
+      ],
+    },
+  },
+)

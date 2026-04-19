@@ -1,0 +1,72 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "zpc/merkin/wasm_entry"
+
+// Values
+pub fn bloom_add(String) -> Unit
+
+pub fn bloom_check(String) -> Bool
+
+pub fn bloom_popcount() -> Int
+
+pub fn bloom_serialize() -> String
+
+pub fn hash_bytes(String) -> String
+
+pub fn lm_bloom_add() -> Unit
+
+pub fn lm_bloom_check() -> Int
+
+pub fn lm_bloom_serialize() -> Unit
+
+pub fn lm_out_get(Int) -> Int
+
+pub fn lm_out_len() -> Int
+
+pub fn lm_plan_drift_commitment() -> Unit
+
+pub fn lm_plan_finger_wasm() -> Unit
+
+pub fn lm_reset() -> Unit
+
+pub fn lm_slot1_len(Int) -> Unit
+
+pub fn lm_slot1_put(Int, Int) -> Unit
+
+pub fn lm_slot2_len(Int) -> Unit
+
+pub fn lm_slot2_put(Int, Int) -> Unit
+
+pub fn lm_tree_ingest() -> Unit
+
+pub fn lm_tree_seal() -> Unit
+
+pub fn lm_tree_sparse() -> Unit
+
+pub fn plan_drift_commitment(String, String) -> String
+
+pub fn plan_finger_wasm(String, String) -> String
+
+pub fn reset() -> Unit
+
+pub fn tree_epoch() -> Int
+
+pub fn tree_ingest(String, String) -> String
+
+pub fn tree_node_count() -> Int
+
+pub fn tree_seal() -> String
+
+pub fn tree_sparse(String) -> String
+
+pub fn triad_abi_status(String) -> String
+
+pub fn triad_contract_wasm(String, String, String, String, String, String, String, String, String, String, String) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

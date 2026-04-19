@@ -69,7 +69,10 @@ pub fn plan_finger_wasm(tokens_csv : String, peer_refs_csv : String) -> String {
 
 ///|
 /// Deterministic drift commitment from sparse-tree projection + peers.
-pub fn plan_drift_commitment(tokens_csv : String, peer_refs_csv : String) -> String {
+pub fn plan_drift_commitment(
+  tokens_csv : String,
+  peer_refs_csv : String,
+) -> String {
   @api.plan_drift_commitment(tokens_csv, peer_refs_csv)
 }
 
@@ -96,17 +99,8 @@ pub fn triad_contract_wasm(
   contract_version : String,
 ) -> String {
   @api.triad_contract_wasm(
-    tokens_csv,
-    peer_refs_csv,
-    merkin_head,
-    mu_head,
-    lang_head,
-    merkin_branch_raw,
-    mu_branch_raw,
-    lang_branch_raw,
-    wasm_exports_csv,
-    generated_at_utc,
-    contract_version,
+    tokens_csv, peer_refs_csv, merkin_head, mu_head, lang_head, merkin_branch_raw,
+    mu_branch_raw, lang_branch_raw, wasm_exports_csv, generated_at_utc, contract_version,
   )
 }
 

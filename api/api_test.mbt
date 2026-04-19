@@ -41,10 +41,9 @@ test "WASM finger plan emission includes drift coordination fields" {
   assert_true(string_contains(wire, "git_report=1"))
   assert_true(string_contains(wire, "git_report_merge_base=mu:abc"))
   assert_true(string_contains(wire, "git_report_head=muyata:def"))
-  assert_true(string_contains(
-    wire,
-    "git_report_refs=peer_a:mu:abc,peer_b:muyata:def,",
-  ))
+  assert_true(
+    string_contains(wire, "git_report_refs=peer_a:mu:abc,peer_b:muyata:def,"),
+  )
   assert_true(string_contains(wire, "boundary_mode=sanitize"))
   assert_true(string_contains(wire, "boundary_cognitive=1"))
   assert_true(string_contains(wire, "boundary_domain=ratio_loci"))
@@ -55,10 +54,11 @@ test "WASM finger plan emission includes drift coordination fields" {
   assert_true(string_contains(wire, "boundary_attention_gradient=quiescent"))
   assert_true(string_contains(wire, "boundary_attention_saturated=0"))
   assert_true(string_contains(wire, "boundary_status=clean"))
-  assert_true(string_contains(
-    wire,
-    "wasm/finger.plan.wasm converging ready=true candidates=1 conf_floor=100 selected=none provenance=1",
-  ))
+  assert_true(
+    string_contains(
+      wire, "wasm/finger.plan.wasm converging ready=true candidates=1 conf_floor=100 selected=none provenance=1",
+    ),
+  )
 }
 
 ///|
@@ -175,43 +175,19 @@ test "Triad ABI status helper and seal stability" {
   ignore(@api.tree_ingest("route://alpha/doc", "alpha,doc"))
   ignore(@api.tree_seal())
   let c1 = @api.triad_contract_wasm(
-    "alpha",
-    "mu:abc,lang:def",
-    "merkin-head",
-    "mu-head",
-    "lang-head",
-    "main",
-    "main",
-    "main",
-    "plan_finger_wasm,plan_drift_commitment,triad_contract_wasm",
-    "2026-04-14T12:00:00Z",
+    "alpha", "mu:abc,lang:def", "merkin-head", "mu-head", "lang-head", "main", "main",
+    "main", "plan_finger_wasm,plan_drift_commitment,triad_contract_wasm", "2026-04-14T12:00:00Z",
     "v0.1",
   )
   let c2 = @api.triad_contract_wasm(
-    "alpha",
-    "mu:abc,lang:def",
-    "merkin-head",
-    "mu-head",
-    "lang-head",
-    "main",
-    "main",
-    "main",
-    "plan_finger_wasm,plan_drift_commitment,triad_contract_wasm",
-    "2026-04-14T12:00:00Z",
+    "alpha", "mu:abc,lang:def", "merkin-head", "mu-head", "lang-head", "main", "main",
+    "main", "plan_finger_wasm,plan_drift_commitment,triad_contract_wasm", "2026-04-14T12:00:00Z",
     "v0.1",
   )
   let c3 = @api.triad_contract_wasm(
-    "alpha",
-    "mu:abc,lang:def",
-    "merkin-head",
-    "mu-head",
-    "lang-head-v2",
-    "main",
-    "main",
-    "main",
-    "plan_finger_wasm,plan_drift_commitment,triad_contract_wasm",
-    "2026-04-14T12:00:00Z",
-    "v0.1",
+    "alpha", "mu:abc,lang:def", "merkin-head", "mu-head", "lang-head-v2", "main",
+    "main", "main", "plan_finger_wasm,plan_drift_commitment,triad_contract_wasm",
+    "2026-04-14T12:00:00Z", "v0.1",
   )
   assert_eq(c1, c2)
   assert_true(c1 != c3)

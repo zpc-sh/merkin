@@ -292,6 +292,7 @@ test "Yata one-shot snapshot can attach both self and git envelopes" {
   }
 }
 
+///|
 test "Yata `.plan` strict parser rejects unknown fields and reports issues" {
   let raw = "kind: merkin.yata.plan\ntrack=program\nmode=compact\ngenerator=chatgpt\nnote=manual\nentries=1\nmaterial_hash=blake3:abc\na=1\n- zzz anchor state ready=true candidates=1 conf_floor=10 selected=none provenance=0"
   let outcome = @model.YataPlan::parse_wire_strict(raw)

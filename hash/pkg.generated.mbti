@@ -9,21 +9,17 @@ package "zpc/merkin/hash"
 pub(all) struct Hash {
   alg : HashAlg
   digest : Bytes
-}
+} derive(Eq, Show)
 pub fn Hash::digest_len(Self) -> Int
 pub fn Hash::key(Self) -> String
 pub fn Hash::matches(Self, Self) -> Bool
 pub fn Hash::of_bytes(Bytes) -> Self
 pub fn Hash::semantic(Self, Bytes) -> Self
-pub impl Eq for Hash
-pub impl Show for Hash
 
 pub(all) enum HashAlg {
   Fnv1a
   Blake3
-}
-pub impl Eq for HashAlg
-pub impl Show for HashAlg
+} derive(Eq, Show)
 
 // Type aliases
 

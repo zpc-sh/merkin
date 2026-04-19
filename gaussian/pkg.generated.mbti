@@ -9,13 +9,11 @@ package "zpc/merkin/gaussian"
 pub(all) struct GaussianField {
   mu : Double
   sigma : Double
-}
+} derive(Eq, Show)
 pub fn GaussianField::new() -> Self
 pub fn GaussianField::of(Double, Double) -> Self
 pub fn GaussianField::should_execute(Self, Double, Double) -> Bool
 pub fn GaussianField::update(Self, Double, Int) -> Self
-pub impl Eq for GaussianField
-pub impl Show for GaussianField
 
 // Type aliases
 

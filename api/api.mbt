@@ -30,9 +30,7 @@ let g_bloom : @bloom.BloomSketch = @bloom.BloomSketch::new()
 ///|
 /// Required Merkin WASM exports expected by Mu/lang integration.
 let triad_expected_wasm_exports : Array[String] = [
-  "plan_finger_wasm",
-  "plan_drift_commitment",
-  "triad_contract_wasm",
+  "plan_finger_wasm", "plan_drift_commitment", "triad_contract_wasm",
 ]
 
 // --- Bloom API ---
@@ -185,9 +183,8 @@ pub fn plan_finger_wasm(tokens_csv : String, peer_refs_csv : String) -> String {
   let raw_peer_a = if 0 < raw_peers.length() { raw_peers[0] } else { "none" }
   let raw_peer_b = if 1 < raw_peers.length() { raw_peers[1] } else { "none" }
   let boundary_fsm = @model.BoundaryWalkerFsm::new(
-    "finger.plan.wasm",
-    "ratio://merkin/api",
-  )
+      "finger.plan.wasm", "ratio://merkin/api",
+    )
     .walk_scalars([("peer_a", raw_peer_a), ("peer_b", raw_peer_b)])
     .mark()
   let refs_sanitized = boundary_fsm.sanitized_scalars
@@ -262,14 +259,19 @@ pub fn plan_finger_wasm(tokens_csv : String, peer_refs_csv : String) -> String {
   out.write_string(boundary_status)
   out.write_string("\n- ")
   out.write_string(hole_id)
-  out.write_string(" wasm/finger.plan.wasm converging ready=true candidates=1 conf_floor=100 selected=none provenance=1")
+  out.write_string(
+    " wasm/finger.plan.wasm converging ready=true candidates=1 conf_floor=100 selected=none provenance=1",
+  )
   out.write_char('\n')
   out.to_string()
 }
 
 ///|
 /// Deterministic drift commitment for sparse-tree + peer coordination.
-pub fn plan_drift_commitment(tokens_csv : String, peer_refs_csv : String) -> String {
+pub fn plan_drift_commitment(
+  tokens_csv : String,
+  peer_refs_csv : String,
+) -> String {
   build_wasm_plan_drift_snapshot(tokens_csv, peer_refs_csv).drift_commitment.key()
 }
 
@@ -525,7 +527,9 @@ fn count_non_none_peers(peer_a : String, peer_b : String) -> UInt {
 }
 
 ///|
-fn expected_wasm_missing_exports(provided_exports : Array[String]) -> Array[String] {
+fn expected_wasm_missing_exports(
+  provided_exports : Array[String],
+) -> Array[String] {
   let missing : Array[String] = []
   for expected in triad_expected_wasm_exports {
     if !string_array_contains(provided_exports, expected) {
@@ -635,7 +639,11 @@ fn scalar_hex(value : String) -> String {
     out.write_char(int_to_hex(code & 0xF))
   }
   let hex = out.to_string()
-  if hex == "" { "none" } else { hex }
+  if hex == "" {
+    "none"
+  } else {
+    hex
+  }
 }
 
 ///|
@@ -669,8 +677,7 @@ fn json_escape(value : String) -> String {
       out.write_string("\\r")
     } else if ch == '\t' {
       out.write_string("\\t")
-    } else if code < 32 || code == 0x200B || code == 0x200C ||
-      code == 0xFEFF {
+    } else if code < 32 || code == 0x200B || code == 0x200C || code == 0xFEFF {
       write_json_u16_escape(out, code)
     } else {
       out.write_char(ch)
@@ -681,7 +688,11 @@ fn json_escape(value : String) -> String {
 
 ///|
 fn bool_to_json(value : Bool) -> String {
-  if value { "true" } else { "false" }
+  if value {
+    "true"
+  } else {
+    "false"
+  }
 }
 
 ///|
@@ -835,7 +846,11 @@ fn sanitize_plan_scalar(value : String) -> String {
     }
   }
   let text = out.to_string()
-  if text == "" { "none" } else { text }
+  if text == "" {
+    "none"
+  } else {
+    text
+  }
 }
 
 ///|
@@ -863,7 +878,11 @@ fn sanitize_boundary_scalar(value : String) -> String {
     }
   }
   let text = out.to_string()
-  if text == "" { "none" } else { text }
+  if text == "" {
+    "none"
+  } else {
+    text
+  }
 }
 
 ///|

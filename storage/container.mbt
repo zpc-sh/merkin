@@ -315,7 +315,9 @@ pub fn CognitiveContainer::pack(
   }
 
   // Keep proof obligations attached to pack-layer accounting.
-  ignore(expected_pack_layer_count(plugins.length(), procsi_bytes, config_bytes))
+  ignore(
+    expected_pack_layer_count(plugins.length(), procsi_bytes, config_bytes),
+  )
 
   {
     manifest,

@@ -9,14 +9,13 @@ package "zpc/merkin/bloom"
 pub(all) struct BloomSketch {
   bits : FixedArray[Bool]
   num_hashes : Int
-}
+} derive(Show)
 pub fn BloomSketch::add(Self, String) -> Unit
 pub fn BloomSketch::maybe_contains(Self, String) -> Bool
 pub fn BloomSketch::merge(Self, Self) -> Self
 pub fn BloomSketch::new() -> Self
 pub fn BloomSketch::rebuild(Array[String]) -> Self
 pub fn BloomSketch::with_params(Int, Int) -> Self
-pub impl Show for BloomSketch
 
 // Type aliases
 

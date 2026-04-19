@@ -857,7 +857,6 @@ fn plan_safe_token(raw : String) -> String {
   }
 }
 
-
 ///|
 /// Convert a String to Bytes by encoding each code point as 4 big-endian bytes.
 /// Used for consistent hash input derivation within the daemon package.
