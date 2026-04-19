@@ -6,6 +6,15 @@ Merkin is a MoonBit substrate for deterministic hashing, tree sealing, storage p
 
 If you're looking for "where everything is", start here:
 
+- `docs/MERKIN_MASTER_DOCUMENT.md` — cohesive project-wide current-state reference
+- `docs/MERKIN_USER_MANUAL.md` — practical usage and operations manual
+- `docs/MERKIN_PACK_STANDARD_v0.1.md` — pack standard and implementation-state reference
+- `docs/GIT_GHOST_HARDENING_RUNBOOK.md` — git byte-hygiene and hardening runbook
+- `docs/RATIO_BOUNDARY_SHIM_SPEC_v0.1.md` — design for git boundary filtering into Merkin
+- `docs/MERKIN_COMPOSITION_PRIMITIVES_v0.1.md` — composition maneuvers (`consume|union|atop`) and invariants
+- `docs/MERKIN_API_REFERENCE_v0.1.md` — consolidated API reference (library/CLI/daemon/WASM/Pactis alignment)
+- `docs/YATA_CONTRACT_LANGUAGE_PROFILE_v0.1.md` — Yata contract language profile for compiler/runtime integrations
+- `docs/BOUNDARY_WALKER_FSM_v0.1.md` — first boundary FSM for bidi/ghost markup and stigmergy emission
 - `docs/DOCUMENTATION_INDEX.md` — full documentation map by use-case
 - `docs/ROADMAP_SCOPE.md` — active scope and de-scoped tracks
 - `docs/LIBRARY_API_GUIDE.md` — library-first usage guide

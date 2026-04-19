@@ -144,6 +144,7 @@ Cross-repo drift helper for `finger.plan.wasm`:
 
 - `tools/yata-wasm-plan-drift-sync.sh`
 - `make wasm-plan-drift`
+- `daemon yata wasm-plan` now emits compact plan wire + paired `merkin.boundary.stigmergy` boundary wire + FSM attention gradient summary fields from the same peer scan
 
 Cross-repo triad contract helper for Merkin + Mu + lang:
 

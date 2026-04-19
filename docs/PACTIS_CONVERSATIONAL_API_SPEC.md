@@ -1,5 +1,8 @@
 # Pactis Conversational Hosting API (Saba) (v0.1-draft)
 
+> Status note (2026-04-18): treat this form as a compatibility stub.
+> Directionally, conversation surfaces are moving toward union'd Merkin composition rather than a separate long-term Pactis API shape.
+
 This specification defines Pactis as an AI-native conversation host, not only a Git-like object host.
 
 For Saba (AI debate hall), a repository is a conversation substrate with replayable timelines, typed artifacts, and deterministic addressability.

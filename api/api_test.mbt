@@ -45,10 +45,61 @@ test "WASM finger plan emission includes drift coordination fields" {
     wire,
     "git_report_refs=peer_a:mu:abc,peer_b:muyata:def,",
   ))
+  assert_true(string_contains(wire, "boundary_mode=sanitize"))
+  assert_true(string_contains(wire, "boundary_cognitive=1"))
+  assert_true(string_contains(wire, "boundary_domain=ratio_loci"))
+  assert_true(string_contains(wire, "boundary_bidi_controls=0"))
+  assert_true(string_contains(wire, "boundary_ascii_controls=0"))
+  assert_true(string_contains(wire, "boundary_ticks=2"))
+  assert_true(string_contains(wire, "boundary_attention_score=0"))
+  assert_true(string_contains(wire, "boundary_attention_gradient=quiescent"))
+  assert_true(string_contains(wire, "boundary_attention_saturated=0"))
+  assert_true(string_contains(wire, "boundary_status=clean"))
   assert_true(string_contains(
     wire,
     "wasm/finger.plan.wasm converging ready=true candidates=1 conf_floor=100 selected=none provenance=1",
   ))
+}
+
+///|
+test "WASM finger plan boundary posture flips to attention on ghost refs" {
+  @api.reset()
+  ignore(@api.tree_ingest("route://alpha/doc", "alpha,doc"))
+  ignore(@api.tree_seal())
+
+  let peer_b = {
+    let out = StringBuilder::new(size_hint=10)
+    out.write_string("muyata:def")
+    out.write_char((65279).unsafe_to_char())
+    out.to_string()
+  }
+  let wire = @api.plan_finger_wasm("alpha", "mu:abc," + peer_b)
+
+  assert_true(string_contains(wire, "boundary_refs_sanitized=1"))
+  assert_true(string_contains(wire, "boundary_ghost_ufeff=1"))
+  assert_true(string_contains(wire, "boundary_attention_score=3"))
+  assert_true(string_contains(wire, "boundary_attention_gradient=watch"))
+  assert_true(string_contains(wire, "boundary_status=attention"))
+}
+
+///|
+test "WASM finger plan boundary posture flips to containment on bidi refs" {
+  @api.reset()
+  ignore(@api.tree_ingest("route://alpha/doc", "alpha,doc"))
+  ignore(@api.tree_seal())
+
+  let peer_b = {
+    let out = StringBuilder::new(size_hint=16)
+    out.write_string("muyata:def")
+    out.write_char((8238).unsafe_to_char()) // U+202E
+    out.to_string()
+  }
+  let wire = @api.plan_finger_wasm("alpha", "mu:abc," + peer_b)
+
+  assert_true(string_contains(wire, "boundary_bidi_controls=1"))
+  assert_true(string_contains(wire, "boundary_attention_score=9"))
+  assert_true(string_contains(wire, "boundary_attention_gradient=pulled"))
+  assert_true(string_contains(wire, "boundary_status=containment"))
 }
 
 ///|

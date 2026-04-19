@@ -1,0 +1,19 @@
+{
+  "kind": "merkin.boundary.shim.mirror",
+  "version": "0.1-draft",
+  "canonical_spec": "docs/RATIO_BOUNDARY_SHIM_SPEC_v0.1.md",
+  "primary_surface": "finger.plan.wasm",
+  "boundary_role": "git-ingress-filter",
+  "required_ghost_codepoints": [
+    "U+200B",
+    "U+200C",
+    "U+FEFF"
+  ],
+  "recommended_modes": [
+    "observe",
+    "sanitize",
+    "strict",
+    "quarantine"
+  ],
+  "drift_rule": "Changes to boundary filtering rules, codepoint hygiene, quarantine semantics, or finger.plan boundary posture fields must update the canonical spec and this mirror in the same change."
+}

@@ -181,6 +181,26 @@ pub fn plan_finger_wasm(tokens_csv : String, peer_refs_csv : String) -> String {
   ).key()
 
   let peer_count = count_non_none_peers(snapshot.peer_a, snapshot.peer_b)
+  let raw_peers = csv_split(peer_refs_csv)
+  let raw_peer_a = if 0 < raw_peers.length() { raw_peers[0] } else { "none" }
+  let raw_peer_b = if 1 < raw_peers.length() { raw_peers[1] } else { "none" }
+  let boundary_fsm = @model.BoundaryWalkerFsm::new(
+    "finger.plan.wasm",
+    "ratio://merkin/api",
+  )
+    .walk_scalars([("peer_a", raw_peer_a), ("peer_b", raw_peer_b)])
+    .mark()
+  let refs_sanitized = boundary_fsm.sanitized_scalars
+  let ghost_u200b = boundary_fsm.ghost_u200b
+  let ghost_u200c = boundary_fsm.ghost_u200c
+  let ghost_ufeff = boundary_fsm.ghost_ufeff
+  let bidi_controls = boundary_fsm.bidi_controls
+  let ascii_controls = boundary_fsm.ascii_controls
+  let boundary_ticks = boundary_fsm.attention_ticks()
+  let boundary_attention_score = boundary_fsm.attention_score()
+  let boundary_attention_gradient = boundary_fsm.attention_gradient()
+  let boundary_attention_saturated = boundary_fsm.attention_saturated()
+  let boundary_status = boundary_status_scalar(boundary_fsm.status())
   let refs = "peer_a:" +
     snapshot.peer_a +
     ",peer_b:" +
@@ -213,6 +233,33 @@ pub fn plan_finger_wasm(tokens_csv : String, peer_refs_csv : String) -> String {
   out.write_string(peer_count.to_string())
   out.write_string("\ngit_report_refs=")
   out.write_string(refs)
+  out.write_string("\nboundary_mode=sanitize")
+  out.write_string("\nboundary_cognitive=1")
+  out.write_string("\nboundary_domain=ratio_loci")
+  out.write_string("\nboundary_refs_total=2")
+  out.write_string("\nboundary_refs_sanitized=")
+  out.write_string(refs_sanitized.to_string())
+  out.write_string("\nboundary_refs_quarantined=0")
+  out.write_string("\nboundary_ghost_u200b=")
+  out.write_string(ghost_u200b.to_string())
+  out.write_string("\nboundary_ghost_u200c=")
+  out.write_string(ghost_u200c.to_string())
+  out.write_string("\nboundary_ghost_ufeff=")
+  out.write_string(ghost_ufeff.to_string())
+  out.write_string("\nboundary_bidi_controls=")
+  out.write_string(bidi_controls.to_string())
+  out.write_string("\nboundary_ascii_controls=")
+  out.write_string(ascii_controls.to_string())
+  out.write_string("\nboundary_ticks=")
+  out.write_string(boundary_ticks.to_string())
+  out.write_string("\nboundary_attention_score=")
+  out.write_string(boundary_attention_score.to_string())
+  out.write_string("\nboundary_attention_gradient=")
+  out.write_string(boundary_attention_gradient)
+  out.write_string("\nboundary_attention_saturated=")
+  out.write_string(if boundary_attention_saturated { "1" } else { "0" })
+  out.write_string("\nboundary_status=")
+  out.write_string(boundary_status)
   out.write_string("\n- ")
   out.write_string(hole_id)
   out.write_string(" wasm/finger.plan.wasm converging ready=true candidates=1 conf_floor=100 selected=none provenance=1")
@@ -769,7 +816,7 @@ fn build_wasm_plan_drift_snapshot(
 ///|
 fn peer_ref_or_none(peers : Array[String], index : Int) -> String {
   if index < peers.length() {
-    sanitize_plan_scalar(peers[index])
+    sanitize_boundary_scalar(peers[index])
   } else {
     "none"
   }
@@ -780,6 +827,34 @@ fn sanitize_plan_scalar(value : String) -> String {
   let out = StringBuilder::new(size_hint=32)
   for ch in value {
     if ch == '\n' || ch == '\r' {
+      out.write_char('_')
+    } else if ch == ',' {
+      out.write_char(';')
+    } else {
+      out.write_char(ch)
+    }
+  }
+  let text = out.to_string()
+  if text == "" { "none" } else { text }
+}
+
+///|
+fn boundary_status_scalar(status : @model.BoundaryStatus) -> String {
+  match status {
+    @model.Clean => "clean"
+    @model.Attention => "attention"
+    @model.Containment => "containment"
+  }
+}
+
+///|
+fn sanitize_boundary_scalar(value : String) -> String {
+  let out = StringBuilder::new(size_hint=32)
+  for ch in value {
+    let code = ch.to_uint().reinterpret_as_int()
+    if code == 0x200B || code == 0x200C || code == 0xFEFF {
+      ()
+    } else if ch == '\n' || ch == '\r' {
       out.write_char('_')
     } else if ch == ',' {
       out.write_char(';')

@@ -3,6 +3,9 @@ info:
   title: Pactis Conversational Hosting API
   version: 0.1.0-draft
   description: >
+    Compatibility stub schema (legacy Pactis form). Directionally, this surface
+    is expected to fold into union'd Merkin conversation composition contracts.
+    ---
     AI-native conversation hosting contract for Saba/Pactis with replay-aware
     length-envelope guards and timeline checkpoints.
 servers:

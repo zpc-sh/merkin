@@ -1260,6 +1260,15 @@ fn split_csv_raw(value : String) -> Array[String] {
 }
 
 ///|
+fn drift_peer_or_none(peers : Array[String], index : Int) -> String {
+  if index < peers.length() {
+    peers[index]
+  } else {
+    "none"
+  }
+}
+
+///|
 fn parse_tokens(value : String) -> Array[String] {
   split_csv_raw(value)
 }
@@ -1345,13 +1354,34 @@ fn run_yata_wasm_plan(args : Array[String]) -> Unit {
 
   let drift = @api.plan_drift_commitment(tokens_csv, drift_peers)
   let wire = @api.plan_finger_wasm(tokens_csv, drift_peers)
+  let raw_peers = split_csv_raw(drift_peers)
+  let peer_a = drift_peer_or_none(raw_peers, 0)
+  let peer_b = drift_peer_or_none(raw_peers, 1)
+  let boundary_fsm = @model.BoundaryWalkerFsm::new(
+    "daemon.yata.wasm-plan",
+    "ratio://merkin/cmd/main",
+  )
+    .walk_scalars([("peer_a", peer_a), ("peer_b", peer_b)])
+    .mark()
+  let boundary_stigmergy = boundary_fsm
+    .emit_stigmergy(note="daemon yata wasm-plan boundary walk")
+  let boundary_attention_saturated = if boundary_fsm.attention_saturated() {
+    "1"
+  } else {
+    "0"
+  }
 
   println("wasm_plan=true")
+  println("boundary_ticks=\{boundary_fsm.attention_ticks()}")
+  println("boundary_attention_score=\{boundary_fsm.attention_score()}")
+  println("boundary_attention_gradient=\{boundary_fsm.attention_gradient()}")
+  println("boundary_attention_saturated=\{boundary_attention_saturated}")
   println("route_count=\{routes.length()}")
   println("tokens=\{tokens_csv}")
   println("drift_peers=\{drift_peers}")
   println("drift_commitment=\{drift}")
   println(wire)
+  println(boundary_stigmergy)
 }
 
 ///|

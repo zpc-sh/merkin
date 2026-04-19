@@ -4,6 +4,19 @@ This file is the top-level map for Merkin documentation.
 
 Active scope and de-scoped tracks: `docs/ROADMAP_SCOPE.md`.
 
+Current-state anchors:
+
+- `docs/MERKIN_MASTER_DOCUMENT.md` — cohesive "what Merkin does now" reference
+- `docs/MERKIN_USER_MANUAL.md` — practical operator/developer manual
+- `docs/MERKIN_PACK_STANDARD_v0.1.md` — current pack-standard position (WASM-first + OCI context)
+- `docs/GIT_GHOST_HARDENING_RUNBOOK.md` — hidden-byte and hostile-history git hygiene runbook
+- `docs/RATIO_BOUNDARY_SHIM_SPEC_v0.1.md` — git-to-Merkin boundary filtering and security signaling design
+- `docs/MERKIN_COMPOSITION_PRIMITIVES_v0.1.md` — formal `consume|union|atop` composition contracts
+- `docs/MERKIN_API_REFERENCE_v0.1.md` — consolidated API surface and implementation-status matrix
+- `docs/YATA_CONTRACT_LANGUAGE_PROFILE_v0.1.md` — compiler-facing Yata wire/parse contract profile
+- `docs/BOUNDARY_WALKER_FSM_v0.1.md` — first bottom-up boundary FSM and stigmergy emission profile
+- `docs/ATTENTION_FORENSICS_v0.1.md` — typed attention-pressure/forensics schema and policy mapping
+
 ## 1) Start here by intent
 
 ### I just want a simple tree-sealing flow (lazy mode)

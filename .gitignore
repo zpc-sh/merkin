@@ -1,8 +1,11 @@
 .DS_Store
 _build/
+dist/
 .mooncakes/
 .moonagent/
-.moon
+.moon/
 .moonbuild
 .mooncache/
 .moonlogs
+.claude/
+.codex/
