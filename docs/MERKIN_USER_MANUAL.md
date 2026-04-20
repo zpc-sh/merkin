@@ -23,6 +23,7 @@ Use one of:
 
 - `moon run cmd/main -- ...`
 - compiled binary wrapper if your environment provides `merkin`
+- Bun host CLI/TUI: `bun run cli/src/index.ts ...` (or `./cli/dist/loci ...` after `bun run --cwd cli build`)
 
 Canonical groups:
 
@@ -31,6 +32,10 @@ Canonical groups:
 - `moon run cmd/main -- daemon ...`
 
 Alias commands (`init`, `loci`, `enter`, etc.) still work, but `ratio` and `genius` are the intended stable forms.
+
+For an end-to-end reviewer script (Bun + MoonBit + artifact expectations), use:
+
+- `docs/MERKIN_CLI_TUI_DEMONSTRATIONS_v0.1.md`
 
 ## 3) Quick Start Workflows
 

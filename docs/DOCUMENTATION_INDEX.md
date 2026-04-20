@@ -16,6 +16,7 @@ Current-state anchors:
 - `docs/YATA_CONTRACT_LANGUAGE_PROFILE_v0.1.md` — compiler-facing Yata wire/parse contract profile
 - `docs/BOUNDARY_WALKER_FSM_v0.1.md` — first bottom-up boundary FSM and stigmergy emission profile
 - `docs/ATTENTION_FORENSICS_v0.1.md` — typed attention-pressure/forensics schema and policy mapping
+- `docs/MERKIN_CLI_TUI_DEMONSTRATIONS_v0.1.md` — Bun/TS + MoonBit demo flows and CI/release artifact usage
 
 ## 1) Start here by intent
 

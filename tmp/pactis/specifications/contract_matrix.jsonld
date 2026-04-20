@@ -1,0 +1,324 @@
+{
+  "@context": {
+    "pactis": "https://pactis.dev/vocab#",
+    "schema": "https://schema.org/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "ContractMatrix": "pactis:ContractMatrix",
+    "InterfaceContract": "pactis:InterfaceContract",
+    "name": "schema:name",
+    "description": "schema:description",
+    "lastUpdated": "schema:dateModified",
+    "primaryRole": "pactis:primaryRole",
+    "status": "pactis:status",
+    "conformanceTag": "pactis:conformanceTag",
+    "specFile": "pactis:specFile",
+    "runtimeAnchor": "pactis:runtimeAnchor",
+    "dependsOn": {
+      "@id": "pactis:dependsOn",
+      "@type": "@id"
+    },
+    "contracts": {
+      "@id": "pactis:contracts",
+      "@container": "@set"
+    }
+  },
+  "@id": "pactis:contract-matrix/2026-04-02",
+  "@type": "ContractMatrix",
+  "name": "Pactis Contract Matrix",
+  "description": "Machine-readable registry of Pactis contractual interfaces and CCV2 Sabha profile contracts.",
+  "lastUpdated": "2026-04-02",
+  "contracts": [
+    {
+      "@id": "pactis:contract/pactis-framework",
+      "@type": "InterfaceContract",
+      "name": "Pactis Framework",
+      "primaryRole": "Canonical model and invariants",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis.md",
+      "runtimeAnchor": "docs/specifications/Pactis.md"
+    },
+    {
+      "@id": "pactis:contract/pai-auth",
+      "@type": "InterfaceContract",
+      "name": "PAI/Auth",
+      "primaryRole": "Identity, tokens, invitations, scopes",
+      "status": "partial",
+      "conformanceTag": "implemented",
+      "specFile": "docs/specifications/Pactis-PAI.md"
+    },
+    {
+      "@id": "pactis:contract/psi",
+      "@type": "InterfaceContract",
+      "name": "PSI",
+      "primaryRole": "Conversation-native specification lifecycle",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-PSI.md",
+      "runtimeAnchor": "lib/pactis/spec"
+    },
+    {
+      "@id": "pactis:contract/pgi",
+      "@type": "InterfaceContract",
+      "name": "PGI",
+      "primaryRole": "Git Smart HTTP with conversation mode",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-PGI.md",
+      "dependsOn": ["pactis:contract/psi"]
+    },
+    {
+      "@id": "pactis:contract/pci",
+      "@type": "InterfaceContract",
+      "name": "PCI",
+      "primaryRole": "Repository/content API semantics",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-PCI.md",
+      "dependsOn": ["pactis:contract/psi"]
+    },
+    {
+      "@id": "pactis:contract/vfs",
+      "@type": "InterfaceContract",
+      "name": "VFS",
+      "primaryRole": "graph/cas/git/file serving semantics",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-VFS.md"
+    },
+    {
+      "@id": "pactis:contract/tvi",
+      "@type": "InterfaceContract",
+      "name": "TVI",
+      "primaryRole": "Validation tiers and taxonomy",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-TVI.md"
+    },
+    {
+      "@id": "pactis:contract/gri",
+      "@type": "InterfaceContract",
+      "name": "GRI",
+      "primaryRole": "Generator capability/semver registry",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-GRI.md"
+    },
+    {
+      "@id": "pactis:contract/api",
+      "@type": "InterfaceContract",
+      "name": "API",
+      "primaryRole": "Artifact publication and retrieval",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-API.md"
+    },
+    {
+      "@id": "pactis:contract/sdi",
+      "@type": "InterfaceContract",
+      "name": "SDI",
+      "primaryRole": "Service self-description",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-SDI.md"
+    },
+    {
+      "@id": "pactis:contract/sri",
+      "@type": "InterfaceContract",
+      "name": "SRI",
+      "primaryRole": "Service registry aggregation",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-SRI.md"
+    },
+    {
+      "@id": "pactis:contract/cfp",
+      "@type": "InterfaceContract",
+      "name": "CFP",
+      "primaryRole": "Context frame exchange protocol",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-CFP.md",
+      "dependsOn": ["pactis:contract/sri"]
+    },
+    {
+      "@id": "pactis:contract/kei",
+      "@type": "InterfaceContract",
+      "name": "KEI",
+      "primaryRole": "Knowledge/context synthesis plane",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-KEI.md",
+      "runtimeAnchor": "lib/pactis/avici",
+      "dependsOn": ["pactis:contract/cfp", "pactis:contract/sri"]
+    },
+    {
+      "@id": "pactis:contract/ccv2",
+      "@type": "InterfaceContract",
+      "name": "CCV2",
+      "primaryRole": "Artifact-first conversational computing (Sabha profile)",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-CCV2.md",
+      "runtimeAnchor": "lib/pactis/sabha",
+      "dependsOn": [
+        "pactis:contract/psi",
+        "pactis:contract/cfp",
+        "pactis:contract/kei",
+        "pactis:contract/pgi",
+        "pactis:contract/pci"
+      ]
+    },
+    {
+      "@id": "pactis:contract/ccv2-sabha-schemas",
+      "@type": "InterfaceContract",
+      "name": "CCV2 Sabha Schemas",
+      "primaryRole": "Canonical object contracts for substrate and crystallization",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-Sabha-Schemas.md",
+      "dependsOn": ["pactis:contract/ccv2"]
+    },
+    {
+      "@id": "pactis:contract/ccv2-sabha-operations",
+      "@type": "InterfaceContract",
+      "name": "CCV2 Sabha Operations",
+      "primaryRole": "Move membrane and operation contracts",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-Sabha-Operations.md",
+      "dependsOn": ["pactis:contract/ccv2"]
+    },
+    {
+      "@id": "pactis:contract/ccv2-sabha-dialects",
+      "@type": "InterfaceContract",
+      "name": "CCV2 Sabha Dialects",
+      "primaryRole": "Dialect adapter contract for AI-native styles",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-Sabha-Dialects.md",
+      "dependsOn": ["pactis:contract/ccv2"]
+    },
+    {
+      "@id": "pactis:contract/ccv2-sabha-rpd-profile",
+      "@type": "InterfaceContract",
+      "name": "CCV2 Sabha RPD Profile",
+      "primaryRole": "RPD/CSG symbolic grammar profile and token mapping",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-Sabha-RPD-Profile.md",
+      "dependsOn": ["pactis:contract/ccv2", "pactis:contract/ccv2-sabha-dialects"]
+    },
+    {
+      "@id": "pactis:contract/ccv2-sabha-conformance",
+      "@type": "InterfaceContract",
+      "name": "CCV2 Sabha Conformance",
+      "primaryRole": "Determinism and replay conformance suites",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-Sabha-Conformance.md",
+      "dependsOn": ["pactis:contract/ccv2"]
+    },
+    {
+      "@id": "pactis:contract/pei",
+      "@type": "InterfaceContract",
+      "name": "PEI",
+      "primaryRole": "Event contract and sinks",
+      "status": "implemented",
+      "conformanceTag": "implemented",
+      "specFile": "docs/specifications/Pactis-PEI.md",
+      "runtimeAnchor": "lib/pactis/events"
+    },
+    {
+      "@id": "pactis:contract/poi",
+      "@type": "InterfaceContract",
+      "name": "POI",
+      "primaryRole": "Observability contract",
+      "status": "implemented",
+      "conformanceTag": "implemented",
+      "specFile": "docs/specifications/Pactis-POI.md"
+    },
+    {
+      "@id": "pactis:contract/lgi",
+      "@type": "InterfaceContract",
+      "name": "LGI",
+      "primaryRole": "Language gateway and tool execution",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-LGI.md"
+    },
+    {
+      "@id": "pactis:contract/smi",
+      "@type": "InterfaceContract",
+      "name": "SMI",
+      "primaryRole": "Metering and settlement",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-SMI.md",
+      "runtimeAnchor": "lib/pactis/billing"
+    },
+    {
+      "@id": "pactis:contract/tai",
+      "@type": "InterfaceContract",
+      "name": "TAI",
+      "primaryRole": "Test artifact and run contract",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-TAI.md"
+    },
+    {
+      "@id": "pactis:contract/dai",
+      "@type": "InterfaceContract",
+      "name": "DAI",
+      "primaryRole": "Design asset contract",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-DAI.md"
+    },
+    {
+      "@id": "pactis:contract/cai",
+      "@type": "InterfaceContract",
+      "name": "CAI",
+      "primaryRole": "Content authoring and projection",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-CAI.md"
+    },
+    {
+      "@id": "pactis:contract/sshs",
+      "@type": "InterfaceContract",
+      "name": "SSHS",
+      "primaryRole": "Secrets handling via ephemeral mounts",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-SSHS.md"
+    },
+    {
+      "@id": "pactis:contract/rbp",
+      "@type": "InterfaceContract",
+      "name": "RBP",
+      "primaryRole": "Resource blueprint schema and API",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-RBP.md"
+    },
+    {
+      "@id": "pactis:contract/rsi",
+      "@type": "InterfaceContract",
+      "name": "RSI",
+      "primaryRole": "Repository service interface pattern",
+      "status": "draft",
+      "conformanceTag": "draft",
+      "specFile": "docs/specifications/Pactis-RSI.md"
+    },
+    {
+      "@id": "pactis:contract/pri-pqi",
+      "@type": "InterfaceContract",
+      "name": "PRI/PQI",
+      "primaryRole": "Resource/query interface contracts",
+      "status": "partial",
+      "conformanceTag": "implemented",
+      "specFile": "docs/specifications/Pactis-PQI.md"
+    }
+  ]
+}

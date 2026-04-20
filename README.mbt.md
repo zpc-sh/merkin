@@ -15,6 +15,7 @@ If you're looking for "where everything is", start here:
 - `docs/MERKIN_API_REFERENCE_v0.1.md` — consolidated API reference (library/CLI/daemon/WASM/Pactis alignment)
 - `docs/YATA_CONTRACT_LANGUAGE_PROFILE_v0.1.md` — Yata contract language profile for compiler/runtime integrations
 - `docs/BOUNDARY_WALKER_FSM_v0.1.md` — first boundary FSM for bidi/ghost markup and stigmergy emission
+- `docs/MERKIN_CLI_TUI_DEMONSTRATIONS_v0.1.md` — contest-friendly Bun/TS + MoonBit demo script and artifact walkthrough
 - `docs/DOCUMENTATION_INDEX.md` — full documentation map by use-case
 - `docs/ROADMAP_SCOPE.md` — active scope and de-scoped tracks
 - `docs/LIBRARY_API_GUIDE.md` — library-first usage guide

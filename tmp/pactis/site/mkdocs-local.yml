@@ -1,0 +1,19 @@
+site_name: Pactis AI & LGI (Local)
+site_description: Local build using base theme for smoke testing
+docs_dir: ../
+theme:
+  name: mkdocs
+nav:
+  - AI Discovery: AI_DISCOVERY.md
+  - Specifications:
+      - Specifications Index: specifications/README.md
+      - LGI (Language Gateway Interface): specifications/Pactis-LGI.md
+      - RSI (Repository Service Interface): specifications/Pactis-RSI.md
+      - SDI (Service Self-Description): specifications/Pactis-SDI.md
+      - SSHS (Secure Secrets via SSH Keys): specifications/Pactis-SSHS.md
+  - How-to:
+      - Agent Quickstart: AGENT_QUICKSTART.md
+      - Ephemeral Secrets (SSHS): howto/secrets_ephemeral_cli.md
+      - SpecAPI for AI: wiki/specapi_for_ai.md
+  - Reference:
+      - Design API (stub): specifications/Pactis-KEI.md

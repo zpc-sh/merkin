@@ -39,7 +39,7 @@ jobs:
           moon test --target native --package zpc/merkin/simd
 
       - name: Build release artifacts
-        run: tools/release.sh --version ${{ github.ref_name }} --zig-target native --skip-tests
+        run: docs/archive/tools/release.sh --version ${{ github.ref_name }} --zig-target native --skip-tests
         # tests already ran above; release.sh --skip-tests to avoid double-run
 
       - name: Build Bun CLI bundle (loci)
@@ -68,6 +68,9 @@ jobs:
           cp _build/native/release/build/cmd/main/main.c              "$DIST/merkin.c" 2>/dev/null || true
           # Bun CLI
           cp dist/loci                                                  "$DIST/loci"
+          # Manuals / demos
+          cp docs/MERKIN_USER_MANUAL.md                                 "$DIST/"
+          cp docs/MERKIN_CLI_TUI_DEMONSTRATIONS_v0.1.md                "$DIST/"
           # Manifests
           cp dist/merkin-${{ github.ref_name }}/release-manifest.json "$DIST/" 2>/dev/null || true
           cp dist/merkin-${{ github.ref_name }}/triad-contract.json.raw "$DIST/triad-contract.json" 2>/dev/null || true

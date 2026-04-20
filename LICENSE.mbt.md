@@ -66,14 +66,15 @@ test {
 ```
 
 ```mbt check
+///|
 test {
-// Anti-weaponization: military use returns false.
-fn permitted(use_case : String) -> Bool {
-  !(use_case == "military" || use_case == "mass-surveillance")
-}
-inspect(permitted("research"), content="true")
-inspect(permitted("ai-substrate"), content="true")
-inspect(permitted("military"), content="false")
+  // Anti-weaponization: military use returns false.
+  fn permitted(use_case : String) -> Bool {
+    !(use_case == "military" || use_case == "mass-surveillance")
+  }
+  inspect(permitted("research"), content="true")
+  inspect(permitted("ai-substrate"), content="true")
+  inspect(permitted("military"), content="false")
 }
 ```
 

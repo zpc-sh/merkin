@@ -1,0 +1,24 @@
+{
+  "@context": "https://pactis.dev/jsonld/pactis.context.jsonld",
+  "@id": "pactis:token-sets/org-42/v7",
+  "@type": "pactis:TokenSet",
+  "version": "v7",
+  "tokens": {
+    "color": {
+      "primary": { "value": "#007bff", "type": "color", "scope": "locked" },
+      "surface": { "value": "#ffffff", "type": "color", "scope": "overridable" }
+    },
+    "spacing": {
+      "base": {
+        "value": "1rem",
+        "type": "dimension",
+        "scope": "overridable",
+        "constraints": {"min": "0.5rem", "max": "2rem", "step": "0.25rem"}
+      }
+    }
+  },
+  "metadata": {
+    "orgId": "org-42",
+    "prov:generatedAtTime": "2025-09-19T12:00:00Z"
+  }
+}

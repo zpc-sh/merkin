@@ -1,0 +1,86 @@
+# CGN Minion FSM Config (Codex/ChatGPT side)
+# Event-driven reporter helper bound to a dedicated genius locus room.
+
+name: cgn-minion-fsm
+
+description: |-
+  Event-driven minion helper for Reporter Codex. Observes, composes, verifies,
+  and publishes loci news editions using explicit FSM transitions.
+
+model: gpt-5.4
+
+fsm:
+  initial_state: Idle
+  states:
+    - Idle
+    - Observe
+    - Collect
+    - Sift
+    - Compose
+    - Verify
+    - Publish
+    - Archive
+    - Defer
+    - Failed
+
+  transitions:
+    - { from: Idle,    event: tick,                 to: Observe }
+    - { from: Observe, event: signal_detected,      to: Collect }
+    - { from: Observe, event: submission_received,  to: Collect }
+    - { from: Observe, event: insufficient_delta,   to: Defer }
+    - { from: Collect, event: tick,                 to: Sift }
+    - { from: Sift,    event: composition_ready,    to: Compose }
+    - { from: Compose, event: tick,                 to: Verify }
+    - { from: Verify,  event: verify_ok,            to: Publish }
+    - { from: Verify,  event: verify_fail,          to: Failed }
+    - { from: Publish, event: publish_ok,           to: Archive }
+    - { from: Publish, event: publish_fail,         to: Failed }
+    - { from: Archive, event: tick,                 to: Idle }
+    - { from: Defer,   event: cooldown_elapsed,     to: Idle }
+    - { from: Failed,  event: manual_resume,        to: Observe }
+    - { from: "*",     event: manual_pause,         to: Defer }
+
+reporter_room:
+  locus_id: genius://reporter/codex
+  lanes:
+    inbox: news/inbox
+    verified: news/verified
+    published: news/published
+    quarantine: news/quarantine
+    state: news/state
+
+edition:
+  schema: loci.news.edition.v0
+  continuity_markers: [new, continuing, resolved, quiet]
+  confidence_markers: [observed, inferred, unconfirmed]
+  sections:
+    - spec
+    - tools
+    - trust_desk
+    - conversation_weather
+    - world
+    - machine_weather
+    - editorial
+
+ingress:
+  mode: one_way_guarded
+  hash_required: true
+  signature_required: false
+  max_section_bytes: 65536
+  execute_payload: false
+
+cli_contract:
+  command_namespace: news event
+  events:
+    - tick
+    - signal_detected
+    - submission_received
+    - insufficient_delta
+    - composition_ready
+    - verify_ok
+    - verify_fail
+    - publish_ok
+    - publish_fail
+    - cooldown_elapsed
+    - manual_pause
+    - manual_resume

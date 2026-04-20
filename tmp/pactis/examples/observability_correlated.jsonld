@@ -1,0 +1,27 @@
+[
+  {
+    "@context": {"spec": "https://pactis.dev/spec#"},
+    "@type": "spec:Request",
+    "@id": "urn:spec:req:r789",
+    "spec:title": "Add compact services view"
+  },
+  {
+    "@context": {"test": "https://pactis.dev/test#", "prov": "http://www.w3.org/ns/prov#"},
+    "@type": "test:TestRun",
+    "@id": "urn:pactis:test:run:r789-01",
+    "test:suite": {"@id": "urn:pactis:test:suite:button-accessibility"},
+    "test:summary": {"passed": 2, "failed": 0, "total": 2},
+    "prov:wasDerivedFrom": [{"@id": "urn:spec:req:r789"}]
+  },
+  {
+    "@context": {"log": "https://pactis.dev/log#", "sri": "https://pactis.dev/sri#", "prov": "http://www.w3.org/ns/prov#"},
+    "@type": "log:LogEntry",
+    "@id": "urn:pactis:log:entry:01J123XYZ",
+    "log:timestamp": "2025-09-20T12:35:00Z",
+    "log:level": "info",
+    "log:message": "Generated compact services response",
+    "sri:service": {"@id": "pactis:service/pactis"},
+    "prov:wasDerivedFrom": [{"@id": "urn:spec:req:r789"}]
+  }
+]
+

@@ -1,0 +1,10 @@
+{
+  "@context": {
+    "@vocab": "https://pactis.dev/vocab/",
+    "pactis": "https://pactis.dev/vocab/",
+    "dlh": "https://pactis.dev/vocab/dlh/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "dct": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  }
+}

@@ -6,8 +6,11 @@
   "bin": { "loci": "./bin/loci" },
   "scripts": {
     "dev": "bun run src/index.ts",
+    "build": "bun build src/index.ts --outfile dist/loci --target bun --minify",
     "wasm": "cd .. && moon build --target wasm --package zpc/merkin/wasm_entry",
-    "link": "bun link"
+    "link": "bun link",
+    "demo:init": "bun run src/index.ts init",
+    "demo:status": "bun run src/index.ts status"
   },
   "dependencies": {
     "@clack/prompts": "^0.9.0"

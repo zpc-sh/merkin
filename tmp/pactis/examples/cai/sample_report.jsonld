@@ -1,0 +1,59 @@
+{
+  "@context": {
+    "pactis": "https://pactis.dev/vocab#",
+    "schema": "https://schema.org/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "dct": "http://purl.org/dc/terms/"
+  },
+  "@id": "urn:pactis:cai:artifact:rep_2025q3_market",
+  "@type": ["pactis:ContentArtifact", "pactis:Report"],
+  "schema:name": "Q3 2025 Market Analysis",
+  "schema:description": "Synthesis of research observations into a publishable report with round-trip authoring.",
+  "pactis:artifactId": "rep_2025q3_market",
+  "pactis:sourceGraph": [
+    {"@id": "urn:pactis:dataset:market-signals-2025Q3"},
+    {"@id": "urn:pactis:research:observation:o_01HZXY4"}
+  ],
+  "pactis:projectionProfile": "report/analysis-default",
+  "pactis:channels": ["markdown-ld", "html", "docx"],
+  "pactis:contentVersion": "v1",
+  "pactis:parts": [
+    {
+      "@id": "urn:pactis:cai:part:sec-intro",
+      "@type": "pactis:ContentBlock",
+      "pactis:label": "Introduction",
+      "pactis:order": 1,
+      "pactis:sourceRef": [
+        {"@id": "urn:pactis:research:observation:o_01HZXY4"}
+      ],
+      "pactis:draftMarkdownLd": "# Introduction\n\nThis report summarizes Q3 market signals and trends."
+    },
+    {
+      "@id": "urn:pactis:cai:part:sec-findings",
+      "@type": "pactis:ContentBlock",
+      "pactis:label": "Key Findings",
+      "pactis:order": 2,
+      "pactis:sourceRef": [
+        {"@id": "urn:pactis:dataset:market-signals-2025Q3"}
+      ],
+      "pactis:draftMarkdownLd": "## Key Findings\n\n- Demand rose 8% q/q.\n- Supply constraints eased in September."
+    }
+  ],
+  "pactis:editIntent": [
+    {
+      "@id": "urn:pactis:cai:edit:ei-0001",
+      "@type": "pactis:EditIntent",
+      "pactis:idempotencyKey": "ei-0001",
+      "dct:creator": "analyst@pactis.dev",
+      "dct:created": "2025-09-20T10:04:00Z",
+      "pactis:summary": "Grammar fixes in introduction"
+    }
+  ],
+  "dct:created": "2025-09-20T10:00:00Z",
+  "dct:modified": "2025-09-20T10:05:00Z",
+  "dct:creator": "analyst@pactis.dev",
+  "prov:wasDerivedFrom": [
+    {"@id": "urn:pactis:dataset:market-signals-2025Q3"}
+  ],
+  "pactis:tags": ["market", "q3-2025", "analysis"]
+}

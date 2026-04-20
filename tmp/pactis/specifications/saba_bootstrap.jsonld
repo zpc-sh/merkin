@@ -1,0 +1,67 @@
+{
+  "@context": {
+    "pactis": "https://pactis.dev/vocab#",
+    "schema": "https://schema.org/",
+    "name": "schema:name",
+    "description": "schema:description",
+    "service": "pactis:service",
+    "moveType": "pactis:moveType",
+    "token": "pactis:token",
+    "mapsTo": "pactis:mapsTo",
+    "policy": "pactis:policy",
+    "threshold": "pactis:threshold"
+  },
+  "@id": "pactis:saba/bootstrap/2026-04-02",
+  "@type": "pactis:SabhaBootstrap",
+  "name": "Saba Bootstrap Seed",
+  "description": "Minimal machine-readable seed for starting Saba with CCV2 + RPD profile mappings.",
+  "service": [
+    "hall-service",
+    "smt-substrate-service",
+    "avici-crystallization-service",
+    "overlay-service",
+    "bodi-tribunal-service-optional"
+  ],
+  "moveType": [
+    "assert",
+    "challenge",
+    "clarify",
+    "concede",
+    "reframe",
+    "fork",
+    "fold",
+    "unfold",
+    "collapse",
+    "crystallize",
+    "prune",
+    "archive",
+    "rehydrate"
+  ],
+  "token": [
+    { "token": "⊕", "mapsTo": "expanded" },
+    { "token": "⊖", "mapsTo": "folded" },
+    { "token": "⊗", "mapsTo": "omitted" },
+    { "token": "⊙", "mapsTo": "noop_stub" },
+    { "token": "⊖ₗ", "mapsTo": "lazy" },
+    { "token": "⊜", "mapsTo": "pending_external" },
+    { "token": "⊝", "mapsTo": "resolved_external" },
+    { "token": "⊟", "mapsTo": "pristine" },
+    { "token": "⊞", "mapsTo": "accumulated" },
+    { "token": "⊚", "mapsTo": "terminal_fold_saba_extension" }
+  ],
+  "policy": [
+    "fork_freely",
+    "nucleant_on_return",
+    "lineage_on_authority",
+    "archive_optional",
+    "fold_before_overload"
+  ],
+  "threshold": {
+    "max_branches": 800,
+    "max_entropy": 12.0,
+    "max_pressure": 10.0,
+    "max_traversal_cost": 5000,
+    "max_fold_density": 0.65,
+    "max_latency_ms": 1500
+  }
+}

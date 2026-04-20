@@ -1,0 +1,13 @@
+{
+  "@context": "https://pactis.dev/jsonld/pactis.context.jsonld",
+  "@id": "pactis:validation/xyz",
+  "@type": "pactis:Validation",
+  "component": "pactis:components/abc123",
+  "designTokenSet": "pactis:effective-token-sets/alice/demo/v7+sha256:abcd...",
+  "results": [
+    {"rule": "pactis:policy/color-contrast", "status": "passed"},
+    {"rule": "pactis:policy/spacing-scale", "status": "warning", "message": "off scale by 0.1rem"}
+  ],
+  "prov:wasGeneratedBy": "pactis:build/def456",
+  "prov:generatedAtTime": "2025-09-19T12:15:00Z"
+}
