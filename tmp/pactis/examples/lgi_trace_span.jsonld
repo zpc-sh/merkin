@@ -1,0 +1,20 @@
+{
+  "@context": {
+    "log": "https://pactis.dev/log#",
+    "sri": "https://pactis.dev/sri#"
+  },
+  "@type": "log:TraceSpan",
+  "@id": "urn:pactis:trace:span:01J123SPAN",
+  "log:traceId": "trc_01HZY0GMG4Z6",
+  "log:spanId": "spn_01HZY0GMG4Z6",
+  "log:parentId": "spn_parent_01HZY0GMG",
+  "sri:service": {"@id": "pactis:service/pactis"},
+  "log:startTime": "2025-09-20T12:00:00Z",
+  "log:endTime": "2025-09-20T12:00:00.120Z",
+  "log:attributes": {
+    "route": "/api/v1/avici/frame",
+    "method": "GET",
+    "status": 200
+  }
+}
+

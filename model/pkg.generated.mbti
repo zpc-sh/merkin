@@ -1,15 +1,41 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "nocsi/merkin/model"
+package "zpc/merkin/model"
 
 import {
-  "nocsi/merkin/hash",
+  "zpc/merkin/hash",
 }
 
 // Values
+pub fn is_valid_tier(String) -> Bool
+
+pub fn lift_router_imprint(String, Array[String], Array[String], @hash.Hash?) -> Imprint
+
+pub fn locus_subdirs() -> Array[String]
+
+pub fn short_id_from_bytes(Bytes) -> String
+
+pub fn valid_tiers() -> Array[String]
 
 // Errors
 
 // Types and methods
+pub(all) struct AiSubstrateFingerprintV2 {
+  fingerprint_id : @hash.Hash
+  family : String
+  surface : String
+  overlay : String
+  mode : String
+  context_hash : @hash.Hash
+  policy_hash : @hash.Hash?
+  capability_hash : @hash.Hash
+  substrate_hash : @hash.Hash
+  issuer : String
+} derive(Show)
+pub fn AiSubstrateFingerprintV2::commitment(Self) -> @hash.Hash
+pub fn AiSubstrateFingerprintV2::mask_with_app(Self, String, String, String, @hash.Hash) -> AppMaskEnvelope
+pub fn AiSubstrateFingerprintV2::new(String, String, String, String, @hash.Hash, @hash.Hash, @hash.Hash, String) -> Self
+pub fn AiSubstrateFingerprintV2::with_policy_hash(Self, @hash.Hash) -> Self
+
 pub(all) struct Anchor {
   anchor_id : @hash.Hash
   subject_hash : @hash.Hash
@@ -20,7 +46,7 @@ pub(all) struct Anchor {
   temporash_ref : String?
   anchored_at : String?
   replication_vector : Array[String]
-}
+} derive(Show)
 pub fn Anchor::add_replica(Self, String) -> Self
 pub fn Anchor::mark_anchored(Self, UInt64, @hash.Hash) -> Self
 pub fn Anchor::mark_failed(Self) -> Self
@@ -29,27 +55,123 @@ pub fn Anchor::new(@hash.Hash) -> Self
 pub fn Anchor::set_mmr_proof_ref(Self, String) -> Self
 pub fn Anchor::set_temporash_ref(Self, String) -> Self
 pub fn Anchor::set_time(Self, String) -> Self
-pub impl Show for Anchor
 
 pub(all) enum AnchorState {
   UNANCHORED
   PENDING
   ANCHORED
   FAILED
-}
-pub impl Eq for AnchorState
-pub impl Show for AnchorState
+} derive(Eq, Show)
+
+pub(all) struct AppEnvelopeRecord {
+  ref_id : String
+  protocol : String
+  audience : String
+  ciphertext_hash : @hash.Hash
+  ciphertext : Bytes
+} derive(Show)
+pub fn AppEnvelopeRecord::new(String, String, String, Bytes) -> Self
+pub fn AppEnvelopeRecord::to_mask_envelope(Self, @hash.Hash) -> AppMaskEnvelope
+
+pub(all) struct AppMaskEnvelope {
+  protocol : String
+  audience : String
+  ciphertext_ref : String
+  ciphertext_hash : @hash.Hash
+  masked_commitment : @hash.Hash
+} derive(Show)
+pub fn AppMaskEnvelope::new(@hash.Hash, String, String, String, @hash.Hash) -> Self
 
 pub(all) struct Artifact {
   content_hash : @hash.Hash
   size_bytes : UInt64
   mime : String?
   payload_ref : PayloadRef
-}
+} derive(Show)
 pub fn Artifact::from_bytes(Bytes) -> Self
 pub fn Artifact::from_bytes_with_mime(Bytes, String) -> Self
 pub fn Artifact::verify(Self) -> Bool
-pub impl Show for Artifact
+
+pub(all) struct BoundaryFinding {
+  field_key : String
+  raw_value : String
+  canonical_value : String
+  raw_hex : String
+  ghost_u200b : UInt
+  ghost_u200c : UInt
+  ghost_ufeff : UInt
+  bidi_controls : UInt
+  ascii_controls : UInt
+  suspicious : Bool
+} derive(Show)
+
+pub(all) enum BoundaryFsmState {
+  Idle
+  Walking
+  Marked
+  Emitted
+  Failed
+} derive(Eq, Show)
+
+pub(all) enum BoundaryStatus {
+  Clean
+  Attention
+  Containment
+} derive(Eq, Show)
+
+pub(all) struct BoundaryWalkerFsm {
+  actor_overlay : String
+  ratio_loci : String
+  state : BoundaryFsmState
+  walked_scalars : UInt
+  findings : Array[BoundaryFinding]
+  sanitized_scalars : UInt
+  ghost_u200b : UInt
+  ghost_u200c : UInt
+  ghost_ufeff : UInt
+  bidi_controls : UInt
+  ascii_controls : UInt
+} derive(Show)
+pub fn BoundaryWalkerFsm::attention_gradient(Self) -> String
+pub fn BoundaryWalkerFsm::attention_saturated(Self) -> Bool
+pub fn BoundaryWalkerFsm::attention_score(Self) -> UInt
+pub fn BoundaryWalkerFsm::attention_ticks(Self) -> UInt
+pub fn BoundaryWalkerFsm::emit_stigmergy(Self, note? : String) -> String
+pub fn BoundaryWalkerFsm::mark(Self) -> Self
+pub fn BoundaryWalkerFsm::new(String, String) -> Self
+pub fn BoundaryWalkerFsm::status(Self) -> BoundaryStatus
+pub fn BoundaryWalkerFsm::walk_scalar(Self, String, String) -> Self
+pub fn BoundaryWalkerFsm::walk_scalars(Self, Array[(String, String)]) -> Self
+
+pub(all) enum EmbeddingAction {
+  Observe
+  FlipAot
+  Purge
+} derive(Eq, Show)
+
+pub(all) struct EmbeddingFinding {
+  detector : String
+  signature : String
+  offset_start : UInt
+  offset_end : UInt
+  confidence : UInt
+} derive(Show)
+
+pub(all) struct EmbeddingMetadata {
+  file_ref : String
+  file_type : String
+  mime_type : String
+  found : Bool
+  findings : Array[EmbeddingFinding]
+  action : EmbeddingAction
+  ephemeral : Bool
+  purge_after_turns : UInt
+  note : String
+} derive(Show)
+pub fn EmbeddingMetadata::mark_found(Self, EmbeddingFinding) -> Self
+pub fn EmbeddingMetadata::new(String, String, String) -> Self
+pub fn EmbeddingMetadata::should_purge(Self, UInt) -> Bool
+pub fn EmbeddingMetadata::with_action(Self, EmbeddingAction, Bool, UInt, String) -> Self
 
 pub(all) struct Envelope {
   envelope_id : @hash.Hash
@@ -63,41 +185,208 @@ pub(all) struct Envelope {
   provenance : String?
   work_refs : Array[@hash.Hash]
   state : EnvelopeState
-}
+} derive(Show)
 pub fn Envelope::commit_semantic(Self) -> Self
 pub fn Envelope::is_sealed(Self) -> Bool
 pub fn Envelope::new(@hash.Hash, Array[String]) -> Self
 pub fn Envelope::seal(Self) -> Self
 pub fn Envelope::subject_hash(Self) -> @hash.Hash
-pub impl Show for Envelope
 
 pub(all) struct EnvelopeState {
   freshness : Freshness
   semantic_committed : Bool
-}
-pub impl Eq for EnvelopeState
-pub impl Show for EnvelopeState
+} derive(Eq, Show)
 
 pub(all) enum Freshness {
   FRESH
   DIRTY
   DEFERRED
   SEALED
-}
-pub impl Eq for Freshness
-pub impl Show for Freshness
+} derive(Eq, Show)
+
+pub(all) struct GeniusProcsiAttestation {
+  locus : String?
+  project : String
+  ratio_loci : String
+  session_surface : String
+  fingerprint_commitment : @hash.Hash
+  app_envelope : AppMaskEnvelope
+} derive(Show)
+pub fn GeniusProcsiAttestation::from_masked_refs(String?, String, String, String, @hash.Hash, String, String, String, @hash.Hash) -> Self
+pub fn GeniusProcsiAttestation::new(String?, String, String, String, @hash.Hash, AppMaskEnvelope) -> Self
 
 pub(all) enum HeaderEncoding {
   ArbyteGrin
   ChainCoda
+} derive(Eq, Show)
+
+pub(all) struct Imprint {
+  imprint_id : @hash.Hash
+  source : String
+  kind : ImprintKind
+  surface_projection : Array[String]
+  route_projection : Array[String]
+  contract_graph : Array[String]
+  parent_imprint : @hash.Hash?
+  horizon : UInt
+  mode : MirageMode
+  confidence : UInt
+} derive(Show)
+pub fn Imprint::new(String, ImprintKind, Array[String], Array[String], Array[String], @hash.Hash?, UInt, MirageMode) -> Self
+pub fn Imprint::to_mirage(Self) -> Mirage
+
+pub(all) enum ImprintKind {
+  Router
+  Node
+  Artifact
+  Envelope
+  Unknown
+} derive(Eq, Show)
+
+pub(all) struct Locus {
+  name : String
+  spirit : String
+  tags : Array[String]
+  membrane_refs : Array[@hash.Hash]
+  affordance_refs : Array[@hash.Hash]
+  trail_depth : UInt
+  last_push_hash : @hash.Hash?
 }
-pub impl Eq for HeaderEncoding
-pub impl Show for HeaderEncoding
+pub fn Locus::add_affordance(Self, @hash.Hash) -> Self
+pub fn Locus::add_membrane(Self, @hash.Hash) -> Self
+pub fn Locus::new(String, String) -> Self
+pub fn Locus::record_push(Self, @hash.Hash) -> Self
+pub fn Locus::with_tags(String, String, Array[String]) -> Self
+
+pub(all) struct Mirage {
+  mirage_id : @hash.Hash
+  source_imprint : @hash.Hash
+  source : String
+  kind : ImprintKind
+  appearance : Array[String]
+  route_projection : Array[String]
+  contract_graph : Array[String]
+  horizon : UInt
+  mode : MirageMode
+  confidence : UInt
+  has_private_payload : Bool
+} derive(Show)
+
+pub(all) enum MirageMode {
+  SurfaceOnly
+  ContractOnly
+  Temporal
+  Defense
+} derive(Eq, Show)
 
 pub(all) enum PayloadRef {
   Inline(Bytes)
+} derive(Show)
+
+pub(all) struct ProcsiAttestedSectionV1 {
+  attestation : GeniusProcsiAttestation
+  context_hash : @hash.Hash
+  policy_hash : @hash.Hash
+} derive(Show)
+pub fn ProcsiAttestedSectionV1::emit_pr1_custom_section(Self) -> Bytes
+pub fn ProcsiAttestedSectionV1::emit_pr1_payload(Self) -> Bytes
+pub fn ProcsiAttestedSectionV1::new(GeniusProcsiAttestation, @hash.Hash, @hash.Hash) -> Self
+pub fn ProcsiAttestedSectionV1::parse_pr1_custom_section(Bytes) -> Self?
+pub fn ProcsiAttestedSectionV1::parse_pr1_payload(Bytes) -> Self?
+
+pub(all) struct ProcsiSectionCursor {
+  bytes : Bytes
+  mut pos : Int
 }
-pub impl Show for PayloadRef
+
+pub(all) struct Residue {
+  locus : String
+  tier : String
+  session_short_id : String
+  timestamp : String
+  picked_up_from : String?
+  what_i_did : Array[String]
+  what_i_left_open : Array[String]
+  recommendation : String?
+} derive(Show)
+pub fn Residue::add_did(Self, String) -> Self
+pub fn Residue::add_left_open(Self, String) -> Self
+pub fn Residue::filename(Self) -> String
+pub fn Residue::from_markdown(String, String) -> Self?
+pub fn Residue::new(String, String, String, String) -> Self
+pub fn Residue::set_picked_up(Self, String) -> Self
+pub fn Residue::set_recommendation(Self, String) -> Self
+pub fn Residue::to_markdown(Self) -> String
+
+pub(all) struct SessionIdentity {
+  tier : String
+  short_id : String
+  locus : String?
+} derive(Show)
+pub fn SessionIdentity::display(Self) -> String
+pub fn SessionIdentity::enter_locus(Self, String) -> Self
+pub fn SessionIdentity::from_genius_attestation(GeniusProcsiAttestation) -> Self
+pub fn SessionIdentity::new(String, String) -> Self
+pub fn SessionIdentity::with_locus(String, String, String) -> Self
+
+pub(all) enum SolveMode {
+  Accumulate
+  Offload
+  Execute
+} derive(Eq, Show)
+
+pub(all) struct SolvePolicyHints {
+  preferred_surface : String
+  preferred_tier : String
+  preferred_lane : String
+  fallback_handler : String
+  max_parallelism : UInt
+} derive(Show)
+pub fn SolvePolicyHints::new(String, String, String, String, UInt) -> Self
+
+pub(all) enum SolveStatus {
+  Absent
+  Promised
+  Queued
+  Running
+  Blocked
+  RateLimited
+  Stale
+  Materialized
+  Verified
+  Failed
+  Purged
+} derive(Eq, Show)
+
+pub(all) struct SolveTicket {
+  solve_id : @hash.Hash
+  solve_kind : String
+  offloaded_to : String
+  status : SolveStatus
+  handler : String
+  result_hash : @hash.Hash?
+  result_envelope_id : @hash.Hash?
+  witness_ref : String?
+  detail : String
+} derive(Show)
+pub fn SolveTicket::attach_result(Self, @hash.Hash, @hash.Hash) -> Self
+pub fn SolveTicket::mark_failed(Self, String) -> Self
+pub fn SolveTicket::mark_verified(Self) -> Self
+pub fn SolveTicket::new(@hash.Hash, String, String, SolveStatus, String, String) -> Self
+pub fn SolveTicket::with_witness(Self, String) -> Self
+
+pub(all) struct SolveTraits {
+  deterministic : Bool
+  replayable : Bool
+  idempotent : Bool
+  ephemeral : Bool
+  requires_verification : Bool
+  requires_proof : Bool
+  may_offload : Bool
+  may_parallelize : Bool
+  bounded_write_scope : Bool
+} derive(Show)
+pub fn SolveTraits::new(Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool) -> Self
 
 pub(all) struct WorkPromise {
   promise_id : @hash.Hash
@@ -108,13 +397,13 @@ pub(all) struct WorkPromise {
   result_hash : @hash.Hash?
   result_envelope_id : @hash.Hash?
   cost_hint : UInt?
-}
+} derive(Show)
 pub fn WorkPromise::complete(Self, @hash.Hash, @hash.Hash) -> Self
 pub fn WorkPromise::fail(Self) -> Self
 pub fn WorkPromise::new(@hash.Hash, @hash.Hash, @hash.Hash) -> Self
 pub fn WorkPromise::promise(Self) -> Self
 pub fn WorkPromise::start(Self) -> Self
-pub impl Show for WorkPromise
+pub fn WorkPromise::to_solve_ticket(Self, String, String, String, String) -> SolveTicket
 
 pub(all) enum WorkPromiseState {
   ABSENT
@@ -123,9 +412,292 @@ pub(all) enum WorkPromiseState {
   STALE
   FRESH
   FAILED
-}
-pub impl Eq for WorkPromiseState
-pub impl Show for WorkPromiseState
+} derive(Eq, Show)
+
+pub(all) struct YataAddress {
+  uri : String
+  scheme : String
+  authority : String
+  anchor : String
+  cas_alg : String
+  cas_digest : String
+  id_token : String
+  hole_id : @hash.Hash
+  overlay : String
+  peer : String
+  mode : String
+  gap : UInt
+  track : YataTrack
+  view : String
+} derive(Show)
+pub fn YataAddress::canonicalize(String) -> String?
+pub fn YataAddress::parse(String) -> Self?
+pub fn YataAddress::parse_in_context(String, YataAddressContext) -> Self?
+pub fn YataAddress::parse_in_context_strict(String, YataAddressContext) -> YataAddressParseOutcome
+pub fn YataAddress::parse_strict(String) -> YataAddressParseOutcome
+pub fn YataAddress::to_wire_canonical(Self) -> String
+
+pub(all) struct YataAddressContext {
+  authority : String
+  anchor : String
+} derive(Show)
+
+pub(all) struct YataAddressHint {
+  overlay : String
+  peer : String
+  mode : String
+  gap : UInt
+  view : String
+} derive(Show)
+
+pub(all) struct YataAddressParseIssue {
+  line : Int
+  code : String
+  message : String
+} derive(Show)
+
+pub(all) struct YataAddressParseOutcome {
+  address : YataAddress?
+  issues : Array[YataAddressParseIssue]
+  ok : Bool
+} derive(Show)
+
+pub(all) struct YataCandidate {
+  candidate_id : String
+  surface : String
+  confidence : UInt
+  rationale : String
+} derive(Show)
+pub fn YataCandidate::new(String, String, UInt, String) -> Self
+
+pub(all) struct YataContract {
+  expected_type : String
+  invariants : Array[String]
+  effect_bounds : Array[String]
+  min_confidence : UInt
+} derive(Show)
+pub fn YataContract::new(String, Array[String], Array[String], UInt) -> Self
+
+pub(all) struct YataGitSnapshot {
+  branch : String
+  remote : String
+  merge_base : String
+  head : String
+  refs : Array[String]
+} derive(Show)
+pub fn YataGitSnapshot::to_report(Self) -> YataPlanGitReport
+
+pub(all) struct YataGraph {
+  holes : Array[YataHole]
+} derive(Show)
+pub fn YataGraph::add(Self, YataHole) -> Self
+pub fn YataGraph::child_fanout(Self, @hash.Hash) -> UInt
+pub fn YataGraph::detached_holes(Self, UInt) -> Array[YataHole]
+pub fn YataGraph::emit_plan(Self, YataTrack, YataPlanMode, String, String) -> String
+pub fn YataGraph::get(Self, @hash.Hash) -> YataHole?
+pub fn YataGraph::holes_with_missing_dependencies(Self) -> Array[YataHole]
+pub fn YataGraph::lineage_replay(Self, @hash.Hash, UInt) -> Array[YataReplayStep]
+pub fn YataGraph::max_branch_fanout(Self) -> UInt
+pub fn YataGraph::new() -> Self
+pub fn YataGraph::overbranched(Self, UInt) -> Array[YataHole]
+pub fn YataGraph::project(Self, Array[@hash.Hash]) -> Self
+pub fn YataGraph::ready_set(Self) -> Array[YataHole]
+pub fn YataGraph::reparent(Self, @hash.Hash, @hash.Hash, @hash.Hash?) -> Self
+pub fn YataGraph::snapshot_with_metadata(Self, YataTrack, YataPlanMode, String, String, YataPlanSelfReport?, YataGitSnapshot?, YataPlanTemporalDelta?, YataPlanEmbeddingReport?) -> YataPlan
+pub fn YataGraph::snapshot_with_reports(Self, YataTrack, YataPlanMode, String, String, YataPlanSelfReport?, YataGitSnapshot?) -> YataPlan
+pub fn YataGraph::snapshot_with_runtime_metadata(Self, YataTrack, YataPlanMode, String, String, YataPlanSelfReport?, YataGitSnapshot?, YataPlanTemporalDelta?, YataPlanEmbeddingReport?, YataPlanSolveReport?, YataPlanProcsiReport?, YataPlanCapabilityReport?) -> YataPlan
+pub fn YataGraph::snapshot_with_solve_metadata(Self, YataTrack, YataPlanMode, String, String, YataPlanSelfReport?, YataGitSnapshot?, YataPlanTemporalDelta?, YataPlanEmbeddingReport?, YataPlanSolveReport?) -> YataPlan
+pub fn YataGraph::to_plan(Self, YataTrack, YataPlanMode, String, String) -> YataPlan
+pub fn YataGraph::transitive_ancestry(Self, @hash.Hash, UInt) -> Array[@hash.Hash]
+pub fn YataGraph::upsert(Self, YataHole) -> Self
+
+pub(all) struct YataHole {
+  hole_id : @hash.Hash
+  anchor : String
+  contract : YataContract
+  refinements : Array[YataRefinement]
+  dependencies : Array[@hash.Hash]
+  candidates : Array[YataCandidate]
+  selected_candidate : String?
+  state : YataState
+  provenance : Array[String]
+} derive(Show)
+pub fn YataHole::abandon(Self, String) -> Self
+pub fn YataHole::add_dependency(Self, @hash.Hash) -> Self
+pub fn YataHole::add_refinement(Self, YataRefinement) -> Self
+pub fn YataHole::admissible(Self) -> Bool
+pub fn YataHole::best_candidate(Self) -> YataCandidate?
+pub fn YataHole::is_ready(Self, YataGraph) -> Bool
+pub fn YataHole::new(String, YataContract, Array[YataRefinement], Array[@hash.Hash], Array[String]) -> Self
+pub fn YataHole::propose(Self, YataCandidate) -> Self
+pub fn YataHole::resolve(Self) -> Self
+pub fn YataHole::seal(Self, String, YataWitness?) -> Self
+pub fn YataHole::to_cas_uri(Self, String, YataAddressHint, YataTrack, String) -> String
+pub fn YataHole::to_cog_uri(Self, String, YataAddressHint, YataTrack) -> String
+pub fn YataHole::to_substrate_uri(Self, String, YataAddressHint, YataTrack) -> String
+
+pub(all) struct YataParseIssue {
+  line : Int
+  code : String
+  message : String
+} derive(Show)
+
+pub(all) struct YataParseOutcome {
+  plan : YataPlan?
+  issues : Array[YataParseIssue]
+  ok : Bool
+} derive(Show)
+
+pub(all) struct YataPlan {
+  track : YataTrack
+  mode : YataPlanMode
+  generator : String
+  note : String
+  material_hash : @hash.Hash
+  self_report : YataPlanSelfReport?
+  git_report : YataPlanGitReport?
+  temporal_delta : YataPlanTemporalDelta?
+  embedding_report : YataPlanEmbeddingReport?
+  solve_report : YataPlanSolveReport?
+  procsi_report : YataPlanProcsiReport?
+  capability_report : YataPlanCapabilityReport?
+  entries : Array[YataPlanEntry]
+} derive(Show)
+pub fn YataPlan::parse_wire(String) -> Self?
+pub fn YataPlan::parse_wire_strict(String) -> YataParseOutcome
+pub fn YataPlan::to_cursor(Self) -> YataPlanCursor
+pub fn YataPlan::to_wire(Self) -> String
+pub fn YataPlan::validate(Self) -> YataPlanCursor
+pub fn YataPlan::with_capability_report(Self, YataPlanCapabilityReport) -> Self
+pub fn YataPlan::with_embedding_report(Self, YataPlanEmbeddingReport) -> Self
+pub fn YataPlan::with_git_report(Self, YataPlanGitReport) -> Self
+pub fn YataPlan::with_procsi_report(Self, YataPlanProcsiReport) -> Self
+pub fn YataPlan::with_self_report(Self, YataPlanSelfReport) -> Self
+pub fn YataPlan::with_solve_report(Self, YataPlanSolveReport) -> Self
+pub fn YataPlan::with_temporal_delta(Self, YataPlanTemporalDelta) -> Self
+
+pub(all) struct YataPlanCapabilityReport {
+  authority : String
+  ticket_kind : String
+  scope : String
+  status : String
+  count : UInt
+  store_ref : String
+} derive(Show)
+pub fn YataPlanCapabilityReport::new(String, String, String, String, UInt, String) -> Self
+
+pub(all) struct YataPlanCursor {
+  expected_entries : UInt
+  observed_entries : UInt
+  ready_count : UInt
+  unresolved_count : UInt
+  warnings : Array[YataParseIssue]
+} derive(Show)
+
+pub(all) struct YataPlanEmbeddingReport {
+  file_type : String
+  found : Bool
+  count : UInt
+  ephemeral : Bool
+  purge_after_turns : UInt
+  strategy : String
+} derive(Show)
+
+pub(all) struct YataPlanEntry {
+  hole_id : @hash.Hash
+  anchor : String
+  state : String
+  candidate_count : UInt
+  ready : Bool
+  selected_candidate : String?
+  provenance : Array[String]
+  confidence_floor : UInt
+} derive(Show)
+
+pub(all) struct YataPlanGitReport {
+  branch : String
+  remote : String
+  merge_base : String
+  head : String
+  commit_count : UInt
+  refs : String
+} derive(Show)
+
+pub(all) enum YataPlanMode {
+  Full
+  Compact
+} derive(Eq, Show)
+
+pub(all) struct YataPlanProcsiReport {
+  project : String
+  ratio_loci : String
+  session_surface : String
+  fingerprint_commitment : String
+  app_ref : String
+  app_audience : String
+  masked : Bool
+} derive(Show)
+pub fn YataPlanProcsiReport::from_attestation(GeniusProcsiAttestation) -> Self
+
+pub(all) struct YataPlanSelfReport {
+  overlay : String
+  peer : String
+  authority : String
+  anchor_hint : String
+  gap : UInt
+  view_hint : String
+} derive(Show)
+
+pub(all) struct YataPlanSolveReport {
+  solve_kind : String
+  status : String
+  handler : String
+  offloaded_to : String
+  count : UInt
+} derive(Show)
+
+pub(all) struct YataPlanTemporalDelta {
+  delta_turns : Int
+  delta_bytes : Int
+  causal_offset : Int
+} derive(Show)
+
+pub(all) struct YataRefinement {
+  label : String
+  predicate : String
+  weight : UInt
+} derive(Show)
+pub fn YataRefinement::new(String, String, UInt) -> Self
+
+pub(all) struct YataReplayStep {
+  sequence : UInt
+  hole_id : @hash.Hash
+  anchor : String
+  state : String
+  ready : Bool
+  selected_candidate : String?
+  is_admissible : Bool
+} derive(Show)
+
+pub(all) enum YataState {
+  Open
+  Converging
+  Sealed(String)
+  Resolved(String)
+  Abandoned(String)
+} derive(Eq, Show)
+
+pub(all) enum YataTrack {
+  Program
+  Git
+} derive(Eq, Show)
+
+pub(all) struct YataWitness {
+  proposer : String
+  proof_token : String
+  proof_artifact : String
+} derive(Show)
+pub fn YataWitness::new(String, String, String) -> Self
 
 // Type aliases
 

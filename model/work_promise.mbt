@@ -10,7 +10,7 @@ pub(all) enum WorkPromiseState {
 } derive(Eq, Show)
 
 ///|
-/// WorkPromise: deferred computation promise (§4.1).
+/// WorkPromise: deferred work artifact promise (§4.1).
 /// A node/envelope may carry promises for derived artifacts.
 pub(all) struct WorkPromise {
   promise_id : @hash.Hash

@@ -1,8 +1,19 @@
 # Pactis Conversational Hosting API (Saba) (v0.1-draft)
 
+> Status note (2026-04-18): treat this form as a compatibility stub.
+> Directionally, conversation surfaces are moving toward union'd Merkin composition rather than a separate long-term Pactis API shape.
+
 This specification defines Pactis as an AI-native conversation host, not only a Git-like object host.
 
 For Saba (AI debate hall), a repository is a conversation substrate with replayable timelines, typed artifacts, and deterministic addressability.
+
+OpenAPI schema companion:
+
+- `docs/PACTIS_CONVERSATIONAL_OPENAPI.yaml`
+
+Runtime scaffold companion:
+
+- `daemon/conversation.mbt` (in-memory host and handler stubs)
 
 ## 1. Design goals
 
@@ -149,6 +160,18 @@ Supported schemes:
 - `cog://`
 - `substrate://`
 - `cas://`
+
+### 4.7 Embedding metadata and purge
+
+- `POST /threads/{thread_id}/embeddings/findings`
+- `GET /threads/{thread_id}/embeddings`
+- `POST /threads/{thread_id}/embeddings/purge`
+
+Purpose:
+
+- attach arbitrary-file embedding findings to timeline context
+- mark action (`observe`, `flip-aot`, `purge`)
+- purge ephemeral records by causal turn age
 
 ## 5. Streaming
 

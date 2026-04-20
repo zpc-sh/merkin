@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    name: test (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: wasm-gc
+            cmd: moon test --target wasm-gc
+          - target: native-simd
+            cmd: moon test --target native --package zpc/merkin/simd
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: moon version
+        run: moon version
+
+      - name: moon check
+        run: moon check --target wasm-gc
+
+      - name: ${{ matrix.target }}
+        run: ${{ matrix.cmd }}
+
+  artifacts:
+    name: build-artifacts
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build MoonBit artifacts
+        run: |
+          moon build --target wasm-gc --release --package zpc/merkin/wasm_entry
+          moon build --target wasm-gc --release --package zpc/merkin/wasm_lib
+          moon build --target native --release --package zpc/merkin/cmd/main
+
+      - name: Build Bun CLI bundle
+        run: |
+          mkdir -p dist
+          bun build cli/src/index.ts --outfile dist/loci --target bun --minify
+          chmod +x dist/loci
+
+      - name: Collect CI bundle
+        run: |
+          mkdir -p dist/ci-bundle
+          cp _build/wasm-gc/release/build/wasm_entry/wasm_entry.wasm dist/ci-bundle/merkin.wasm
+          cp _build/wasm-gc/release/build/wasm_lib/wasm_lib.wasm dist/ci-bundle/merkin-lib.wasm
+          cp _build/native/release/build/cmd/main/main.exe dist/ci-bundle/merkin || true
+          cp dist/loci dist/ci-bundle/loci
+          cp docs/MERKIN_CLI_TUI_DEMONSTRATIONS_v0.1.md dist/ci-bundle/
+          cp docs/MERKIN_USER_MANUAL.md dist/ci-bundle/
+          (cd dist/ci-bundle && sha256sum * > SHA256SUMS)
+          tar -czf dist/merkin-ci-bundle-${{ github.sha }}.tar.gz -C dist ci-bundle
+
+      - name: Upload CI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: merkin-ci-artifacts-${{ github.sha }}
+          path: |
+            dist/ci-bundle/*
+            dist/merkin-ci-bundle-${{ github.sha }}.tar.gz

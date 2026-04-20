@@ -1,0 +1,29 @@
+{
+  "kind": "merkin.procsi.sections",
+  "version": "0.2-draft",
+  "canonical_spec": "docs/MU_RUNTIME_SPEC.md",
+  "sections": [
+    {
+      "name": ".mks",
+      "section_id": 0,
+      "magic_ascii": "MKST",
+      "mode": "operational-state",
+      "payload_versioning": "v0-by-exact-layout"
+    },
+    {
+      "name": ".prc",
+      "section_id": 0,
+      "magic_ascii": "PRCS",
+      "mode": "procsi-identity",
+      "payload_versioning": "v0-by-exact-layout"
+    },
+    {
+      "name": ".pr1",
+      "section_id": 0,
+      "magic_ascii": "PRC1",
+      "mode": "procsi-attested-identity",
+      "payload_versioning": "v1-fixed-layout"
+    }
+  ],
+  "drift_rule": "Any change to .mks, .prc, or .pr1 binary layout, validation, or semantics must update finger.plan.wasm plus this compatibility mirror and the canonical mu spec together."
+}

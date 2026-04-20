@@ -1,0 +1,9 @@
+{
+  "@context": {"sri": "https://pactis.dev/sri#"},
+  "@type": "sri:Registry",
+  "sri:services": [
+    {"href": "https://pactis.sh/zpc/avici/service"},
+    {"href": "https://example.org/service.jsonld"}
+  ]
+}
+

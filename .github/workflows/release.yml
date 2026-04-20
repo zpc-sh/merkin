@@ -1,0 +1,119 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: build & publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: latest
+
+      - name: moon check
+        run: moon check --target wasm-gc
+
+      - name: Run tests
+        run: |
+          moon test --target wasm-gc
+          moon test --target native --package zpc/merkin/simd
+
+      - name: Build release artifacts
+        run: docs/archive/tools/release.sh --version ${{ github.ref_name }} --zig-target native --skip-tests
+        # tests already ran above; release.sh --skip-tests to avoid double-run
+
+      - name: Build Bun CLI bundle (loci)
+        run: |
+          mkdir -p dist
+          bun build cli/src/index.ts \
+            --outfile dist/loci \
+            --target bun \
+            --minify
+          chmod +x dist/loci
+
+      - name: Collect assets
+        id: assets
+        run: |
+          DIST="dist/loci-${{ github.ref_name }}"
+          mkdir -p "$DIST"
+
+          # WASM artifacts
+          cp _build/wasm-gc/release/build/wasm_entry/wasm_entry.wasm "$DIST/merkin.wasm"
+          cp _build/wasm-gc/release/build/wasm_lib/wasm_lib.wasm     "$DIST/merkin-lib.wasm"
+          cp _build/wasm/release/build/wasm_entry/wasm_entry.wasm    "$DIST/merkin-wasmex.wasm" 2>/dev/null || true
+          # Native CLI
+          cp _build/native/release/build/cmd/main/main.exe            "$DIST/merkin" 2>/dev/null || true
+          strip "$DIST/merkin" 2>/dev/null || true
+          # C source (Zig/FFI input)
+          cp _build/native/release/build/cmd/main/main.c              "$DIST/merkin.c" 2>/dev/null || true
+          # Bun CLI
+          cp dist/loci                                                  "$DIST/loci"
+          # Manuals / demos
+          cp docs/MERKIN_USER_MANUAL.md                                 "$DIST/"
+          cp docs/MERKIN_CLI_TUI_DEMONSTRATIONS_v0.1.md                "$DIST/"
+          # Manifests
+          cp dist/merkin-${{ github.ref_name }}/release-manifest.json "$DIST/" 2>/dev/null || true
+          cp dist/merkin-${{ github.ref_name }}/triad-contract.json.raw "$DIST/triad-contract.json" 2>/dev/null || true
+
+          echo "dist=$DIST" >> $GITHUB_OUTPUT
+          ls -lh "$DIST/"
+
+      - name: Generate checksums
+        run: |
+          DIST="${{ steps.assets.outputs.dist }}"
+          cd "$DIST"
+          sha256sum * > SHA256SUMS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: loci ${{ github.ref_name }}
+          body: |
+            ## loci ${{ github.ref_name }}
+
+            ### Artifacts
+
+            | File | Target | Use |
+            |------|--------|-----|
+            | `merkin.wasm` | wasm-gc | AtomVM / Popcorn (`wasm_entry`) |
+            | `merkin-lib.wasm` | wasm-gc | wasmex-gc / WasmEdge (`wasm_lib`) |
+            | `merkin-wasmex.wasm` | wasm | wasmex linear-memory / WasmEdge |
+            | `merkin` | native | CLI binary (Linux x86-64, stripped) |
+            | `merkin.c` | C source | Zig cross-compilation / FFI input |
+            | `loci` | Bun bundle | L-OCI CLI/TUI (run with: `bun loci`) |
+            | `release-manifest.json` | — | Content-addressed artifact hashes |
+            | `triad-contract.json` | — | Drift contract sealing this release |
+            | `SHA256SUMS` | — | Checksums for all assets |
+
+            ### Quick start
+
+            ```sh
+            # Bun CLI
+            bun ${{ steps.assets.outputs.dist }}/loci --help
+
+            # Native CLI
+            ./${{ steps.assets.outputs.dist }}/merkin --help
+            ```
+          files: ${{ steps.assets.outputs.dist }}/*
+          fail_on_unmatched_files: false
+          generate_release_notes: true

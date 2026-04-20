@@ -1,3 +1,4 @@
 import {
-  "nocsi/merkin/hash" @hash,
+  "moonbitlang/core/encoding/utf8" @utf8,
+  "zpc/merkin/hash" @hash,
 }

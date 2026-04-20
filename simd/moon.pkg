@@ -1,0 +1,6 @@
+warnings = "-0055"
+
+options(
+  "native-stub": [ "simd_stub.c" ],
+  targets: { "simd.mbt": [ "native" ], "simd_test.mbt": [ "native" ] },
+)

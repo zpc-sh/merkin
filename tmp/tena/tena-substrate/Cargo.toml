@@ -1,0 +1,21 @@
+[package]
+name = "tena-substrate"
+version = "0.1.0"
+edition = "2021"
+description = "N-Merkle-FSM runtime — 6-dimensional sparse merkle tree substrate with living nodes"
+
+[dependencies]
+tena-protocol = { path = "../tena-protocol" }
+serde = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+bytes = { workspace = true }
+thiserror = { workspace = true }
+bincode = { workspace = true }
+
+# Hashing for content-addressing
+blake3 = "1.5"
+# Sparse merkle tree
+sha2 = "0.10"

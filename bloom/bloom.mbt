@@ -62,7 +62,7 @@ pub fn BloomSketch::add(self : BloomSketch, token : String) -> Unit {
 pub fn BloomSketch::maybe_contains(self : BloomSketch, token : String) -> Bool {
   let positions = bloom_positions(token, self.bits.length(), self.num_hashes)
   for pos in positions {
-    if not(self.bits[pos]) {
+    if !self.bits[pos] {
       return false
     }
   }

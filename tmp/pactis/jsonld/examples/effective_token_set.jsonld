@@ -1,0 +1,20 @@
+{
+  "@context": "https://pactis.dev/jsonld/pactis.context.jsonld",
+  "@id": "pactis:effective-token-sets/alice/demo/v7+sha256:abcd...",
+  "@type": "pactis:EffectiveTokenSet",
+  "derivedFrom": {
+    "org": "pactis:token-sets/org-42/v7",
+    "repoOverrides": "sha256:beef..."
+  },
+  "tokens": {
+    "color": {
+      "primary": { "value": "#007bff", "type": "color", "scope": "locked" }
+    },
+    "spacing": {
+      "base": { "value": "1.25rem", "type": "dimension", "overridden": true, "source": "repo" }
+    }
+  },
+  "hash": "sha256:deadbeef...",
+  "computedAt": "2025-09-19T12:10:00Z"
+}
+

@@ -1,0 +1,28 @@
+{
+  "kind": "merkin.mu.interface",
+  "version": "0.4-draft",
+  "canonical_spec": "docs/MU_RUNTIME_SPEC.md",
+  "primary_drift_surface": "finger.plan.wasm",
+  "companion_docs": [
+    "docs/AI_SUBSTRATE_FINGERPRINTS_v0.2.md",
+    "docs/MU-INTERFACE-SPEC.md",
+    "docs/MU_GENERALIZED_SOLVE_PROFILE.md",
+    "docs/YATA_PLAN_SPEC.md",
+    "docs/YATA_COGNITIVE_ENVELOPE_DESIGN.md",
+    "docs/AI_PROVIDER_ADAPTER_CONTRACT_v0.3.md",
+    "docs/TRIAD_CONTRACT_SPEC.md"
+  ],
+  "code_companions": [
+    "model/procsi_identity.mbt",
+    "model/work_promise.mbt",
+    "model/solve.mbt"
+  ],
+  "ownership": {
+    "merkin": "structure, addressing, envelopes, work promise identity, replay transport",
+    "mu": "execution, compilation, policy, config, solve dispatch",
+    "fsm": "handle resolution, callback routing, pubsub, status transitions"
+  },
+  "triad_mirror": ".well-known/triad-contract.json",
+  "sat_smt_offload_mirror": ".well-known/sat-smt-offload.json",
+  "drift_rule": "Changes to the canonical mu contract, solve surface, procsi section layout, genius attestation contract, or triad required wasm ABI exports must update finger.plan.wasm and compatibility mirrors in the same change."
+}

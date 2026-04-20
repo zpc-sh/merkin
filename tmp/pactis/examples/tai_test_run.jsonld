@@ -1,0 +1,31 @@
+{
+  "@context": {
+    "test": "https://pactis.dev/test#",
+    "spec": "https://pactis.dev/spec#",
+    "prov": "http://www.w3.org/ns/prov#"
+  },
+  "@type": "test:TestRun",
+  "@id": "urn:pactis:test:run:2025-09-20T120000Z:button-accessibility",
+  "test:suite": {"@id": "urn:pactis:test:suite:button-accessibility"},
+  "test:startedAt": "2025-09-20T12:00:00Z",
+  "test:endedAt": "2025-09-20T12:00:08Z",
+  "test:environment": {
+    "os": "macOS 14",
+    "elixir": "1.16",
+    "otp": "26"
+  },
+  "test:summary": {"passed": 1, "failed": 0, "skipped": 0, "total": 1},
+  "test:results": [
+    {
+      "@type": "test:TestResult",
+      "test:case": {"@id": "urn:pactis:test:case:contrast"},
+      "test:status": "passed",
+      "test:durationMs": 420,
+      "test:artifacts": []
+    }
+  ],
+  "prov:wasDerivedFrom": [
+    {"@id": "urn:spec:req:r456"}
+  ]
+}
+

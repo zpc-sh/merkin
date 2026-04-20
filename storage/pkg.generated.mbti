@@ -1,9 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "nocsi/merkin/storage"
+package "zpc/merkin/storage"
 
 import {
-  "nocsi/merkin/hash",
-  "nocsi/merkin/store",
+  "zpc/merkin/hash",
+  "zpc/merkin/model",
+  "zpc/merkin/store",
 }
 
 // Values
@@ -11,6 +12,13 @@ import {
 // Errors
 
 // Types and methods
+pub(all) struct AppEnvelopeManifest {
+  ref_id : String
+  protocol : String
+  audience : String
+  ciphertext_hash : @hash.Hash
+}
+
 pub(all) struct ArtifactCasNode {
   id : String
   role_kind : StoreRole
@@ -25,26 +33,52 @@ pub(all) enum Availability {
   Online
   Degraded
   Offline
-}
-pub impl Eq for Availability
-pub impl Show for Availability
+} derive(Eq, Show)
 
 pub(all) struct BackpressurePolicy {
   max_inflight_ops : UInt64
   max_inflight_bytes : UInt64
   max_pending_ops : UInt64
   max_pending_bytes : UInt64
-}
+} derive(Show)
 pub fn BackpressurePolicy::default() -> Self
-pub impl Show for BackpressurePolicy
+
+pub(all) struct CognitiveContainer {
+  manifest : ContainerManifest
+  void_layer : Bytes
+  tree_layer : Bytes
+  bloom_layer : Bytes
+  plugin_layers : Array[PluginLayer]
+  procsi_layer : Bytes
+  config_layer : Bytes
+} derive(Show)
+pub fn CognitiveContainer::digest(Self) -> @hash.Hash
+pub fn CognitiveContainer::pack(Bytes, Bytes, Bytes, Array[PluginLayer], Bytes, Bytes, Map[String, String]) -> Self
+pub fn CognitiveContainer::plugin_count(Self) -> Int
+pub fn CognitiveContainer::push_to_oci(Self, InMemoryOciRegistry, String, String) -> @hash.Hash
+pub fn CognitiveContainer::total_size(Self) -> Int
+
+pub(all) struct ContainerManifest {
+  schema_version : Int
+  layers : Array[LayerDescriptor]
+  annotations : Map[String, String]
+  total_size : Int
+} derive(Show)
+pub fn ContainerManifest::add_layer(Self, LayerDescriptor) -> Self
+pub fn ContainerManifest::from_bytes(Array[Byte]) -> Self?
+pub fn ContainerManifest::layer_count(Self) -> Int
+pub fn ContainerManifest::mark_sat_smt_offloaded(Self, String) -> Self
+pub fn ContainerManifest::merge(Self, Self) -> Self
+pub fn ContainerManifest::new() -> Self
+pub fn ContainerManifest::set_annotation(Self, String, String) -> Self
+pub fn ContainerManifest::to_bytes(Self) -> Array[Byte]
 
 pub(all) struct DispatchResult {
   target_id : String
   state : DispatchState
   op_key : @hash.Hash?
   digest : @hash.Hash?
-}
-pub impl Show for DispatchResult
+} derive(Show)
 
 pub(all) enum DispatchState {
   Committed
@@ -52,24 +86,41 @@ pub(all) enum DispatchState {
   SkippedTree
   SkippedPolicy
   SkippedBackpressure
+} derive(Eq, Show)
+
+pub(all) struct FileAppEnvelopeStore {
+  root : String
+  ref_cache : Map[String, @model.AppEnvelopeRecord]
 }
-pub impl Eq for DispatchState
-pub impl Show for DispatchState
+pub fn FileAppEnvelopeStore::has_ref(Self, String) -> Bool
+pub fn FileAppEnvelopeStore::new(String) -> Self
+pub fn FileAppEnvelopeStore::put(Self, @model.AppEnvelopeRecord) -> String
+pub fn FileAppEnvelopeStore::resolve(Self, String) -> @model.AppEnvelopeRecord?
+
+pub(all) struct FileOciRegistry {
+  root : String
+  blob_cache : Map[String, Bytes]
+  tag_cache : Map[String, String]
+}
+pub fn FileOciRegistry::get_blob(Self, String, String) -> Bytes?
+pub fn FileOciRegistry::has_blob(Self, String, String) -> Bool
+pub fn FileOciRegistry::new(String) -> Self
+pub fn FileOciRegistry::put_blob(Self, String, Bytes) -> String
+pub fn FileOciRegistry::put_tag(Self, String, String, String) -> Unit
+pub fn FileOciRegistry::resolve_tag(Self, String, String) -> String?
 
 pub(all) struct HttpRequest {
   http_method : String
   url : String
   headers : Map[String, String]
   body : Bytes?
-}
-pub impl Show for HttpRequest
+} derive(Show)
 
 pub(all) struct HttpResponse {
   status : UInt
   headers : Map[String, String]
   body : Bytes?
-}
-pub impl Show for HttpResponse
+} derive(Show)
 
 pub(all) struct IdempotencyLedger {
   states : Map[String, IdempotencyState]
@@ -86,34 +137,41 @@ pub fn IdempotencyLedger::state(Self, @hash.Hash) -> IdempotencyState?
 pub(all) struct IdempotencyPolicy {
   scope : String
   include_epoch : Bool
-}
+} derive(Show)
 pub fn IdempotencyPolicy::default() -> Self
-pub impl Show for IdempotencyPolicy
 
 pub(all) struct IdempotencySnapshot {
   snapshot_id : @hash.Hash
   entries : Array[(String, IdempotencyState)]
-}
-pub impl Show for IdempotencySnapshot
+} derive(Show)
 
 pub(all) enum IdempotencyState {
   Pending
   Committed
   Failed
-}
-pub impl Eq for IdempotencyState
-pub impl Show for IdempotencyState
+} derive(Eq, Show)
 
 pub(all) struct InMemoryOciRegistry {
   blobs : Map[String, Bytes]
   tags : Map[String, String]
 }
 pub fn InMemoryOciRegistry::get_blob(Self, String, String) -> Bytes?
+pub fn InMemoryOciRegistry::get_manifest(Self, String, String) -> Bytes?
+pub fn InMemoryOciRegistry::get_manifest_by_digest(Self, String, String) -> Bytes?
 pub fn InMemoryOciRegistry::has_blob(Self, String, String) -> Bool
 pub fn InMemoryOciRegistry::new() -> Self
 pub fn InMemoryOciRegistry::put_blob(Self, String, Bytes) -> String
+pub fn InMemoryOciRegistry::put_manifest(Self, String, String, Bytes) -> String
 pub fn InMemoryOciRegistry::put_tag(Self, String, String, String) -> Unit
 pub fn InMemoryOciRegistry::resolve_tag(Self, String, String) -> String?
+
+pub(all) struct LayerDescriptor {
+  media_type : String
+  digest : @hash.Hash
+  size : Int
+  name : String
+} derive(Show)
+pub fn LayerDescriptor::new(String, Bytes, String) -> Self
 
 pub(all) struct OciCasNode {
   id : String
@@ -153,9 +211,8 @@ pub(all) struct OciPolicy {
   repository : String
   artifact_media_type : String
   tag_mode : OciTagMode
-}
+} derive(Show)
 pub fn OciPolicy::disabled() -> Self
-pub impl Show for OciPolicy
 
 pub(all) struct OciRegistryHttpTransport {
   base_url : String
@@ -174,9 +231,19 @@ pub(all) enum OciTagMode {
   DigestOnly
   EpochTag
   LatestTag
-}
-pub impl Eq for OciTagMode
-pub impl Show for OciTagMode
+} derive(Eq, Show)
+
+pub(all) struct PluginLayer {
+  name : String
+  wasm_hash : @hash.Hash
+  wasm_size : Int
+  wasm_bytes : Bytes
+  procsi : Bytes
+  mks_state : Bytes?
+} derive(Show)
+pub fn PluginLayer::new(String, Bytes) -> Self
+pub fn PluginLayer::with_mks(Self, Bytes) -> Self
+pub fn PluginLayer::with_procsi(Self, Bytes) -> Self
 
 pub(all) struct QueueItem {
   op_key : @hash.Hash
@@ -186,41 +253,34 @@ pub(all) struct QueueItem {
   digest : @hash.Hash
   size_bytes : UInt64
   state : QueueItemState
-}
-pub impl Show for QueueItem
+} derive(Show)
 
 pub(all) enum QueueItemState {
   Pending
   InFlight
   Done
   Failed
-}
-pub impl Eq for QueueItemState
-pub impl Show for QueueItemState
+} derive(Eq, Show)
 
 pub(all) struct QueueSnapshot {
   snapshot_id : @hash.Hash
   items : Array[QueueItem]
-}
-pub impl Show for QueueSnapshot
+} derive(Show)
 
 pub(all) struct QueueStats {
   inflight_ops : UInt64
   inflight_bytes : UInt64
   pending_ops : UInt64
   pending_bytes : UInt64
-}
+} derive(Show)
 pub fn QueueStats::idle() -> Self
-pub impl Show for QueueStats
 
 pub(all) enum ReplicationEvent {
   Ingest
   SealEpoch
   ReadMiss
   PeerHandshake
-}
-pub impl Eq for ReplicationEvent
-pub impl Show for ReplicationEvent
+} derive(Eq, Show)
 
 pub(all) enum ReplicationLane {
   Critical
@@ -228,9 +288,7 @@ pub(all) enum ReplicationLane {
   Warm
   Cold
   ArchiveLane
-}
-pub impl Eq for ReplicationLane
-pub impl Show for ReplicationLane
+} derive(Eq, Show)
 
 pub(all) struct ReplicationPolicy {
   policy_id : @hash.Hash
@@ -243,7 +301,7 @@ pub(all) struct ReplicationPolicy {
   oci : OciPolicy
   targets : Array[TargetRule]
   tree_rules : Array[TreeRule]
-}
+} derive(Show)
 pub fn ReplicationPolicy::allow_dispatch(Self, ReplicationLane, QueueStats) -> Bool
 pub fn ReplicationPolicy::allows_target(Self, String, StoreRole, ReplicationLane, Availability) -> Bool
 pub fn ReplicationPolicy::draft_v1(UInt64, Array[TargetRule], tree_rules? : Array[TreeRule]) -> Self
@@ -251,7 +309,6 @@ pub fn ReplicationPolicy::idempotency_key(Self, @hash.Hash, String, ReplicationL
 pub fn ReplicationPolicy::new(UInt, UInt64, UInt, UInt, IdempotencyPolicy, BackpressurePolicy, OciPolicy, Array[TargetRule], Array[TreeRule]) -> Self
 pub fn ReplicationPolicy::target_count_for_lane(Self, ReplicationLane) -> UInt
 pub fn ReplicationPolicy::tree_accepts(Self, Array[String], ReplicationLane, Bool, UInt) -> Bool
-pub impl Show for ReplicationPolicy
 
 pub(all) struct ReplicationQueue {
   items : Map[String, QueueItem]
@@ -271,8 +328,7 @@ pub(all) struct ReplicationReceipt {
   committed_count : UInt
   quorum_met : Bool
   dispatches : Array[DispatchResult]
-}
-pub impl Show for ReplicationReceipt
+} derive(Show)
 
 pub(all) enum StoreRole {
   Local
@@ -281,9 +337,7 @@ pub(all) enum StoreRole {
   Replica
   Archive
   Oci
-}
-pub impl Eq for StoreRole
-pub impl Show for StoreRole
+} derive(Eq, Show)
 
 pub(all) struct TargetRule {
   target_id : String
@@ -292,15 +346,12 @@ pub(all) struct TargetRule {
   min_availability : Availability
   write_mode : WriteMode
   pull_on_miss : Bool
-}
-pub impl Show for TargetRule
+} derive(Show)
 
 pub(all) enum TreeMatchMode {
   Prefix
   Exact
-}
-pub impl Eq for TreeMatchMode
-pub impl Show for TreeMatchMode
+} derive(Eq, Show)
 
 pub(all) struct TreeRule {
   path : Array[String]
@@ -308,8 +359,7 @@ pub(all) struct TreeRule {
   lane : ReplicationLane
   require_sealed_epoch : Bool
   min_replicas : UInt
-}
-pub impl Show for TreeRule
+} derive(Show)
 
 pub(all) struct UnionStore {
   nodes : Array[&StoreNode]
@@ -328,9 +378,7 @@ pub(all) enum WriteMode {
   SyncQuorum
   AsyncFanout
   LocalOnly
-}
-pub impl Eq for WriteMode
-pub impl Show for WriteMode
+} derive(Eq, Show)
 
 // Type aliases
 

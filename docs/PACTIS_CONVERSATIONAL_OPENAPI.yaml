@@ -1,0 +1,498 @@
+openapi: 3.1.0
+info:
+  title: Pactis Conversational Hosting API
+  version: 0.1.0-draft
+  description: >
+    Compatibility stub schema (legacy Pactis form). Directionally, this surface
+    is expected to fold into union'd Merkin conversation composition contracts.
+    ---
+    AI-native conversation hosting contract for Saba/Pactis with replay-aware
+    length-envelope guards and timeline checkpoints.
+servers:
+  - url: /v1
+paths:
+  /halls:
+    post:
+      summary: Create hall
+      operationId: createHall
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHallRequest'
+      responses:
+        '200':
+          description: Hall created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hall'
+  /halls/{hall_id}/threads:
+    post:
+      summary: Create thread
+      operationId: createThread
+      parameters:
+        - in: path
+          name: hall_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateThreadRequest'
+      responses:
+        '200':
+          description: Thread created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Thread'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /threads/{thread_id}/turns:
+    post:
+      summary: Append turn
+      operationId: appendTurn
+      parameters:
+        - in: path
+          name: thread_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TurnRequest'
+      responses:
+        '200':
+          description: Turn outcome
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TurnOutcome'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /threads/{thread_id}/replay:
+    post:
+      summary: Replay timeline window
+      operationId: replayThread
+      parameters:
+        - in: path
+          name: thread_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplayRequest'
+      responses:
+        '200':
+          description: Replay result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplayOutcome'
+  /threads/{thread_id}/checkpoints:
+    post:
+      summary: Create checkpoint
+      operationId: createCheckpoint
+      parameters:
+        - in: path
+          name: thread_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCheckpointRequest'
+      responses:
+        '200':
+          description: Checkpoint created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checkpoint'
+  /plans/parse:
+    post:
+      summary: Parse Yata plan wire
+      operationId: parsePlan
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Strict parse outcome
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanParseOutcome'
+  /addresses/canonicalize:
+    post:
+      summary: Canonicalize cognitive/CAS URI
+      operationId: canonicalizeAddress
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [raw]
+              properties:
+                raw:
+                  type: string
+      responses:
+        '200':
+          description: Canonical address
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [canonical]
+                properties:
+                  canonical:
+                    type: string
+  /threads/{thread_id}/embeddings/findings:
+    post:
+      summary: Record embedding findings for a file
+      operationId: recordEmbeddingFindings
+      parameters:
+        - in: path
+          name: thread_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmbeddingRecordRequest'
+      responses:
+        '200':
+          description: Embedding record accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmbeddingRecord'
+  /threads/{thread_id}/embeddings:
+    get:
+      summary: List embedding records for thread
+      operationId: listEmbeddingRecords
+      parameters:
+        - in: path
+          name: thread_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Embedding record list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmbeddingRecord'
+  /threads/{thread_id}/embeddings/purge:
+    post:
+      summary: Purge ephemeral embedding records by turn age
+      operationId: purgeEmbeddingRecords
+      parameters:
+        - in: path
+          name: thread_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_turn_seq]
+              properties:
+                current_turn_seq:
+                  type: integer
+                  minimum: 0
+      responses:
+        '200':
+          description: Purge result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [purged]
+                properties:
+                  purged:
+                    type: integer
+components:
+  schemas:
+    CreateHallRequest:
+      type: object
+      required: [name, policy_profile]
+      properties:
+        name:
+          type: string
+        policy_profile:
+          type: string
+    CreateThreadRequest:
+      type: object
+      required: [topic, track]
+      properties:
+        topic:
+          type: string
+        track:
+          type: string
+          enum: [program, git]
+    CreateCheckpointRequest:
+      type: object
+      properties:
+        label:
+          type: string
+      additionalProperties: false
+    LengthEnvelope:
+      type: object
+      required: [input_len_min, input_len_max, output_len_min, output_len_max]
+      properties:
+        input_len_min:
+          type: integer
+          minimum: 1
+        input_len_max:
+          type: integer
+          minimum: 1
+        output_len_min:
+          type: integer
+          minimum: 1
+        output_len_max:
+          type: integer
+          minimum: 1
+    TurnRequest:
+      type: object
+      required: [actor_overlay, actor_role, content, length_envelope]
+      properties:
+        actor_overlay:
+          type: string
+        actor_role:
+          type: string
+          enum: [ai, human, system]
+        content:
+          type: string
+        length_envelope:
+          $ref: '#/components/schemas/LengthEnvelope'
+        idempotency_key:
+          type: string
+    TurnOutcome:
+      type: object
+      required: [accepted, issues, canonical_addresses]
+      properties:
+        accepted:
+          type: boolean
+        turn_id:
+          type: string
+          nullable: true
+        turn_seq:
+          type: integer
+          nullable: true
+        checkpoint_id:
+          type: string
+          nullable: true
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/Issue'
+        canonical_addresses:
+          type: array
+          items:
+            type: string
+    ReplayRequest:
+      type: object
+      required: [from_seq, length_guard_enforced]
+      properties:
+        from_seq:
+          type: integer
+          minimum: 1
+        to_seq:
+          type: integer
+          minimum: 1
+          nullable: true
+        length_guard_enforced:
+          type: boolean
+    ReplayOutcome:
+      type: object
+      required: [ok, replayed_count, non_replayable_count, issues]
+      properties:
+        ok:
+          type: boolean
+        replayed_count:
+          type: integer
+        non_replayable_count:
+          type: integer
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/Issue'
+    Hall:
+      type: object
+      required: [hall_id, name, policy_profile, created_at_seq]
+      properties:
+        hall_id:
+          type: string
+        name:
+          type: string
+        policy_profile:
+          type: string
+        created_at_seq:
+          type: integer
+    Thread:
+      type: object
+      required: [thread_id, hall_id, topic, track, head_checkpoint]
+      properties:
+        thread_id:
+          type: string
+        hall_id:
+          type: string
+        topic:
+          type: string
+        track:
+          type: string
+          enum: [program, git]
+        head_checkpoint:
+          type: string
+    Checkpoint:
+      type: object
+      required: [checkpoint_id, thread_id, turn_seq, label]
+      properties:
+        checkpoint_id:
+          type: string
+        thread_id:
+          type: string
+        turn_seq:
+          type: integer
+        label:
+          type: string
+    PlanParseOutcome:
+      type: object
+      required: [ok, issues]
+      properties:
+        ok:
+          type: boolean
+        plan:
+          type: object
+          nullable: true
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/Issue'
+    Issue:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    EmbeddingRecordRequest:
+      type: object
+      required:
+        - file_ref
+        - file_type
+        - mime_type
+        - found
+        - count
+        - action
+        - ephemeral
+        - purge_after_turns
+      properties:
+        file_ref:
+          type: string
+        file_type:
+          type: string
+        mime_type:
+          type: string
+        found:
+          type: boolean
+        count:
+          type: integer
+          minimum: 0
+        action:
+          type: string
+          enum: [observe, flip-aot, purge]
+        ephemeral:
+          type: boolean
+        purge_after_turns:
+          type: integer
+          minimum: 0
+        note:
+          type: string
+    EmbeddingRecord:
+      type: object
+      required:
+        - record_id
+        - thread_id
+        - file_ref
+        - file_type
+        - mime_type
+        - found
+        - count
+        - action
+        - ephemeral
+        - purge_after_turns
+        - recorded_turn_seq
+        - note
+      properties:
+        record_id:
+          type: string
+        thread_id:
+          type: string
+        file_ref:
+          type: string
+        file_type:
+          type: string
+        mime_type:
+          type: string
+        found:
+          type: boolean
+        count:
+          type: integer
+        action:
+          type: string
+          enum: [observe, flip-aot, purge]
+        ephemeral:
+          type: boolean
+        purge_after_turns:
+          type: integer
+        recorded_turn_seq:
+          type: integer
+        note:
+          type: string

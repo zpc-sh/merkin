@@ -1,0 +1,33 @@
+site_name: Pactis AI & LGI
+site_description: Canonical AI discovery, ethics, and interfaces for Pactis
+docs_dir: ../
+theme:
+  name: material
+nav:
+  - AI Discovery: AI_DISCOVERY.md
+  - Specifications:
+      - Specifications Index: specifications/README.md
+      - OSI (Org Services Index): specifications/Pactis-OSI.md
+      - RBP (Resource Blueprint Protocol): specifications/Pactis-RBP.md
+      - LGI (Language Gateway Interface): specifications/Pactis-LGI.md
+      - RSI (Repository Service Interface): specifications/Pactis-RSI.md
+      - SDI (Service Self-Description): specifications/Pactis-SDI.md
+      - SSHS (Secure Secrets via SSH Keys): specifications/Pactis-SSHS.md
+  - How-to:
+      - Agent Quickstart: AGENT_QUICKSTART.md
+      - Ephemeral Secrets (SSHS): howto/secrets_ephemeral_cli.md
+      - SpecAPI for AI: wiki/specapi_for_ai.md
+  - Guides:
+      - Getting Started: getting_started.md
+      - Architecture Overview: architecture.md
+      - Blueprints: blueprints.md
+      - Billing Overview: BILLING_OVERVIEW.md
+      - Events: events.md
+  - Reference:
+      - Design API (stub): specifications/Pactis-KEI.md
+      - Ash Framework: ash.md
+      - SpecAPI Overview: spec_api/overview.md
+  - Clients:
+      - Rust Client: rust-client/README.md
+  - Roadmap:
+      - Overview: roadmap/README.md

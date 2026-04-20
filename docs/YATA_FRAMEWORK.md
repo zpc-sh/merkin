@@ -5,8 +5,12 @@ This document defines the abstract Yata hole model used by merkin.
 Related specifications:
 
 - `docs/YATA_PLAN_SPEC.md` for the full `.plan` wire contract.
+- `docs/MUYATA_SPEC.md` for the AI-shaped Yata profile layer and plan profile guidance.
+- `docs/YATA_COGNITIVE_ENVELOPE_DESIGN.md` for guidance on cognitive envelopes, overlay profiles, and ChatGPT/OpenAI shaping.
+- `docs/YATA_PLAN_GOVERNANCE.md` for ownership, compatibility, and extension policy.
 - `docs/PACTIS_GIT_PARITY_FUNCTION_MAP.md` for Git-equivalent command/function scope in Pactis.
 - `docs/PACTIS_CONVERSATIONAL_API_SPEC.md` for AI-native conversational hosting (Saba/Pactis).
+- `docs/EMBEDDING_EPHEMERAL_METADATA_SPEC.md` for filetype-agnostic embedding detection, flip-ahead-of-time, and purge rules.
 
 ## Core intuition
 
@@ -59,6 +63,37 @@ Yata is *effect-conscious* only by contract:
 - no dependence on absolute timestamps as truth
 
 Each hole remains valid under deferred evaluation and partial truth.
+
+## Topology balancing and detached-chain reasoning
+
+For first release, Yata dependency graphs are treated as DAG-like structures with permissive construction,
+but we explicitly track two failure modes:
+
+1. **Over-branching pressure** (one parent feeding too many child holes).
+2. **Detached chains** (holes that do not connect to any root, or depend on missing nodes).
+
+### Why balancing matters
+
+- Very high fanout from a single parent tends to create noisy candidate churn and slow convergence.
+- A balanced graph is not required for correctness, but is recommended for operational stability.
+- In practice, teams should define policy thresholds per domain (for example: alert when fanout > 16).
+
+### Why detached-chain detection matters
+
+- Missing dependencies can silently strand a hole forever in non-ready states.
+- Rootless cycles can look “active” but never reach a stable, replayable root lineage.
+- Detecting detachment early prevents hidden backlog in long-running agent workflows.
+
+### Runtime support in `model/yata_lineage.mbt`
+
+- `YataGraph::child_fanout(parent_id)` — reverse-edge child count for one hole.
+- `YataGraph::max_branch_fanout()` — max fanout observed in the graph.
+- `YataGraph::overbranched(max_children)` — hotspots that exceed policy threshold.
+- `YataGraph::holes_with_missing_dependencies()` — holes referencing unknown ids.
+- `YataGraph::detached_holes(max_depth)` — holes that cannot reach any zero-dependency root within bounded ancestry traversal.
+
+These checks are diagnostic/operational signals, not hard schema constraints.
+They can be promoted to policy gates by downstream systems when stricter release posture is required.
 
 ## Cognitive address mapping (program track)
 
@@ -114,6 +149,10 @@ git_report_refs=...
 - `.plan` instances can carry optional metadata envelopes:
   - `YataPlanSelfReport` and `YataPlan::with_self_report`, which emits `self_report_*` headers and rehydrates during strict parse.
   - `YataPlanGitReport` and `YataPlan::with_git_report`, which emits `git_report_*` headers and rehydrates during strict parse.
+  - `YataPlanTemporalDelta` and `YataPlan::with_temporal_delta`, for signed replay movement vectors.
+  - `YataPlanEmbeddingReport` and `YataPlan::with_embedding_report`, for filetype-agnostic embedding scan summary.
+  - `YataPlanSolveReport` and `YataPlan::with_solve_report`, for compact generalized solve/offload summaries.
+  - for design guidance on future cognitive-profile metadata, see `docs/YATA_COGNITIVE_ENVELOPE_DESIGN.md`.
   - `YataGitSnapshot::to_report` can derive git envelope fields from lightweight snapshot refs.
 
 ### Interoperability schema (strict parse)
@@ -131,6 +170,7 @@ git_report_refs=...
 - Conditional metadata:
   - if `self_report=1`, then `self_report_overlay=` is required.
   - if `git_report=1`, then `git_report_branch=` is required.
+  - if `solve_report=1`, then `solve_report_handler=` is required.
 - Track guidance:
   - `program` track should usually carry `self_report_*` for cross-layer replay.
   - `git` track should usually carry `git_report_*` for branch/head provenance.

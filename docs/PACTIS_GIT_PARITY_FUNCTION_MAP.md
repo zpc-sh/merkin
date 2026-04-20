@@ -15,6 +15,7 @@ Goal: full day-to-day parity for developers and CI systems.
 AI-native additions (Yata, `.plan`, overlays) are included as first-class extensions, not bolt-ons.
 Conversation-hosting API for Saba/Pactis is specified in:
 - `docs/PACTIS_CONVERSATIONAL_API_SPEC.md`
+- `docs/PACTIS_CONVERSATIONAL_OPENAPI.yaml`
 
 ## 2. Function map
 

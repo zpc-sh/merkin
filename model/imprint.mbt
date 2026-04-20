@@ -107,19 +107,14 @@ pub fn Imprint::new(
   horizon : UInt,
   mode : MirageMode,
 ) -> Imprint {
-  let confidence = infer_confidence(surface_projection, route_projection, contract_graph, horizon)
-  let material = imprint_material(
-    source,
-    kind,
-    surface_projection,
-    route_projection,
-    contract_graph,
-    parent_imprint,
-    horizon,
-    mode,
-    confidence,
+  let confidence = infer_confidence(
+    surface_projection, route_projection, contract_graph, horizon,
   )
-  let imprint_id = @hash.Hash::of_bytes(string_to_bytes(material))
+  let material = imprint_material(
+    source, kind, surface_projection, route_projection, contract_graph, parent_imprint,
+    horizon, mode, confidence,
+  )
+  let imprint_id = @hash.Hash::of_bytes(imprint_string_to_bytes(material))
   {
     imprint_id,
     source,
@@ -137,7 +132,7 @@ pub fn Imprint::new(
 ///|
 /// Convert an imprint into a hollow, portable mirage.
 pub fn Imprint::to_mirage(self : Imprint) -> Mirage {
-  let mut appearance = [self.mode_name()]
+  let appearance = [self.mode_name()]
   for value in self.surface_projection {
     appearance.push(value)
   }
@@ -165,8 +160,15 @@ fn infer_confidence(
   contracts : Array[String],
   horizon : UInt,
 ) -> UInt {
-  let score = surface.length() * 12U + route.length() * 8U + contracts.length() * 10U + horizon * 3U
-  if score > 100U { 100U } else { score }
+  let score = surface.length().reinterpret_as_uint() * 12U +
+    route.length().reinterpret_as_uint() * 8U +
+    contracts.length().reinterpret_as_uint() * 10U +
+    horizon * 3U
+  if score > 100U {
+    100U
+  } else {
+    score
+  }
 }
 
 ///|
@@ -182,7 +184,7 @@ fn imprint_material(
   mode : MirageMode,
   confidence : UInt,
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string(kind.to_string())
   b.write_string("|")
   b.write_string(source)
@@ -259,7 +261,7 @@ fn mode_to_tag(mode : MirageMode) -> String {
 }
 
 ///|
-fn string_to_bytes(s : String) -> Bytes {
+fn imprint_string_to_bytes(s : String) -> Bytes {
   let mut total = 0
   for _ch in s {
     total = total + 4

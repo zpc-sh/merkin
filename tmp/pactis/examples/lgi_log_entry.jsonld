@@ -1,0 +1,17 @@
+{
+  "@context": {
+    "log": "https://pactis.dev/log#",
+    "sri": "https://pactis.dev/sri#",
+    "prov": "http://www.w3.org/ns/prov#"
+  },
+  "@type": "log:LogEntry",
+  "@id": "urn:pactis:log:entry:01J123ABCDEF",
+  "log:timestamp": "2025-09-20T12:34:56Z",
+  "log:level": "info",
+  "log:message": "Service started",
+  "sri:service": {"@id": "pactis:service/pactis"},
+  "log:traceId": "trc_01HZY0GMG4Z6",
+  "log:spanId": "spn_01HZY0GMG4Z6",
+  "log:fields": {"env": "dev", "port": 4000}
+}
+

@@ -1,0 +1,11 @@
+{
+  "@context": "https://pactis.dev/jsonld/pactis.context.jsonld",
+  "@id": "pactis:build/def456",
+  "@type": "prov:Activity",
+  "prov:generatedAtTime": "2025-09-19T12:34:56Z",
+  "prov:wasAssociatedWith": "pactis:system/builder",
+  "prov:used": [
+    "pactis:token-sets/org-42/v7",
+    "pactis:components/abc123@2.3.1"
+  ]
+}

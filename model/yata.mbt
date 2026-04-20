@@ -145,7 +145,9 @@ pub fn YataHole::new(
   dependencies : Array[@hash.Hash],
   provenance : Array[String],
 ) -> YataHole {
-  let material = hole_material(anchor, contract, refinements, dependencies, provenance)
+  let material = hole_material(
+    anchor, contract, refinements, dependencies, provenance,
+  )
   let hole_id = @hash.Hash::of_bytes(string_to_bytes(material))
   {
     hole_id,
@@ -162,39 +164,48 @@ pub fn YataHole::new(
 
 ///|
 /// Add a refinement constraint.
-pub fn YataHole::add_refinement(self : YataHole, refinement : YataRefinement) -> YataHole {
-  let mut refinements = self.refinements
+pub fn YataHole::add_refinement(
+  self : YataHole,
+  refinement : YataRefinement,
+) -> YataHole {
+  let refinements = self.refinements
   refinements.push(refinement)
-  { ..self, refinements: refinements }
+  { ..self, refinements, }
 }
 
 ///|
 /// Add a dependency edge.
-pub fn YataHole::add_dependency(self : YataHole, dependency : @hash.Hash) -> YataHole {
-  let mut dependencies = self.dependencies
+pub fn YataHole::add_dependency(
+  self : YataHole,
+  dependency : @hash.Hash,
+) -> YataHole {
+  let dependencies = self.dependencies
   dependencies.push(dependency)
-  { ..self, dependencies: dependencies }
+  { ..self, dependencies, }
 }
 
 ///|
 /// Add a candidate proposal.
-pub fn YataHole::propose(self : YataHole, candidate : YataCandidate) -> YataHole {
-  let mut candidates = self.candidates
+pub fn YataHole::propose(
+  self : YataHole,
+  candidate : YataCandidate,
+) -> YataHole {
+  let candidates = self.candidates
   candidates.push(candidate)
-  {
-    ..self,
-    candidates,
-    state: Converging,
-  }
+  { ..self, candidates, state: Converging }
 }
 
 ///|
 /// Select a candidate and optional witness provenance.
-pub fn YataHole::seal(self : YataHole, candidate_id : String, witness : YataWitness?) -> YataHole {
+pub fn YataHole::seal(
+  self : YataHole,
+  candidate_id : String,
+  witness : YataWitness?,
+) -> YataHole {
   match witness {
     Some(w) => {
-      let mut next = self.provenance
-      next.push(self.state_to_trace(w.proposer, w.proof_token))
+      let next = self.provenance
+      next.push(state_to_trace(w.proposer, w.proof_token))
       {
         ..self,
         selected_candidate: Some(candidate_id),
@@ -202,13 +213,12 @@ pub fn YataHole::seal(self : YataHole, candidate_id : String, witness : YataWitn
         provenance: next,
       }
     }
-    None => {
+    None =>
       {
         ..self,
         selected_candidate: Some(candidate_id),
         state: Sealed(candidate_id),
       }
-    }
   }
 }
 
@@ -224,7 +234,7 @@ pub fn YataHole::resolve(self : YataHole) -> YataHole {
 ///|
 /// Abandon unresolved work.
 pub fn YataHole::abandon(self : YataHole, reason : String) -> YataHole {
-  let mut next = self.provenance
+  let next = self.provenance
   next.push(reason)
   { ..self, state: Abandoned(reason), provenance: next }
 }
@@ -234,12 +244,11 @@ pub fn YataHole::abandon(self : YataHole, reason : String) -> YataHole {
 pub fn YataHole::is_ready(self : YataHole, graph : YataGraph) -> Bool {
   for dependency in self.dependencies {
     match graph.get(dependency) {
-      Some(hole) => {
+      Some(hole) =>
         match hole.state {
           Resolved(_) => continue
           _ => return false
         }
-      }
       None => return false
     }
   }
@@ -254,12 +263,11 @@ pub fn YataHole::best_candidate(self : YataHole) -> YataCandidate? {
   for candidate in self.candidates {
     let score = candidate.confidence
     match best {
-      Some(current) => {
+      Some(current) =>
         if score >= current.confidence && score >= best_score {
           best = Some(candidate)
           best_score = score
         }
-      }
       None => {
         best = Some(candidate)
         best_score = score
@@ -272,7 +280,7 @@ pub fn YataHole::best_candidate(self : YataHole) -> YataCandidate? {
 ///|
 /// Check admissibility against contract confidence floor.
 pub fn YataHole::admissible(self : YataHole) -> Bool {
-  self.contract.min_confidence <= max_candidate_confidence(self)
+  self.contract.min_confidence <= self.max_candidate_confidence()
 }
 
 ///|
@@ -284,9 +292,9 @@ pub fn YataGraph::new() -> YataGraph {
 ///|
 /// Append a hole.
 pub fn YataGraph::add(self : YataGraph, hole : YataHole) -> YataGraph {
-  let mut holes = self.holes
+  let holes = self.holes
   holes.push(hole)
-  { holes: holes }
+  { holes, }
 }
 
 ///|
@@ -303,8 +311,8 @@ pub fn YataGraph::get(self : YataGraph, id : @hash.Hash) -> YataHole? {
 ///|
 /// Replace/update matching hole by id.
 pub fn YataGraph::upsert(self : YataGraph, hole : YataHole) -> YataGraph {
-  let mut holes = self.holes
-  let mut updated : Array[YataHole] = []
+  let holes = self.holes
+  let updated : Array[YataHole] = []
   let mut touched = false
   for existing in holes {
     if existing.hole_id == hole.hole_id {
@@ -325,7 +333,7 @@ pub fn YataGraph::upsert(self : YataGraph, hole : YataHole) -> YataGraph {
 ///|
 /// Return holes whose dependencies are all resolved.
 pub fn YataGraph::ready_set(self : YataGraph) -> Array[YataHole] {
-  let mut out : Array[YataHole] = []
+  let out : Array[YataHole] = []
   for hole in self.holes {
     if hole.is_ready(self) {
       out.push(hole)
@@ -334,7 +342,8 @@ pub fn YataGraph::ready_set(self : YataGraph) -> Array[YataHole] {
   out
 }
 
-fn max_candidate_confidence(self : YataHole) -> UInt {
+///|
+fn YataHole::max_candidate_confidence(self : YataHole) -> UInt {
   let mut max : UInt = 0
   for candidate in self.candidates {
     if candidate.confidence > max {
@@ -344,10 +353,12 @@ fn max_candidate_confidence(self : YataHole) -> UInt {
   max
 }
 
+///|
 fn state_to_trace(actor : String, proof_token : String) -> String {
   actor + ":" + proof_token
 }
 
+///|
 fn hole_material(
   anchor : String,
   contract : YataContract,
@@ -355,7 +366,7 @@ fn hole_material(
   dependencies : Array[@hash.Hash],
   provenance : Array[String],
 ) -> String {
-  let mut b = StringBuilder::new()
+  let b = StringBuilder::new()
   b.write_string(anchor)
   b.write_string("|")
   b.write_string(contract.expected_type)

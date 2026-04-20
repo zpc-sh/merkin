@@ -1,0 +1,25 @@
+{
+  "@context": {
+    "test": "https://pactis.dev/test#",
+    "schema": "https://schema.org/"
+  },
+  "@type": "test:TestSuite",
+  "@id": "urn:pactis:test:suite:button-accessibility",
+  "test:title": "Button Accessibility Suite",
+  "schema:description": "Ensures button components meet contrast and focus requirements.",
+  "test:cases": [
+    {
+      "@type": "test:TestCase",
+      "@id": "urn:pactis:test:case:contrast",
+      "test:title": "Contrast ratio >= 4.5:1",
+      "test:tags": ["a11y", "contrast"]
+    },
+    {
+      "@type": "test:TestCase",
+      "@id": "urn:pactis:test:case:focus-visible",
+      "test:title": "Focus indicator is visible",
+      "test:tags": ["a11y", "focus"]
+    }
+  ]
+}
+

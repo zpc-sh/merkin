@@ -1,0 +1,15 @@
+{
+  "@context": [
+    "https://pactis.dev/ash-context",
+    {"custom": "https://mycompany.com/"}
+  ],
+  "@type": "AshResource",
+  "name": "Document",
+  "version": "1.2.0",
+  "attributes": [
+    {"name": "filename", "type": "string", "required": true},
+    {"name": "custom:internal_id", "type": "integer"}  // Custom addition
+  ],
+  "ash:actions": [...],  // Ash-specific extensions
+  "custom:deployment_notes": "..."  // Arbitrary metadata
+}

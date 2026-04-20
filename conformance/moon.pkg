@@ -1,9 +1,9 @@
 import {
   "moonbitlang/core/bench" @bench,
-  "nocsi/merkin/hash" @hash,
-  "nocsi/merkin/model" @model,
-  "nocsi/merkin/store" @store,
-  "nocsi/merkin/tree" @tree,
-  "nocsi/merkin/bloom" @bloom,
-  "nocsi/merkin/gaussian" @gaussian,
+  "zpc/merkin/hash" @hash,
+  "zpc/merkin/model" @model,
+  "zpc/merkin/store" @store,
+  "zpc/merkin/tree" @tree,
+  "zpc/merkin/bloom" @bloom,
+  "zpc/merkin/gaussian" @gaussian,
 }

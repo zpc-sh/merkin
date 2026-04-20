@@ -1,4 +1,4 @@
 import {
-  "nocsi/merkin/hash" @hash,
-  "nocsi/merkin/model" @model,
+  "zpc/merkin/hash" @hash,
+  "zpc/merkin/model" @model,
 }

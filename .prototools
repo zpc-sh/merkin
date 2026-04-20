@@ -1,0 +1,9 @@
+[plugins.tools]
+just = "github://muuvmuuv/proto-plugins/just_tool"
+sccache = "https://raw.githubusercontent.com/appthrust/proto-toml-plugins/main/sccache/plugin.toml"
+wizer = "https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/wizer/plugin.toml"
+wasmtime = "https://raw.githubusercontent.com/isaac10334/wasmtime-proto/master/wasmtime.toml"
+mise = "https://raw.githubusercontent.com/appthrust/proto-toml-plugins/main/mise/plugin.toml"
+gcloud = "github://ageha734/proto-gcloud"
+fly = "https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/flyctl/plugin.toml"
+cosign = "https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/cosign/plugin.toml"

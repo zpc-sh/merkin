@@ -1,0 +1,8 @@
+{
+  "@context": "https://pactis.dev/jsonld/pactis.context.jsonld",
+  "@id": "pactis:policy/color-contrast",
+  "@type": "pactis:PolicyRule",
+  "name": "WCAG Color Contrast",
+  "severity": "error",
+  "params": { "minContrast": 4.5 }
+}

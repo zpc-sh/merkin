@@ -1,4 +1,14 @@
 .DS_Store
 _build/
+dist/
 .mooncakes/
 .moonagent/
+.moon/
+.moonbuild
+.mooncache/
+.moonlogs
+.claude/
+.codex/
+.codex
+.protools
+trace.json
