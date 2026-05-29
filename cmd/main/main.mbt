@@ -1241,22 +1241,11 @@ fn split_csv(value : String) -> Array[String] {
 
 ///|
 fn split_csv_raw(value : String) -> Array[String] {
-  let out : Array[String] = []
-  let mut cur = StringBuilder::new(size_hint=32)
-  for ch in value {
-    if ch == ',' {
-      let s = cur.to_string()
-      if s != "" {
-        out.push(s)
-      }
-      cur = StringBuilder::new(size_hint=32)
-    } else {
-      cur.write_char(ch)
+  let out = []
+  for s in value.split(",") {
+    if s != "" {
+      out.push(s)
     }
-  }
-  let s = cur.to_string()
-  if s != "" {
-    out.push(s)
   }
   out
 }
