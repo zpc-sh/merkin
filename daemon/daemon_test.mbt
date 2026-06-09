@@ -75,6 +75,57 @@ test "Daemon proxy mode forwards without local commit" {
 }
 
 ///|
+test "Daemon receiver mode rejects when policy tree_accepts is false" {
+  let policy = @storage.ReplicationPolicy::new(
+    1U,
+    1UL,
+    1U,
+    1U,
+    @storage.IdempotencyPolicy::default(),
+    @storage.BackpressurePolicy::default(),
+    @storage.OciPolicy::disabled(),
+    [
+      {
+        target_id: "local-1",
+        role: @storage.Local,
+        lanes: [@storage.Hot, @storage.Warm, @storage.Critical],
+        min_availability: @storage.Online,
+        write_mode: @storage.SyncQuorum,
+        pull_on_miss: true,
+      },
+    ],
+    [
+      {
+        path: ["restricted"],
+        match_mode: @storage.Prefix,
+        lane: @storage.Hot,
+        require_sealed_epoch: false,
+        min_replicas: 100U,
+      },
+    ], // High replica requirement to fail the check
+  )
+
+  let daemon = @daemon.DaemonNode::new(
+    "node-restrict",
+    @daemon.Receiver,
+    policy,
+  )
+  let local_node = @storage.ArtifactCasNode::new("local-1", @storage.Local)
+  daemon.add_store(local_node.as_store_node())
+
+  let result = daemon.handle_oci_put({
+    payload: b"blob-reject",
+    lane: @storage.Hot,
+    event: @storage.Ingest,
+    path: ["restricted", "data"],
+    sealed_epoch: false,
+  })
+
+  assert_eq(result.disposition, @daemon.Rejected)
+  assert_eq(result.reason, Some("policy rejected"))
+}
+
+///|
 test "Daemon pass-through mode bypasses local commit" {
   let policy = sample_policy_for(["local-1"])
   let daemon = @daemon.DaemonNode::new("node-c", @daemon.PassThrough, policy)
