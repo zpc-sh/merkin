@@ -36,3 +36,51 @@ test "BloomSketch rebuild" {
   assert_true(b.maybe_contains("y"))
   assert_true(b.maybe_contains("z"))
 }
+
+///|
+test "BloomSketch rebuild with empty array" {
+  let b = @bloom.BloomSketch::rebuild([])
+  assert_false(b.maybe_contains("anything"))
+}
+
+///|
+test "BloomSketch rebuild with single element" {
+  let b = @bloom.BloomSketch::rebuild(["solo"])
+  assert_true(b.maybe_contains("solo"))
+  assert_false(b.maybe_contains("other"))
+}
+
+///|
+test "BloomSketch rebuild with duplicates" {
+  let b = @bloom.BloomSketch::rebuild(["repeat", "repeat", "repeat"])
+  assert_true(b.maybe_contains("repeat"))
+  assert_false(b.maybe_contains("other"))
+}
+
+///|
+test "BloomSketch rebuild with special characters" {
+  let special = ["🚀", "こんにちは", "hëllö", "spaces and\ttabs", ""]
+  let b = @bloom.BloomSketch::rebuild(special)
+  for token in special {
+    assert_true(b.maybe_contains(token))
+  }
+  assert_false(b.maybe_contains("normal"))
+}
+
+///|
+test "BloomSketch rebuild with large array" {
+  let tokens = []
+  for i = 0; i < 1000; i = i + 1 {
+    tokens.push("token_\{i}")
+  }
+  let b = @bloom.BloomSketch::rebuild(tokens)
+
+  // Test a subset to ensure they are added
+  assert_true(b.maybe_contains("token_0"))
+  assert_true(b.maybe_contains("token_500"))
+  assert_true(b.maybe_contains("token_999"))
+
+  // Note: with 1000 items in a 256-bit bloom filter, the filter will be saturated.
+  // We can't meaningfully assert_false for non-members because false positives
+  // approach 100%. We just verify the members are found.
+}

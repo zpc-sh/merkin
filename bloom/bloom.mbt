@@ -4,7 +4,7 @@
 pub(all) struct BloomSketch {
   bits : FixedArray[Bool]
   num_hashes : Int
-} derive(Show)
+} derive(Debug)
 
 ///|
 /// Default BloomSketch size (bits) for v0.
