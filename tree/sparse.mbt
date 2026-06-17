@@ -48,17 +48,24 @@ pub fn MerkinTree::sparse(
   tokens : Array[String],
 ) -> SparseMerkinTree {
   let include_all = tokens.length() == 0
-  let included : Map[String, Bool] = {}
+  let included : Map[String, MerkinNode] = {}
 
   for key, node in self.nodes {
     if include_all || node_matches_tokens(node, tokens) {
-      included[key] = true
+      included[key] = node
     }
   }
 
   let root_key = self.active_root_key()
   match root_key {
-    Some(key) => included[key] = true
+    Some(key) => {
+      if included.get(key) is None {
+        match self.nodes.get(key) {
+          Some(node) => included[key] = node
+          None => ()
+        }
+      }
+    }
     None => ()
   }
 
@@ -87,8 +94,13 @@ pub fn MerkinTree::sparse(
           Some(parents) =>
             for parent_key in parents {
               if included.get(parent_key) is None {
-                included[parent_key] = true
-                queue.push(parent_key)
+                match self.nodes.get(parent_key) {
+                  Some(node) => {
+                    included[parent_key] = node
+                    queue.push(parent_key)
+                  }
+                  None => ()
+                }
               }
             }
           None => ()
@@ -97,13 +109,5 @@ pub fn MerkinTree::sparse(
     }
   }
 
-  let nodes : Map[String, MerkinNode] = {}
-  for key, _ in included {
-    match self.nodes.get(key) {
-      Some(node) => nodes[key] = node
-      None => ()
-    }
-  }
-
-  { root_key, nodes }
+  { root_key, nodes: included }
 }
