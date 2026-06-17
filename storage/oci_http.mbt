@@ -148,11 +148,28 @@ pub fn OciRegistryHttpTransport::get_blob(
 }
 
 ///|
+pub fn is_valid_digest(digest : String) -> Bool {
+  for ch in digest {
+    let is_alphanumeric = (ch >= 'a' && ch <= 'z') ||
+      (ch >= 'A' && ch <= 'Z') ||
+      (ch >= '0' && ch <= '9')
+    let is_allowed_special = ch == ':' || ch == '.' || ch == '_' || ch == '-'
+    if !(is_alphanumeric || is_allowed_special) {
+      return false
+    }
+  }
+  true
+}
+
+///|
 pub fn OciRegistryHttpTransport::put_tag(
   self : OciRegistryHttpTransport,
   tag : String,
   digest : String,
 ) -> Unit {
+  if !is_valid_digest(digest) {
+    abort("OCI put tag failed: invalid digest format")
+  }
   let body = oci_http_string_to_bytes(
     "{\"mediaType\":\"application/vnd.oci.image.manifest.v1+json\",\"config\":{\"digest\":\"" +
     digest +
