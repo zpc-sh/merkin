@@ -1290,7 +1290,14 @@ fn parse_routes(csv : String) -> Array[Array[String]] {
 
 ///|
 fn path_to_string(path : Array[String]) -> String {
-  let out = StringBuilder::new(size_hint=64)
+  // ⚡ Bolt: Pre-calculate exact string length to avoid dynamic reallocations in StringBuilder
+  let mut size_hint = 0
+  for i = 0; i < path.length(); i = i + 1 {
+    size_hint = size_hint + path[i].length()
+  }
+  let sep_len = if path.length() > 0 { path.length() - 1 } else { 0 }
+  size_hint = size_hint + sep_len
+  let out = StringBuilder::new(size_hint~,)
   for i = 0; i < path.length(); i = i + 1 {
     if i > 0 {
       out.write_char('/')

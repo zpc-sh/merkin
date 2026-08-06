@@ -599,7 +599,14 @@ fn policy_material(
 ///|
 // Use StringBuilder to avoid quadratic-time string concatenation.
 fn join(items : Array[String], sep : String) -> String {
-  let builder = StringBuilder::new()
+  // ⚡ Bolt: Pre-calculate exact string length to avoid dynamic reallocations in StringBuilder
+  let mut size_hint = 0
+  for i = 0; i < items.length(); i = i + 1 {
+    size_hint = size_hint + items[i].length()
+  }
+  let sep_len = if items.length() > 0 { (items.length() - 1) * sep.length() } else { 0 }
+  size_hint = size_hint + sep_len
+  let builder = StringBuilder::new(size_hint~,)
   for i = 0; i < items.length(); i = i + 1 {
     if i > 0 {
       builder.write_string(sep)
