@@ -266,8 +266,15 @@ pub fn DaemonNode::handle_oci_put(
     )
     if receipt.committed_count > 0U {
       self.index_digest_route(digest, request.path)
+      return { disposition: Stored, digest, receipt: Some(receipt), reason: None }
+    } else {
+      return {
+        disposition: Rejected,
+        digest,
+        receipt: Some(receipt),
+        reason: Some("storage-failed"),
+      }
     }
-    return { disposition: Stored, digest, receipt: Some(receipt), reason: None }
   }
 
   if self.oci.proxy {
