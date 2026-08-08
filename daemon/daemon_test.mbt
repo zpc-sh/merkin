@@ -182,3 +182,18 @@ test "Daemon diff endpoints compare sparse snapshots and token views" {
   let token_diff = daemon.diff_views(["alpha"], ["beta"])
   assert_true(!token_diff.is_empty())
 }
+
+///|
+test "LengthEnvelope::default initializes correctly" {
+  let env = @daemon.LengthEnvelope::default()
+  assert_eq(env.size_bytes, 0UL)
+  assert_eq(env.span_count, 0U)
+}
+
+///|
+test "ReplayRequest::default initializes correctly" {
+  let req = @daemon.ReplayRequest::default()
+  assert_eq(req.from_seq, 1U)
+  assert_true(req.to_seq is None)
+  assert_true(req.length_guard_enforced)
+}
