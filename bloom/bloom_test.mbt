@@ -36,3 +36,9 @@ test "BloomSketch rebuild" {
   assert_true(b.maybe_contains("y"))
   assert_true(b.maybe_contains("z"))
 }
+
+///|
+test "BloomSketch rebuild empty array" {
+  let b = @bloom.BloomSketch::rebuild([])
+  assert_false(b.maybe_contains("x"))
+}
