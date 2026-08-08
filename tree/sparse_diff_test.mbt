@@ -89,3 +89,35 @@ test "diff_sparse_trees reports branch swap" {
   assert_true(array_contains(diff.added, child_b.node_id.key()))
   assert_eq(diff.changed.length(), 0)
 }
+
+///|
+test "diff_sparse_trees reports all diff states for overlapping nodes" {
+  let root = root_hash()
+  let child_unchanged = build_child(b"\x71", b"\x81", "alpha")
+  let child_removed = build_child(b"\x72", b"\x82", "alpha")
+  let child_added = build_child(b"\x73", b"\x83", "alpha")
+
+  let left = @tree.MerkinTree::new()
+  left.upsert_node(@tree.MerkinNode::leaf(root))
+  left.upsert_node(child_unchanged)
+  left.upsert_node(child_removed)
+  ignore(left.add_child_edge(root, child_unchanged.node_id))
+  ignore(left.add_child_edge(root, child_removed.node_id))
+
+  let right = @tree.MerkinTree::new()
+  right.upsert_node(@tree.MerkinNode::leaf(root))
+  right.upsert_node(child_unchanged)
+  right.upsert_node(child_added)
+  ignore(right.add_child_edge(root, child_unchanged.node_id))
+  ignore(right.add_child_edge(root, child_added.node_id))
+
+  let sparse_left = left.sparse(["alpha"])
+  let sparse_right = right.sparse(["alpha"])
+
+  let diff = @tree.diff_sparse_trees(sparse_left, sparse_right)
+
+  assert_true(array_contains(diff.added, child_added.node_id.key()))
+  assert_true(array_contains(diff.removed, child_removed.node_id.key()))
+  assert_true(array_contains(diff.changed, root.key()))
+  assert_eq(diff.unchanged, 1U)
+}
