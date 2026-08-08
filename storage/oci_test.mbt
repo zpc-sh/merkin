@@ -2,14 +2,14 @@
 test "InMemoryOciRegistry blob and tag operations" {
   let reg = @storage.InMemoryOciRegistry::new()
   let payload = b"oci-payload"
-  let digest = reg.put_blob("repo/a", payload)
+  let digest = reg.put_blob("repo/a", payload).unwrap()
   assert_true(reg.has_blob("repo/a", digest))
   match reg.get_blob("repo/a", digest) {
     Some(bytes) => assert_eq(bytes, payload)
     None => assert_true(false)
   }
 
-  reg.put_tag("repo/a", "latest", digest)
+  assert_true(reg.put_tag("repo/a", "latest", digest))
   match reg.resolve_tag("repo/a", "latest") {
     Some(d) => assert_eq(d, digest)
     None => assert_true(false)
@@ -24,7 +24,7 @@ test "OciCasNode participates in StoreNode API" {
   )
 
   let payload = b"oci-node-subject"
-  let digest = node.put_blob(payload)
+  let digest = node.put_blob(payload).unwrap()
   assert_true(node.has_blob(digest))
 
   match node.get_blob(digest) {
