@@ -96,7 +96,7 @@ fn uint64_to_bytes(v : UInt64) -> Bytes {
 
 ///|
 /// Concatenate two Bytes values.
-fn bytes_concat(a : Bytes, b : Bytes) -> Bytes {
+pub fn bytes_concat(a : Bytes, b : Bytes) -> Bytes {
   let buf = FixedArray::make(a.length() + b.length(), b'\x00')
   for i = 0; i < a.length(); i = i + 1 {
     buf[i] = a[i]
